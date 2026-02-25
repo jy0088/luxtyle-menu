@@ -191,6 +191,21 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
   const [open, setOpen] = useState(false);
   const emoji = isMeal ? '🍱' : '🍵';
   const imgBg = isMeal ? '#FFF7ED' : C.cardImg;
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<number | null>(null);
+  const [dragY, setDragY] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => { dragStart.current = e.touches[0].clientY; };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (dragStart.current === null) return;
+    const dy = e.touches[0].clientY - dragStart.current;
+    if (dy > 0) setDragY(dy);
+  };
+  const handleTouchEnd = () => {
+    if (dragY > 80) setOpen(false);
+    setDragY(0);
+    dragStart.current = null;
+  };
 
   return (
     <>
@@ -226,10 +241,18 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
 
       {open && (
         <div style={overlayStyle} onClick={() => setOpen(false)}>
-          <div style={sheetStyle} onClick={e => e.stopPropagation()}>
+          <div
+            ref={sheetRef}
+            style={{ ...sheetStyle, transform: `translateY(${dragY}px)`, transition: dragY === 0 ? 'transform 0.3s' : 'none' }}
+            onClick={e => e.stopPropagation()}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {/* Drag handle */}
             <div style={{ padding: '12px 0 0', flexShrink: 0 }}>
               <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto' }} />
+              <div style={{ textAlign: 'center', fontSize: 10, color: '#ccc', marginTop: 4 }}>下滑关闭</div>
             </div>
             {/* Hero image — full width, tall */}
             <div style={{ width: '100%', height: 240, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12 }}>
