@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import YGFGrowthBar from '@/components/YGFGrowthBar';
 
 const Y = {
   orange: '#D95F1A', orangeLight: '#F07030', orangeBg: '#FFF4ED',
@@ -457,6 +458,9 @@ function MainMenu() {
         {view === 'items' && <IngredientsView />}
         {view === 'promo' && <PromoView />}
       </div>
+
+      {/* Growth Bar — Review / VIP / Share */}
+      <YGFGrowthBar />
     </div>
   );
 }
