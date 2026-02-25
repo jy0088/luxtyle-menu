@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import {
   allCategories, toppings, freeDrinkOptions,
   MenuCategory, MenuItem, MenuSubCategory,
@@ -23,10 +24,109 @@ const C = {
   border: '#E8E4DE', text: '#1a1a1a', sub: '#888', faint: '#bbb',
   accent: '#B45309', accentBg: '#FEF3C7', orange: '#EA580C',
   green: '#16A34A', greenBg: '#F0FDF4', blue: '#2563EB',
-  tabOn: '#1a1a1a', tabOff: '#E8E4DE', tabOnTx: '#fff', tabOffTx: '#666',
   overlay: 'rgba(0,0,0,0.45)',
+  brand: '#0D4A2E', brandDark: '#092E1C',
+  gold: '#C9A84C', goldLight: '#F0D98A',
 };
 
+type TabGroup = { id: string; nameCn: string; nameEn: string };
+type TabSection = {
+  label: string; labelEn: string;
+  color: string; colorBg: string; colorBgActive: string; colorText: string;
+  tabs: TabGroup[];
+};
+
+const TAB_SECTIONS: TabSection[] = [
+  {
+    label: '冷饮', labelEn: 'Cold Drinks',
+    color: '#0369A1', colorBg: '#E0F2FE', colorBgActive: '#0369A1', colorText: '#075985',
+    tabs: [
+      { id: 'C-A', nameCn: '冰调味茶', nameEn: 'Iced Tea' },
+      { id: 'C-B', nameCn: '冰调味奶茶', nameEn: 'Iced Milk Tea' },
+      { id: 'C-C', nameCn: '经典特调冰饮', nameEn: 'Special Iced Drink' },
+      { id: 'C-D', nameCn: '经典特制冰品', nameEn: 'Special Iced' },
+    ],
+  },
+  {
+    label: '热饮', labelEn: 'Hot Drinks',
+    color: '#166534', colorBg: '#DCFCE7', colorBgActive: '#166534', colorText: '#14532D',
+    tabs: [
+      { id: 'H-A', nameCn: '热传统/调味茶', nameEn: 'Hot Tea' },
+      { id: 'H-B', nameCn: '热调味奶茶', nameEn: 'Hot Milk Tea' },
+      { id: 'H-C', nameCn: '经典特调热饮', nameEn: 'Special Hot Drink' },
+    ],
+  },
+  {
+    label: '套餐', labelEn: 'Meal Sets',
+    color: '#EA580C', colorBg: '#FFF7ED', colorBgActive: '#EA580C', colorText: '#9A3412',
+    tabs: [
+      { id: 'M-A', nameCn: '精制套餐组合', nameEn: 'Meal Set' },
+    ],
+  },
+  {
+    label: '餐食', labelEn: 'Food',
+    color: '#D97706', colorBg: '#FEF9C3', colorBgActive: '#D97706', colorText: '#92400E',
+    tabs: [
+      { id: 'M-B', nameCn: '精制主餐单碟', nameEn: 'Entree' },
+      { id: 'M-C', nameCn: '精致主食面点', nameEn: 'Noodles' },
+      { id: 'S-A', nameCn: '精致茶点', nameEn: 'Snacks' },
+      { id: 'S-B', nameCn: '精致甜点', nameEn: 'Dessert' },
+    ],
+  },
+  {
+    label: '其他', labelEn: 'Add-ons',
+    color: '#7C3AED', colorBg: '#EDE9FE', colorBgActive: '#7C3AED', colorText: '#4C1D95',
+    tabs: [
+      { id: 'T', nameCn: '饮料配料', nameEn: 'Topping' },
+    ],
+  },
+];
+
+// ── Splash Screen ──────────────────────────────────────
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<'show' | 'drip' | 'done'>('show');
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('drip'), 1800);
+    const t2 = setTimeout(() => { setPhase('done'); onDone(); }, 2500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [onDone]);
+
+  if (phase === 'done') return null;
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      background: C.brand,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      transition: phase === 'drip' ? 'transform 0.6s cubic-bezier(0.4,0,0.2,1), opacity 0.4s' : 'none',
+      transform: phase === 'drip' ? 'translateY(-100%)' : 'translateY(0)',
+      opacity: phase === 'drip' ? 0 : 1,
+    }}>
+      {/* Background cover image */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <img
+          src="/beiyuan-cover.png"
+          alt="cover"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
+        />
+      </div>
+      {/* Logo overlay */}
+      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+        <img
+          src="/beiyuan-logo.png"
+          alt="北苑南家"
+          style={{ width: 160, height: 160, borderRadius: '50%', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
+        />
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 13, color: C.goldLight, letterSpacing: 4, fontWeight: 600 }}>— MENU —</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tea Base Badges ────────────────────────────────────
 function TeaBaseBadge({ bases }: { bases: string[] }) {
   const map: Record<string, string> = { B: '红茶', G: '绿茶', O: '乌龙+$0.5' };
   return (
@@ -143,7 +243,7 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
             {item.caffeineF && <div style={{ fontSize: 11, color: C.blue, marginTop: 4 }}>☆ Caffeine Free</div>}
             {item.seasonal && <div style={{ fontSize: 11, color: C.green, marginTop: 4 }}>🌿 Seasonal item</div>}
             {isMeal && (
-              <div style={{ background: C.greenBg, borderRadius: 16, padding: 16, marginTop: 16 }}>
+              <div style={{ background: '#F0FDF4', borderRadius: 16, padding: 16, marginTop: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: C.green, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>Free Drink · 免费饮料选一</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                   {freeDrinkOptions.map((d, i) => (
@@ -241,10 +341,10 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.overlay, backdropFilter: 'blur(6px)', padding: 20 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 360, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }} onClick={e => e.stopPropagation()}>
-        <div style={{ background: 'linear-gradient(135deg,#B45309 0%,#EA580C 100%)', padding: '24px 24px 20px' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 1.2, textTransform: 'uppercase' as const }}>北苑南家</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', marginTop: 4 }}>每月特价 & 店长推荐</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>{monthlySpecials.month}</div>
+        <div style={{ background: `linear-gradient(135deg,${C.brand} 0%,${C.brandDark} 100%)`, padding: '24px 24px 20px' }}>
+          <div style={{ fontSize: 11, color: C.goldLight, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const }}>北苑南家</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: C.gold, marginTop: 4 }}>每月特价 & 店长推荐</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{monthlySpecials.month}</div>
         </div>
         <div style={{ padding: 20 }}>
           <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>🏷 本月特价</div>
@@ -268,7 +368,7 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
               <div style={{ fontSize: 18, fontWeight: 900, color: C.orange }}>${p.price.toFixed(2)}</div>
             </div>
           ))}
-          <button onClick={onClose} style={{ width: '100%', background: C.text, color: '#fff', border: 'none', borderRadius: 16, padding: '14px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>
+          <button onClick={onClose} style={{ width: '100%', background: C.brand, color: C.gold, border: 'none', borderRadius: 16, padding: '14px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>
             查看全部菜单 View Menu
           </button>
         </div>
@@ -277,15 +377,17 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
-const tabs = [
-  ...allCategories.map(c => ({ id: c.id, label: c.nameCn })),
-  { id: 'T', label: 'Topping' },
-];
-
 export default function BeiYuanPage() {
-  const [activeTab, setActiveTab] = useState(allCategories[0].id);
-  const [showPopup, setShowPopup] = useState(true);
+  const [activeTab, setActiveTab] = useState('C-A');
+  const [showPopup, setShowPopup] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
+
+  // Show popup after splash
+  const handleSplashDone = () => {
+    setSplashDone(true);
+    setTimeout(() => setShowPopup(true), 300);
+  };
 
   useEffect(() => {
     const el = tabsRef.current?.querySelector(`[data-tab="${activeTab}"]`) as HTMLElement;
@@ -293,52 +395,106 @@ export default function BeiYuanPage() {
   }, [activeTab]);
 
   const activeCategory = activeTab === 'T' ? null : allCategories.find(c => c.id === activeTab);
+  const activeSection = TAB_SECTIONS.find(s => s.tabs.some(t => t.id === activeTab));
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+      {!splashDone && <SplashScreen onDone={handleSplashDone} />}
       {showPopup && <MonthlyPopup onClose={() => setShowPopup(false)} />}
 
-      {/* Header */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 40, background: '#fff', borderBottom: `1px solid ${C.border}`, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 8px' }}>
-          <div>
-            <div style={{ fontSize: 10, color: C.faint, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const }}>Bei Yuan Tea & Boba</div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: C.text, marginTop: 1 }}>北苑南家</div>
+      {/* Sticky Header — 深绿金色品牌风格 */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 40,
+        background: C.brand,
+        borderBottom: `1px solid ${C.brandDark}`,
+        boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
+      }}>
+        {/* Brand row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img
+              src="/beiyuan-logo.png"
+              alt="logo"
+              style={{ width: 44, height: 44, borderRadius: '50%', border: `2px solid ${C.gold}` }}
+            />
+            <div>
+              <div style={{ fontSize: 10, color: C.goldLight, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const }}>Bei Yuan Tea & Boba</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: C.gold, marginTop: 0, lineHeight: 1.2 }}>北苑南家</div>
+            </div>
           </div>
-          <button onClick={() => setShowPopup(true)} style={{ background: C.accentBg, color: C.accent, border: 'none', borderRadius: 999, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => setShowPopup(true)} style={{
+            background: C.gold, color: C.brand, border: 'none',
+            borderRadius: 999, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+          }}>
             🏷 本月特价
           </button>
         </div>
-        {/* Tabs */}
-        <div ref={tabsRef} style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '0 16px 12px', scrollbarWidth: 'none' as const }}>
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              data-tab={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                flexShrink: 0, padding: '6px 14px', borderRadius: 999,
-                fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
-                whiteSpace: 'nowrap' as const,
-                background: activeTab === tab.id ? C.tabOn : C.tabOff,
-                color: activeTab === tab.id ? C.tabOnTx : C.tabOffTx,
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+
+        {/* Section group pills */}
+        <div style={{ display: 'flex', gap: 6, padding: '0 16px 8px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+          {TAB_SECTIONS.map(section => {
+            const isActive = section.tabs.some(t => t.id === activeTab);
+            return (
+              <button
+                key={section.label}
+                onClick={() => setActiveTab(section.tabs[0].id)}
+                style={{
+                  flexShrink: 0, border: 'none', cursor: 'pointer', borderRadius: 999,
+                  padding: '6px 16px', fontWeight: 700, fontSize: 12,
+                  background: isActive ? section.colorBgActive : 'rgba(255,255,255,0.12)',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
+                  boxShadow: isActive ? `0 2px 8px ${section.color}66` : 'none',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {section.label} · {section.labelEn}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Sub-tab cards */}
+        {activeSection && (
+          <div
+            ref={tabsRef}
+            style={{ display: 'flex', gap: 8, padding: '0 16px 14px', overflowX: 'auto', scrollbarWidth: 'none' as const }}
+          >
+            {activeSection.tabs.map(tab => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  data-tab={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    flexShrink: 0,
+                    border: isActive ? `2px solid ${activeSection.color}` : '2px solid rgba(255,255,255,0.15)',
+                    cursor: 'pointer', borderRadius: 14,
+                    padding: '10px 16px', textAlign: 'left' as const,
+                    minWidth: 110,
+                    background: isActive ? activeSection.colorBg : 'rgba(255,255,255,0.08)',
+                    transition: 'all 0.15s',
+                    boxShadow: isActive ? `0 2px 8px ${activeSection.color}44` : 'none',
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 800, color: isActive ? activeSection.color : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{tab.nameCn}</div>
+                  <div style={{ fontSize: 10, color: isActive ? activeSection.colorText : 'rgba(255,255,255,0.5)', marginTop: 2, fontWeight: 500 }}>{tab.nameEn}</div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Title */}
+      {/* Category Title */}
       {activeCategory && (
-        <div style={{ padding: '16px 16px 0' }}>
+        <div style={{ padding: '16px 16px 0', borderLeft: activeSection ? `4px solid ${activeSection.color}` : 'none', paddingLeft: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{activeCategory.nameEn}</div>
           <div style={{ fontSize: 12, color: C.sub }}>{activeCategory.nameCn}</div>
         </div>
       )}
       {activeTab === 'T' && (
-        <div style={{ padding: '16px 16px 0' }}>
+        <div style={{ padding: '16px 16px 0', borderLeft: '4px solid #7C3AED', paddingLeft: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Drink Toppings</div>
           <div style={{ fontSize: 12, color: C.sub }}>饮料配料</div>
         </div>
