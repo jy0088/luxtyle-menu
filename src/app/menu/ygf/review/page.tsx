@@ -4,21 +4,13 @@ import Link from 'next/link';
 
 const GOOGLE_PLACE_ID = 'ChIJkdiUucL_24AR6wPCvJavwWU';
 
-// 智能跳转：有 Google Maps app → 直接打开；没有 → 网页版
 function openGoogleReview() {
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
-  if (isIOS) {
-    window.location.href = `comgooglemaps://?action=reviewsplace&place_id=${GOOGLE_PLACE_ID}`;
-    setTimeout(() => {
-      window.open(`https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`, '_blank');
-    }, 2000);
-  } else if (isAndroid) {
-    window.location.href = `intent://maps.google.com/maps?action=writereview&placeid=${GOOGLE_PLACE_ID}#Intent;scheme=https;package=com.google.android.apps.maps;end`;
-  } else {
-    window.open(`https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`, '_blank');
-  }
+  // 最可靠的方式：直接跳 Google Maps 写评价的通用链接
+  // iOS/Android 有 Google Maps app 会自动唤起，没有打开网页
+  window.open(
+    `https://maps.google.com/maps?action=writereview&placeid=${GOOGLE_PLACE_ID}`,
+    '_blank'
+  );
 }
 
 const WA_NUMBER = '18582688225';
@@ -32,10 +24,11 @@ export default function YGFReviewPage() {
         <h1 style={styles.heading}>Your Voice Matters</h1>
         <p style={styles.sub}>We appreciate every bit of feedback. Choose what feels right for you.</p>
         <div style={styles.grid}>
-          <button onClick={openGoogleReview} style={{ ...styles.btn, background: '#1a1a1a', color: '#fff', border: 'none', cursor: 'pointer' }}>
+          <button onClick={openGoogleReview}
+            style={{ ...styles.btn, background: '#1a1a1a', color: '#fff', border: 'none', cursor: 'pointer' }}>
             <span style={styles.icon}>⭐</span>
             <span style={styles.btnLabel}>Write a Review on Google</span>
-            <span style={styles.btnSub}>Opens Google Maps app directly</span>
+            <span style={styles.btnSub}>Opens in Google Maps</span>
           </button>
           <a href={WA_FEEDBACK_URL} target="_blank" rel="noopener noreferrer"
             style={{ ...styles.btn, background: '#fff', color: '#1a1a1a', border: '2px solid #1a1a1a' }}>
