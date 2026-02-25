@@ -1,43 +1,131 @@
-import Link from "next/link";
-import PageTransition from "@/components/PageTransition";
+import Link from 'next/link';
 
-export default function Home() {
+const brands = [
+  {
+    href: '/menu/beiyuan',
+    nameEn: 'Bei Yuan Tea & Boba',
+    nameCn: '北苑南家',
+    desc: '传统台式餐点与奶茶',
+    descEn: 'Taiwanese Tea · Food · Boba',
+    bg: '#0D4A2E',
+    accent: '#C9A84C',
+    accentLight: '#F0D98A',
+    border: '#1a6640',
+    logo: '/beiyuan-logo.png',
+    emoji: null,
+  },
+  {
+    href: '/menu/ygf',
+    nameEn: 'Yang Guo Fu Malatang',
+    nameCn: '杨国福麻辣烫',
+    desc: '真骨汤底麻辣烫',
+    descEn: 'YGF Malatang · San Diego #1',
+    bg: '#D95F1A',
+    accent: '#FFFFFF',
+    accentLight: 'rgba(255,255,255,0.85)',
+    border: '#c05010',
+    logo: '/ygf-logo.png',
+    emoji: null,
+  },
+  {
+    href: '/menu/tomo',
+    nameEn: 'Tomo Gelato',
+    nameCn: 'Tomo 意式冰淇淋',
+    desc: '手工意式冰淇淋',
+    descEn: 'Artisan Italian Gelato',
+    bg: '#0E7490',
+    accent: '#FFFFFF',
+    accentLight: 'rgba(255,255,255,0.85)',
+    border: '#0a5f78',
+    logo: null,
+    emoji: '🍦',
+  },
+];
+
+export default function HomePage() {
   return (
-    <PageTransition>
-      <main className="min-h-screen flex flex-col items-center justify-center px-8" style={{ backgroundColor: "#F5F2EC" }}>
-        
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-serif tracking-[0.2em] text-stone-700 mb-3">
-            LUXTYLE
-          </h1>
-          <div className="w-16 h-px bg-stone-400 mx-auto mb-3" />
-          <p className="text-xs tracking-[0.4em] text-stone-400 uppercase">
-            Digital Menu
-          </p>
+    <div style={{
+      minHeight: '100dvh',
+      background: '#F5F2EC',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '32px 20px',
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div style={{ fontSize: 11, color: '#aaa', letterSpacing: 4, fontWeight: 600, textTransform: 'uppercase', marginBottom: 8 }}>
+          Digital Menu
         </div>
-
-        <div className="flex flex-col gap-4 w-full max-w-xs">
-
-          <Link href="/menu/beiyuan" className="text-center py-5 border border-stone-300 hover:bg-stone-200 transition-colors">
-            <div className="text-base font-serif tracking-widest text-stone-700">北苑南家</div>
-            <div className="text-xs tracking-[0.2em] text-stone-400 mt-1">Bei Yuan Tea &amp; Boba</div>
-            <div className="text-xs text-stone-400 mt-0.5">传统台式餐点与奶茶</div>
-          </Link>
-
-          <Link href="/menu/ygf" className="text-center py-5 border border-stone-300 hover:bg-stone-200 transition-colors">
-            <div className="text-base font-serif tracking-widest text-stone-700">杨国福麻辣烫</div>
-            <div className="text-xs tracking-[0.2em] text-stone-400 mt-1">YGF Malatang · San Diego #1</div>
-            <div className="text-xs text-stone-400 mt-0.5">真骨汤麻辣烫</div>
-          </Link>
-
-          <Link href="/menu/tomo" className="text-center py-5 border border-stone-300 hover:bg-stone-200 transition-colors">
-            <div className="text-base font-serif tracking-widest text-stone-700">TOMO</div>
-            <div className="text-xs tracking-[0.2em] text-stone-400 mt-1">Tomo Gelato</div>
-          </Link>
-
+        <div style={{ fontSize: 38, fontWeight: 900, color: '#1a1a1a', letterSpacing: 6, textTransform: 'uppercase' }}>
+          LUXTYLE
         </div>
+        <div style={{ width: 48, height: 2, background: '#ccc', margin: '12px auto 0' }} />
+      </div>
 
-      </main>
-    </PageTransition>
+      {/* Brand cards */}
+      <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {brands.map(brand => (
+          <Link key={brand.href} href={brand.href} style={{ textDecoration: 'none' }}>
+            <div style={{
+              background: brand.bg,
+              borderRadius: 20,
+              border: `1px solid ${brand.border}`,
+              padding: '20px 22px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              boxShadow: `0 4px 20px ${brand.bg}44`,
+              cursor: 'pointer',
+              transition: 'transform 0.1s',
+            }}>
+              {/* Logo / Emoji */}
+              <div style={{
+                width: 58,
+                height: 58,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.12)',
+                border: `2px solid ${brand.accent}44`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                overflow: 'hidden',
+              }}>
+                {brand.logo ? (
+                  <img src={brand.logo} alt={brand.nameCn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: 28 }}>{brand.emoji}</span>
+                )}
+              </div>
+
+              {/* Text */}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: brand.accentLight, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>
+                  {brand.descEn}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: brand.accent, lineHeight: 1.2 }}>
+                  {brand.nameCn}
+                </div>
+                <div style={{ fontSize: 12, color: brand.accentLight, marginTop: 3 }}>
+                  {brand.desc}
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <div style={{ fontSize: 20, color: brand.accentLight, flexShrink: 0 }}>›</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div style={{ marginTop: 40, textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: '#bbb' }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
+        <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
+      </div>
+    </div>
   );
 }

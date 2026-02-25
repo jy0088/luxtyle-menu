@@ -177,9 +177,14 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const sheetStyle: React.CSSProperties = {
-  background: '#fff', borderRadius: '24px 24px 0 0',
-  width: '100%', maxWidth: 480,
-  padding: '20px 20px 36px', maxHeight: '85vh', overflowY: 'auto',
+  background: '#fff',
+  borderRadius: '24px 24px 0 0',
+  width: '100%',
+  maxWidth: 480,
+  height: '92dvh',
+  display: 'flex',
+  flexDirection: 'column' as const,
+  overflow: 'hidden',
 };
 
 function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
@@ -202,8 +207,8 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
         </div>
         {/* Right info block */}
         <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{item.nameCn}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
+          <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
           {item.note && <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>{item.note}</div>}
           {item.teaBases && <TeaBaseBadge bases={item.teaBases} />}
           {item.caffeineF && <span style={{ fontSize: 10, color: '#1D4ED8', marginTop: 3, display: 'block' }}>☆ Caffeine Free</span>}
@@ -212,7 +217,7 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
               + Free Drink 含饮料
             </div>
           )}
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.accent, marginTop: 6 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: C.accent, marginTop: 8 }}>
             ${item.price.toFixed(2)}
             {item.priceL && <span style={{ fontSize: 12, fontWeight: 400, color: C.faint, marginLeft: 6 }}>/ L ${item.priceL.toFixed(2)}</span>}
           </div>
@@ -222,35 +227,60 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
       {open && (
         <div style={overlayStyle} onClick={() => setOpen(false)}>
           <div style={sheetStyle} onClick={e => e.stopPropagation()}>
-            <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto 16px' }} />
-            <div style={{ width: '100%', height: 140, background: imgBg, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 52, marginBottom: 16 }}>
-              <span style={{ opacity: 0.4 }}>{emoji}</span>
+            {/* Drag handle */}
+            <div style={{ padding: '12px 0 0', flexShrink: 0 }}>
+              <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto' }} />
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{item.nameEn}</div>
-            <div style={{ fontSize: 13, color: C.sub, marginTop: 2 }}>{item.nameCn}</div>
-            {item.note && <div style={{ fontSize: 11, color: C.faint, marginTop: 4 }}>{item.note}</div>}
-            {item.teaBases && <div style={{ marginTop: 10 }}><div style={{ fontSize: 11, color: C.sub, marginBottom: 4 }}>茶底选择</div><TeaBaseBadge bases={item.teaBases} /></div>}
-            <div style={{ fontSize: 26, fontWeight: 900, color: C.accent, marginTop: 12 }}>
-              ${item.price.toFixed(2)}
-              {item.priceL && <span style={{ fontSize: 14, fontWeight: 400, color: C.faint, marginLeft: 8 }}>Large: ${item.priceL.toFixed(2)}</span>}
+            {/* Hero image — full width, tall */}
+            <div style={{ width: '100%', height: 240, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12 }}>
+              <span style={{ opacity: 0.25 }}>{emoji}</span>
+              {item.seasonal && <span style={{ position: 'absolute', top: 12, right: 12, fontSize: 11, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>🌿 Seasonal</span>}
+              {item.largeOnly && <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#D97706', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>Large Only</span>}
+              {item.caffeineF && <span style={{ position: 'absolute', bottom: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#DBEAFE', color: '#1D4ED8', padding: '4px 10px', borderRadius: 999 }}>☆ Caffeine Free</span>}
+              {/* Close button */}
+              <button onClick={() => setOpen(false)} style={{ position: 'absolute', top: 12, right: item.seasonal ? 100 : 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
-            {item.largeOnly && <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>★ Large size only</div>}
-            {item.caffeineF && <div style={{ fontSize: 11, color: C.blue, marginTop: 4 }}>☆ Caffeine Free</div>}
-            {item.seasonal && <div style={{ fontSize: 11, color: C.green, marginTop: 4 }}>🌿 Seasonal item</div>}
-            {isMeal && (
-              <div style={{ background: '#F0FDF4', borderRadius: 16, padding: 16, marginTop: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: C.green, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>Free Drink · 免费饮料选一</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                  {freeDrinkOptions.map((d, i) => (
-                    <div key={i} style={{ background: '#fff', borderRadius: 10, padding: '8px 10px' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{d.nameEn}</div>
-                      <div style={{ fontSize: 10, color: C.faint }}>{d.nameCn}</div>
-                    </div>
-                  ))}
+            {/* Scrollable content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{item.nameEn}</div>
+              <div style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>{item.nameCn}</div>
+              {item.note && <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>{item.note}</div>}
+              {item.teaBases && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>茶底选择 Tea Base</div>
+                  <TeaBaseBadge bases={item.teaBases} />
                 </div>
-                <div style={{ fontSize: 10, color: C.faint, marginTop: 8 }}>甜度可选 · 默认无冰 · 大杯 +$1</div>
+              )}
+              <div style={{ fontSize: 32, fontWeight: 900, color: C.accent, marginTop: 16 }}>
+                ${item.price.toFixed(2)}
+                {item.priceL && <span style={{ fontSize: 16, fontWeight: 400, color: C.faint, marginLeft: 10 }}>/ Large ${item.priceL.toFixed(2)}</span>}
               </div>
-            )}
+              {/* Customization info */}
+              <div style={{ marginTop: 20, background: C.muted, borderRadius: 16, padding: '14px 16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>Customization · 定制选项</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                  <span style={{ fontSize: 12, background: '#FEF9C3', color: '#854D0E', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>甜度可调</span>
+                  <span style={{ fontSize: 12, background: '#E0F2FE', color: '#0369A1', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>冰量可调</span>
+                  <span style={{ fontSize: 12, background: '#F3E8FF', color: '#6D28D9', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Topping 可加</span>
+                </div>
+              </div>
+              {isMeal && (
+                <div style={{ background: '#F0FDF4', borderRadius: 16, padding: 16, marginTop: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: C.green, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>🎁 Free Drink · 免费饮料选一</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    {freeDrinkOptions.map((d, i) => (
+                      <div key={i} style={{ background: '#fff', borderRadius: 10, padding: '10px 12px' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{d.nameEn}</div>
+                        <div style={{ fontSize: 11, color: C.faint }}>{d.nameCn}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>甜度可选 · 默认无冰 · 大杯 +$1</div>
+                </div>
+              )}
+              {/* Spacer for safe area */}
+              <div style={{ height: 20 }} />
+            </div>
           </div>
         </div>
       )}
@@ -275,7 +305,7 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{sub.nameEn}</div>
           <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
           <div style={{ fontSize: 10, color: C.faint, marginTop: 4 }}>{sub.items.length} flavors · tap to choose</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: C.accent, marginTop: 6 }}>${sub.price.toFixed(2)}</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: C.accent, marginTop: 8 }}>${sub.price.toFixed(2)}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', paddingRight: 14, color: C.faint, fontSize: 18 }}>›</div>
       </div>
@@ -441,7 +471,7 @@ export default function BeiYuanPage() {
                 onClick={() => setActiveTab(section.tabs[0].id)}
                 style={{
                   flexShrink: 0, border: 'none', cursor: 'pointer', borderRadius: 999,
-                  padding: '6px 16px', fontWeight: 700, fontSize: 12,
+                  padding: '8px 18px', fontWeight: 700, fontSize: 13,
                   background: isActive ? section.colorBgActive : 'rgba(255,255,255,0.12)',
                   color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
                   boxShadow: isActive ? `0 2px 8px ${section.color}66` : 'none',
@@ -471,15 +501,15 @@ export default function BeiYuanPage() {
                     flexShrink: 0,
                     border: isActive ? `2px solid ${activeSection.color}` : '2px solid rgba(255,255,255,0.15)',
                     cursor: 'pointer', borderRadius: 14,
-                    padding: '10px 16px', textAlign: 'left' as const,
-                    minWidth: 110,
+                    padding: '12px 18px', textAlign: 'left' as const,
+                    minWidth: 120,
                     background: isActive ? activeSection.colorBg : 'rgba(255,255,255,0.08)',
                     transition: 'all 0.15s',
                     boxShadow: isActive ? `0 2px 8px ${activeSection.color}44` : 'none',
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 800, color: isActive ? activeSection.color : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{tab.nameCn}</div>
-                  <div style={{ fontSize: 10, color: isActive ? activeSection.colorText : 'rgba(255,255,255,0.5)', marginTop: 2, fontWeight: 500 }}>{tab.nameEn}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: isActive ? activeSection.color : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{tab.nameCn}</div>
+                  <div style={{ fontSize: 11, color: isActive ? activeSection.colorText : 'rgba(255,255,255,0.5)', marginTop: 3, fontWeight: 600 }}>{tab.nameEn}</div>
                 </button>
               );
             })}
@@ -490,8 +520,8 @@ export default function BeiYuanPage() {
       {/* Category Title */}
       {activeCategory && (
         <div style={{ padding: '16px 16px 0', borderLeft: activeSection ? `4px solid ${activeSection.color}` : 'none', paddingLeft: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>{activeCategory.nameEn}</div>
-          <div style={{ fontSize: 12, color: C.sub }}>{activeCategory.nameCn}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>{activeCategory.nameEn}</div>
+          <div style={{ fontSize: 14, color: C.sub, marginTop: 2 }}>{activeCategory.nameCn}</div>
         </div>
       )}
       {activeTab === 'T' && (
