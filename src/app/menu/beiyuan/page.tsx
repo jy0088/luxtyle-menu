@@ -103,24 +103,13 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
       transform: phase === 'drip' ? 'translateY(-100%)' : 'translateY(0)',
       opacity: phase === 'drip' ? 0 : 1,
     }}>
-      {/* Background cover image */}
+      {/* Background cover image only */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         <img
           src="/beiyuan-cover.png"
           alt="cover"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 1 }}
         />
-      </div>
-      {/* Logo overlay */}
-      <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
-        <img
-          src="/beiyuan-logo.png"
-          alt="北苑南家"
-          style={{ width: 160, height: 160, borderRadius: '50%', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
-        />
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 13, color: C.goldLight, letterSpacing: 4, fontWeight: 600 }}>— MENU —</div>
-        </div>
       </div>
     </div>
   );
@@ -200,26 +189,32 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
 
   return (
     <>
-      <div style={cardStyle} onClick={() => setOpen(true)}>
-        <div style={imgBox(imgBg)}>
+      {/* Horizontal row card */}
+      <div
+        style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'stretch' }}
+        onClick={() => setOpen(true)}
+      >
+        {/* Left image block */}
+        <div style={{ width: 100, minWidth: 100, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30 }}>
           <span style={{ opacity: 0.35 }}>{emoji}</span>
-          {item.seasonal && <span style={absBadge('#16A34A', '#fff', 8, undefined, undefined, 8)}>Seasonal</span>}
-          {item.largeOnly && <span style={absBadge('#D97706', '#fff', 8, undefined, 8)}>Large Only</span>}
-          {item.caffeineF && <span style={absBadge('#DBEAFE', '#1D4ED8', undefined, 8, 8)}>Caffeine Free</span>}
-          {isMeal && <span style={absBadge('#DCFCE7', '#15803D', undefined, 8, undefined, 8)}>含饮料</span>}
+          {item.seasonal && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 8, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>Seasonal</span>}
+          {item.largeOnly && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 8, fontWeight: 700, background: '#D97706', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>L Only</span>}
         </div>
-        <div style={{ padding: '10px 12px 12px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
-          <div style={{ fontSize: 11, color: C.sub, marginTop: 1 }}>{item.nameCn}</div>
+        {/* Right info block */}
+        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{item.nameCn}</div>
+          {item.note && <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>{item.note}</div>}
           {item.teaBases && <TeaBaseBadge bases={item.teaBases} />}
+          {item.caffeineF && <span style={{ fontSize: 10, color: '#1D4ED8', marginTop: 3, display: 'block' }}>☆ Caffeine Free</span>}
           {isMeal && (
-            <div style={{ marginTop: 5, fontSize: 10, color: '#15803D', background: '#F0FDF4', padding: '2px 8px', borderRadius: 999, display: 'inline-block' }}>
-              + Free Drink
+            <div style={{ marginTop: 5, fontSize: 10, color: '#15803D', background: '#F0FDF4', padding: '2px 8px', borderRadius: 999, display: 'inline-block', alignSelf: 'flex-start' }}>
+              + Free Drink 含饮料
             </div>
           )}
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.accent, marginTop: 6 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.accent, marginTop: 6 }}>
             ${item.price.toFixed(2)}
-            {item.priceL && <span style={{ fontSize: 11, fontWeight: 400, color: C.faint, marginLeft: 4 }}>/ L ${item.priceL.toFixed(2)}</span>}
+            {item.priceL && <span style={{ fontSize: 12, fontWeight: 400, color: C.faint, marginLeft: 6 }}>/ L ${item.priceL.toFixed(2)}</span>}
           </div>
         </div>
       </div>
@@ -267,17 +262,22 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <div style={cardStyle} onClick={() => setOpen(true)}>
-        <div style={imgBox('#FEF3C7')}>
+      {/* Horizontal series card */}
+      <div
+        style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'stretch' }}
+        onClick={() => setOpen(true)}
+      >
+        <div style={{ width: 100, minWidth: 100, background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30 }}>
           <span style={{ opacity: 0.35 }}>✨</span>
-          {sub.note && <span style={absBadge('#D97706', '#fff', 8, undefined, undefined, 8)}>{sub.note}</span>}
+          {sub.note && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 8, fontWeight: 700, background: '#D97706', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>{sub.note}</span>}
         </div>
-        <div style={{ padding: '10px 12px 12px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{sub.nameEn}</div>
-          <div style={{ fontSize: 11, color: C.sub, marginTop: 1 }}>{sub.nameCn}</div>
-          <div style={{ fontSize: 10, color: C.faint, marginTop: 3 }}>{sub.items.length} flavors · tap to see</div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.accent, marginTop: 6 }}>${sub.price.toFixed(2)}</div>
+        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{sub.nameEn}</div>
+          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
+          <div style={{ fontSize: 10, color: C.faint, marginTop: 4 }}>{sub.items.length} flavors · tap to choose</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.accent, marginTop: 6 }}>${sub.price.toFixed(2)}</div>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', paddingRight: 14, color: C.faint, fontSize: 18 }}>›</div>
       </div>
 
       {open && (
@@ -311,7 +311,8 @@ function CategorySection({ cat }: { cat: MenuCategory }) {
   return (
     <div style={{ padding: '4px 16px 16px' }}>
       <CustomChips cat={cat} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
+      {/* Single column list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
         {cat.type === 'items' && cat.items?.map(item => <ItemCard key={item.id} item={item} isMeal={isMeal} />)}
         {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} />)}
       </div>
