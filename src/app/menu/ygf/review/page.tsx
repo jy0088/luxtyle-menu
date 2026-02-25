@@ -5,12 +5,20 @@ import Link from 'next/link';
 const GOOGLE_PLACE_ID = 'ChIJkdiUucL_24AR6wPCvJavwWU';
 
 function openGoogleReview() {
-  // 最可靠的方式：直接跳 Google Maps 写评价的通用链接
-  // iOS/Android 有 Google Maps app 会自动唤起，没有打开网页
-  window.open(
-    `https://maps.google.com/maps?action=writereview&placeid=${GOOGLE_PLACE_ID}`,
-    '_blank'
-  );
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  if (isIOS || isAndroid) {
+    // 移动端：先跳店铺页面，用户点 "Write a review" 即可
+    // 这是最稳定的方式，Google Maps app 会直接打开店铺
+    window.location.href = `https://www.google.com/maps/place/?q=place_id:${GOOGLE_PLACE_ID}`;
+  } else {
+    // 桌面端：直接打开写评价
+    window.open(
+      `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`,
+      '_blank'
+    );
+  }
 }
 
 const WA_NUMBER = '18582688225';
@@ -23,12 +31,13 @@ export default function YGFReviewPage() {
       <div style={styles.card}>
         <h1 style={styles.heading}>Your Voice Matters</h1>
         <p style={styles.sub}>We appreciate every bit of feedback. Choose what feels right for you.</p>
+
         <div style={styles.grid}>
           <button onClick={openGoogleReview}
             style={{ ...styles.btn, background: '#1a1a1a', color: '#fff', border: 'none', cursor: 'pointer' }}>
             <span style={styles.icon}>⭐</span>
             <span style={styles.btnLabel}>Write a Review on Google</span>
-            <span style={styles.btnSub}>Opens in Google Maps</span>
+            <span style={styles.btnSub}>在 Google Maps 打开 → 点 Write a review</span>
           </button>
           <a href={WA_FEEDBACK_URL} target="_blank" rel="noopener noreferrer"
             style={{ ...styles.btn, background: '#fff', color: '#1a1a1a', border: '2px solid #1a1a1a' }}>
@@ -37,6 +46,14 @@ export default function YGFReviewPage() {
             <span style={styles.btnSub}>Message us directly on WhatsApp</span>
           </a>
         </div>
+
+        {/* 引导提示 */}
+        <div style={styles.hint}>
+          <div style={styles.hintStep}><span style={styles.hintNum}>1</span> Tap "Write a Review on Google"</div>
+          <div style={styles.hintStep}><span style={styles.hintNum}>2</span> Google Maps opens our store page</div>
+          <div style={styles.hintStep}><span style={styles.hintNum}>3</span> Tap "Write a review" button in the app</div>
+        </div>
+
         <p style={styles.note}>Both options are equally valued. We read every message.</p>
       </div>
     </main>
@@ -54,5 +71,8 @@ const styles: Record<string, React.CSSProperties> = {
   icon: { fontSize: '28px' },
   btnLabel: { fontSize: '16px', fontWeight: 700 },
   btnSub: { fontSize: '13px', opacity: 0.75 },
-  note: { marginTop: '24px', fontSize: '12px', color: '#aaa' },
+  hint: { marginTop: '20px', background: '#f5f5f5', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' },
+  hintStep: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#444' },
+  hintNum: { background: '#1a1a1a', color: '#fff', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 },
+  note: { marginTop: '20px', fontSize: '12px', color: '#aaa' },
 };
