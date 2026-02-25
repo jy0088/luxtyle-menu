@@ -1,22 +1,62 @@
 {
-  "name": "Luxtyle Menu",
+  "name": "Luxtyle Digital Menu",
   "short_name": "Luxtyle",
-  "description": "Luxtyle Digital Menu",
+  "description": "Bei Yuan Tea & Boba · Yang Guo Fu Malatang · Tomo Gelato",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F5F2EC",
-  "theme_color": "#F5F2EC",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
   "orientation": "portrait",
   "icons": [
     {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "北苑南家",
+      "short_name": "Bei Yuan",
+      "url": "/menu/beiyuan",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "杨国福麻辣烫",
+      "short_name": "YGF",
+      "url": "/menu/ygf",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Tomo Gelato",
+      "short_name": "Tomo",
+      "url": "/menu/tomo",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
 }
