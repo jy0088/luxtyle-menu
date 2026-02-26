@@ -1,7 +1,4 @@
-git add .
-git commit -m "feat: dark homepage + YGF full rebuild + swipe-to-close"
-git push'use client';
-
+'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 const Y = {
