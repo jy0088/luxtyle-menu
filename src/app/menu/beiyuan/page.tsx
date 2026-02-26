@@ -14,7 +14,7 @@ const monthlySpecials = {
     { nameEn: 'Black Sugar Ginger Jujube Milk Tea', nameCn: '黑糖姜枣奶茶', price: 6.98, note: '本月推荐' },
     { nameEn: 'Crispy Pork Chop Meal Set', nameCn: '香酥排骨套餐', price: 15.99, note: '含套餐附赠饮料' },
   ],
-  picks: [],
+  picks: [] as Array<{nameEn: string; nameCn: string; price: number}>,
 };
 
 const C = {
