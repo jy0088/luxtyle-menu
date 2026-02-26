@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
@@ -436,16 +436,20 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
               <div style={{ fontSize: 18, fontWeight: 900, color: C.accent }}>${s.price.toFixed(2)}</div>
             </div>
           ))}
-          <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, margin: '12px 0 8px' }}>⭐ 店长推荐</div>
-          {monthlySpecials.picks.map((p, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FFF7ED', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p.nameEn}</div>
-                <div style={{ fontSize: 11, color: C.sub }}>{p.nameCn}</div>
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.orange }}>${p.price.toFixed(2)}</div>
-            </div>
-          ))}
+          {monthlySpecials.picks.length > 0 && (
+            <>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, margin: '12px 0 8px' }}>⭐ 店长推荐</div>
+              {monthlySpecials.picks.map((p, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FFF7ED', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p.nameEn}</div>
+                    <div style={{ fontSize: 11, color: C.sub }}>{p.nameCn}</div>
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: C.orange }}>${p.price.toFixed(2)}</div>
+                </div>
+              ))}
+            </>
+          )}
           <button onClick={onClose} style={{ width: '100%', background: C.brand, color: C.gold, border: 'none', borderRadius: 16, padding: '14px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>
             查看全部菜单 View Menu
           </button>
@@ -614,4 +618,3 @@ export default function BeiYuanPage() {
     </div>
   );
 }
-

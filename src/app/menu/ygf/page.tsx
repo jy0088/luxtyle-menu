@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 const Y = {
@@ -56,7 +57,7 @@ const STEPS = [
     desc: "We'll weigh your bowl at the counter and cook everything in your chosen broth. Pick from 4 styles.",
     icon: '⚖️',
     items: ['🦴 Beef Bone Broth', '🍅 Tomato Broth', '🍋 Tom Yum Broth', '🌶 Dry Spicy Mix'],
-    price: '$14.99 / lb',
+    price: '$13.99 / lb',
   },
   {
     num: '03', title: 'Customize Your Flavor', cn: '自助调味',
@@ -292,7 +293,7 @@ function IngredientsView() {
       <div style={{ background: '#fff', borderRadius: 14, padding: '12px 16px', marginBottom: 16, border: `1px solid #eee` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: 13, color: Y.sub }}>All ingredients priced at</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: Y.orange }}>$14.99<span style={{ fontSize: 13, fontWeight: 500 }}>/lb</span></div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: Y.orange }}>$13.99<span style={{ fontSize: 13, fontWeight: 500 }}>/lb</span></div>
         </div>
         <div style={{ fontSize: 11, color: Y.faint, marginTop: 4 }}>* Selection varies daily. Ask staff for today's items.</div>
       </div>
@@ -353,24 +354,34 @@ function PromoView() {
 function MenuOverview({ onSelect }: { onSelect: (v: MenuView) => void }) {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
-      {/* Price banner */}
-      <div style={{ background: `linear-gradient(135deg, ${Y.orangeDark}, ${Y.orange})`, borderRadius: 18, padding: '18px 20px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: `0 4px 20px ${Y.orange}44` }}>
-        <div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Ingredients by weight</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>称重计价 · 自助选菜</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 34, fontWeight: 900, color: '#fff', lineHeight: 1 }}>$14.99</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>per pound</div>
-        </div>
+
+      {/* Broth preview FIRST — hero section */}
+      <div style={{ fontSize: 13, fontWeight: 800, color: Y.text, textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 10 }}>
+        🔥 Our Signature Broths
+      </div>
+      <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory' as const, WebkitOverflowScrolling: 'touch' as const }}>
+        {BROTHS.map((b, i) => (
+          <div key={i} onClick={() => onSelect('broths')}
+            style={{ flexShrink: 0, width: 'calc(45vw)', maxWidth: 190, minWidth: 150, borderRadius: 16, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', scrollSnapAlign: 'start' as const }}>
+            <img src={b.img} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+            <div style={{ background: '#fff', padding: '10px 12px 12px' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: Y.text, lineHeight: 1.4, whiteSpace: 'pre-line' }}>{b.name}</div>
+              <div style={{ fontSize: 10, color: Y.faint, marginTop: 2 }}>{b.cn}</div>
+              <div style={{ fontSize: 10, color: b.color, fontWeight: 600, marginTop: 4 }}>{b.spicy}</div>
+              {b.extra && <div style={{ fontSize: 10, color: Y.orange, fontWeight: 700, marginTop: 2 }}>{b.extra}</div>}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 4 category cards */}
+      <div style={{ marginTop: 20, marginBottom: 12, fontSize: 13, fontWeight: 800, color: Y.text, textTransform: 'uppercase' as const, letterSpacing: 1 }}>
+        Explore Menu
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         {OVERVIEW_CARDS.map(card => (
           <div key={card.id} onClick={() => onSelect(card.id)}
             style={{ background: '#fff', borderRadius: 18, padding: '18px 14px', cursor: 'pointer', border: `1px solid ${card.color}22`, boxShadow: `0 2px 12px ${card.glow}, 0 1px 4px rgba(0,0,0,0.06)`, position: 'relative', overflow: 'hidden' }}>
-            {/* Color accent top bar */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: card.color, borderRadius: '18px 18px 0 0' }} />
             <div style={{ fontSize: 32, marginBottom: 10 }}>{card.icon}</div>
             <div style={{ fontSize: 15, fontWeight: 800, color: Y.text, lineHeight: 1.3 }}>{card.title}</div>
@@ -381,17 +392,16 @@ function MenuOverview({ onSelect }: { onSelect: (v: MenuView) => void }) {
         ))}
       </div>
 
-      {/* Quick broth preview */}
-      <div style={{ marginTop: 18, fontSize: 12, fontWeight: 800, color: Y.sub, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Broth Preview</div>
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-        {BROTHS.map((b, i) => (
-          <div key={i} onClick={() => onSelect('broths')} style={{ flexShrink: 0, width: 110, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <img src={b.img} alt="" style={{ width: '100%', height: 70, objectFit: 'cover' }} />
-            <div style={{ background: '#fff', padding: '6px 8px' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: Y.text, lineHeight: 1.3, whiteSpace: 'pre-line' }}>{b.name}</div>
-            </div>
-          </div>
-        ))}
+      {/* Price banner LAST */}
+      <div style={{ marginTop: 20, background: `linear-gradient(135deg, ${Y.orangeDark}, ${Y.orange})`, borderRadius: 18, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: `0 4px 20px ${Y.orange}44` }}>
+        <div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Ingredients by weight</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>称重计价 · 自助选菜</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1 }}>$13.99</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>per pound / 磅</div>
+        </div>
       </div>
     </div>
   );
@@ -411,15 +421,32 @@ function MainMenu() {
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: Y.cream, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
       {/* Header */}
-      <div style={{ background: Y.orange, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, boxShadow: '0 2px 10px rgba(217,95,26,0.3)' }}>
-        {view !== 'overview' && (
-          <button onClick={() => setView('overview')} style={{ background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: '50%', width: 34, height: 34, color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
-        )}
-        <img src="/ygf-logo.png" alt="YGF" style={{ height: 36, flexShrink: 0 }} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>{titles[view].t}</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{titles[view].cn}</div>
+      <div style={{ background: Y.orange, padding: '12px 16px 10px', flexShrink: 0, boxShadow: '0 2px 10px rgba(217,95,26,0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/ygf-logo.png" alt="YGF" style={{ height: 36, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>{titles[view].t}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)' }}>{titles[view].cn}</div>
+          </div>
+          {view !== 'overview' && (
+            <button onClick={() => setView('overview')}
+              style={{ background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: 10, padding: '6px 14px', color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              ← Menu
+            </button>
+          )}
         </div>
+        {/* Slogan - only on overview */}
+        {view === 'overview' && (
+          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 13 }}>🔥</span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.95)', lineHeight: 1.4 }}>
+                Real Bones. Real Heat. Real Flavor.
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>精心熬制 · 真材实料 · 每日鲜制</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Content */}
