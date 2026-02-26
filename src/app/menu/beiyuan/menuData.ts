@@ -92,7 +92,7 @@ export const icedMilkTea: MenuCategory = {
     { id: 'C-B-14', nameEn: 'Iced House Coffee', nameCn: '冰泡沫咖啡', price: 6.49 },
     // 北苑新中式奶茶系列 (Large Only)
     { id: 'C-B-15a', nameEn: 'Longan Jujube Milk Tea', nameCn: '桂圆红枣奶茶', price: 6.98, largeOnly: true, note: '北苑新中式' },
-    { id: 'C-B-15b', nameEn: 'Ginger Jujube Milk Tea', nameCn: '生姜红枣奶茶', price: 6.98, largeOnly: true, note: '北苑新中式' },
+    { id: 'C-B-15b', nameEn: 'Black Sugar Ginger Jujube Milk Tea', nameCn: '黑糖姜枣奶茶', price: 6.98, largeOnly: true, note: '北苑新中式' },
     { id: 'C-B-15c', nameEn: 'Star Anise Milk Tea', nameCn: '八角奶茶', price: 6.98, largeOnly: true, note: '北苑新中式' },
     { id: 'C-B-15d', nameEn: 'Cinnamon Milk Tea', nameCn: '肉桂奶茶', price: 6.98, largeOnly: true, note: '北苑新中式' },
     // 北苑香型乌龙奶茶系列 (Large Only)
@@ -308,7 +308,7 @@ export const hotMilkTea: MenuCategory = {
     { id: 'H-B-12', nameEn: 'Wintermelon Milk Tea', nameCn: '冬瓜奶茶', price: 6.49, priceL: 7.49 },
     { id: 'H-B-13', nameEn: 'Roasted Oolong Milk Tea', nameCn: '岩炭乌龙奶茶', price: 6.98, priceL: 7.98 },
     { id: 'H-B-14', nameEn: 'Longan Jujube Milk Tea', nameCn: '桂圆红枣奶茶', price: 6.98, priceL: 7.98 },
-    { id: 'H-B-15', nameEn: 'Ginger Jujube Milk Tea', nameCn: '生姜红枣奶茶', price: 6.98, priceL: 7.98 },
+    { id: 'H-B-15', nameEn: 'Black Sugar Ginger Jujube Milk Tea', nameCn: '黑糖姜枣奶茶', price: 6.98, priceL: 7.98 },
     { id: 'H-B-16', nameEn: 'Star Anise Milk Tea', nameCn: '八角奶茶', price: 6.98, priceL: 7.98 },
   ],
 };
@@ -400,6 +400,7 @@ export const mealSet: MenuCategory = {
     { id: 'M-A-10', nameEn: "Pu-Erh Flavored Beef Stew Noodle", nameCn: '台式普洱牛肉面', price: 19.95 },
     { id: 'M-A-11', nameEn: 'Meat Balls with Bean Noodle', nameCn: '贡丸冬粉汤', price: 19.95 },
     { id: 'M-A-12', nameEn: 'Beef Brisket in Clear Broth', nameCn: '清汤牛肉面', price: 19.95 },
+    { id: 'M-A-13', nameEn: 'Crispy Pork Chop Meal Set', nameCn: '香酥排骨套餐', price: 15.99, note: '含套餐附赠饮料 · Includes free drink' },
   ],
 };
 

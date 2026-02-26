@@ -8,15 +8,13 @@ import {
 } from './menuData';
 
 const monthlySpecials = {
-  month: 'February 2026',
+  month: 'March 2026',
   specials: [
-    { nameEn: 'Osmanthus Oolong', nameCn: '桂花乌龙', price: 6.98, note: '原价 $7.98' },
-    { nameEn: 'Brown Sugar Sticky Rice Cake', nameCn: '红糖糍粑', price: 7.98, note: '原价 $8.98' },
+    { nameEn: 'Honey Peach Aloe Iced Tea', nameCn: '蜜桃芦荟冰茶', price: 5.50, note: '特价 · Limited time' },
+    { nameEn: 'Black Sugar Ginger Jujube Milk Tea', nameCn: '黑糖姜枣奶茶', price: 6.98, note: '本月推荐' },
+    { nameEn: 'Crispy Pork Chop Meal Set', nameCn: '香酥排骨套餐', price: 15.99, note: '含套餐附赠饮料' },
   ],
-  picks: [
-    { nameEn: 'Longan Jujube Milk Tea', nameCn: '桂圆红枣奶茶', price: 6.98 },
-    { nameEn: 'Spicy Tonkotsu Ramen Set', nameCn: '辣味豚骨拉面套餐', price: 19.95 },
-  ],
+  picks: [],
 };
 
 const C = {
@@ -61,6 +59,7 @@ const TAB_SECTIONS: TabSection[] = [
     color: '#EA580C', colorBg: '#FFF7ED', colorBgActive: '#EA580C', colorText: '#9A3412',
     tabs: [
       { id: 'M-A', nameCn: '精制套餐组合', nameEn: 'Meal Set' },
+      { id: 'FREE-DRINK', nameCn: '套餐附赠饮料', nameEn: 'Free Drink Options' },
     ],
   },
   {
@@ -373,6 +372,31 @@ function CategorySection({ cat }: { cat: MenuCategory }) {
   );
 }
 
+function FreeDrinkSection() {
+  return (
+    <div style={{ padding: '16px 16px 32px' }}>
+      <div style={{ background: '#FFF7ED', borderRadius: 16, padding: '14px 16px', marginBottom: 16, border: '1px solid #FED7AA' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#EA580C' }}>🎁 套餐附赠饮料说明</div>
+        <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.7 }}>
+          所有套餐均含一杯免费饮料。可选热饮或冷饮，甜度冰量均可调。如需升级为大杯，需额外加 $1。
+        </div>
+        <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>
+          All meal sets include one complimentary drink. Hot or cold available. Upgrade to large +$1.
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {freeDrinkOptions.map((d, i) => (
+          <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '14px 14px', border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{d.nameEn}</div>
+            <div style={{ fontSize: 12, color: C.sub, marginTop: 3 }}>{d.nameCn}</div>
+            <div style={{ marginTop: 8, fontSize: 11, background: '#FFF7ED', color: '#EA580C', padding: '3px 8px', borderRadius: 999, display: 'inline-block', fontWeight: 600 }}>免费附赠</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ToppingSection() {
   return (
     <div style={{ padding: '4px 16px 16px' }}>
@@ -448,8 +472,25 @@ export default function BeiYuanPage() {
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [activeTab]);
 
-  const activeCategory = activeTab === 'T' ? null : allCategories.find(c => c.id === activeTab);
+  const activeCategory = (activeTab === 'T' || activeTab === 'FREE-DRINK') ? null : allCategories.find(c => c.id === activeTab);
   const activeSection = TAB_SECTIONS.find(s => s.tabs.some(t => t.id === activeTab));
+  const activeSectionIndex = TAB_SECTIONS.findIndex(s => s.tabs.some(t => t.id === activeTab));
+
+  // Swipe to change section
+  const swipeStartX = useRef<number | null>(null);
+  const handleSwipeStart = (e: React.TouchEvent) => { swipeStartX.current = e.touches[0].clientX; };
+  const handleSwipeEnd = (e: React.TouchEvent) => {
+    if (swipeStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX.current;
+    if (Math.abs(dx) > 60) {
+      if (dx < 0 && activeSectionIndex < TAB_SECTIONS.length - 1) {
+        setActiveTab(TAB_SECTIONS[activeSectionIndex + 1].tabs[0].id);
+      } else if (dx > 0 && activeSectionIndex > 0) {
+        setActiveTab(TAB_SECTIONS[activeSectionIndex - 1].tabs[0].id);
+      }
+    }
+    swipeStartX.current = null;
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
@@ -484,8 +525,8 @@ export default function BeiYuanPage() {
           </button>
         </div>
 
-        {/* Section group pills */}
-        <div style={{ display: 'flex', gap: 6, padding: '0 16px 8px', overflowX: 'auto', scrollbarWidth: 'none' as const }}>
+        {/* Section group pills — swipeable */}
+        <div style={{ display: 'flex', gap: 6, padding: '0 16px 8px', overflowX: 'auto', scrollbarWidth: 'none' as const, WebkitOverflowScrolling: 'touch' as const }}>
           {TAB_SECTIONS.map(section => {
             const isActive = section.tabs.some(t => t.id === activeTab);
             return (
@@ -549,13 +590,22 @@ export default function BeiYuanPage() {
       )}
       {activeTab === 'T' && (
         <div style={{ padding: '16px 16px 0', borderLeft: '4px solid #7C3AED', paddingLeft: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>Drink Toppings</div>
-          <div style={{ fontSize: 12, color: C.sub }}>饮料配料</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Drink Toppings</div>
+          <div style={{ fontSize: 14, color: C.sub, marginTop: 2 }}>饮料配料</div>
+        </div>
+      )}
+      {activeTab === 'FREE-DRINK' && (
+        <div style={{ padding: '16px 16px 0', borderLeft: '4px solid #EA580C', paddingLeft: 20 }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: C.text }}>Free Drink Options</div>
+          <div style={{ fontSize: 14, color: C.sub, marginTop: 2 }}>套餐附赠饮料选项</div>
         </div>
       )}
 
-      {activeCategory && <CategorySection cat={activeCategory} />}
-      {activeTab === 'T' && <ToppingSection />}
+      <div onTouchStart={handleSwipeStart} onTouchEnd={handleSwipeEnd}>
+        {activeCategory && <CategorySection cat={activeCategory} />}
+        {activeTab === 'T' && <ToppingSection />}
+        {activeTab === 'FREE-DRINK' && <FreeDrinkSection />}
+      </div>
 
       <div style={{ textAlign: 'center', padding: '24px 16px 40px' }}>
         <div style={{ fontSize: 11, color: C.faint }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
