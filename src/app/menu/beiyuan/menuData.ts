@@ -435,8 +435,8 @@ export const noodles: MenuCategory = {
   nameCn: '精致主食面点',
   type: 'items',
   items: [
-    { id: 'M-C-01', nameEn: 'Instant Noodle with Egg', nameCn: '台式泡面加蛋', price: 8.98, img: '/beiyuan-M-C-instant-noodle-egg.webp', img: '/beiyuan-M-C-instant-noodle-egg.webp' },
-    { id: 'M-C-02', nameEn: 'Instant Beef Noodle with Ham and Egg', nameCn: '广式公仔泡面', img: '/beiyuan-M-C-instant-noodle-ham.webp', img: '/beiyuan-M-C-instant-noodle-ham.webp', price: 8.98 },
+    { id: 'M-C-01', nameEn: 'Instant Noodle with Egg', nameCn: '台式泡面加蛋', price: 8.98, img: '/beiyuan-M-C-instant-noodle-egg.webp' },
+    { id: 'M-C-02', nameEn: 'Instant Beef Noodle with Ham and Egg', nameCn: '广式公仔泡面', price: 8.98, img: '/beiyuan-M-C-instant-noodle-ham.webp' },
     { id: 'M-C-03', nameEn: 'Stir Fried Instant Noodle with Sausage', nameCn: '金门炒泡面', img: '/beiyuan-M-C-stir-fried-noodle.webp', price: 17.98 },
     { id: 'M-C-04', nameEn: 'Sausage Fried Rice', nameCn: '台式香肠炒饭', price: 17.98 },
     { id: 'M-C-05', nameEn: 'House Noodle with Deli Plate', nameCn: '阳春肉燥汤面加拼盘', price: 16.98 },
