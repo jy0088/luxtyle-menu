@@ -214,7 +214,7 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
         onClick={() => setOpen(true)}
       >
         {/* Left image block */}
-        <div style={{ width: 100, minWidth: 100, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30, overflow: 'hidden' }}>
+        <div style={{ width: 130, minWidth: 130, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30, overflow: 'hidden' }}>
           {item.img
             ? <img src={item.img} alt={item.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : <span style={{ opacity: 0.35 }}>{emoji}</span>
@@ -223,7 +223,7 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
           {item.largeOnly && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 8, fontWeight: 700, background: '#D97706', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>L Only</span>}
         </div>
         {/* Right info block */}
-        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
           <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
           {item.note && <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>{item.note}</div>}
