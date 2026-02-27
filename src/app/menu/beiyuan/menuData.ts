@@ -443,7 +443,7 @@ export const noodles: MenuCategory = {
     { id: 'M-C-06', nameEn: 'Rice Noodle with Deli Plate', nameCn: '阳春肉燥汤面米粉加拼盘', price: 16.98 },
     { id: 'M-C-07', nameEn: 'Ja-Jang Noodle', nameCn: '廟口炸酱面', price: 16.98, img: '/beiyuan-M-C-jajang.webp', note: '微甜' },
     { id: 'M-C-08', nameEn: "Pu-Erh Flavored Beef Stew Noodle", nameCn: '台式普洱牛肉面', price: 16.98 },
-    { id: 'M-C-09', nameEn: 'Beef Soup with Dumplings', nameCn: '牛肉汤水饺', price: 18.9, img: '/beiyuan-M-C-beef-dumpling.webp'8 },
+    { id: 'M-C-09', nameEn: 'Beef Soup with Dumplings', nameCn: '牛肉汤水饺', price: 18.98, img: '/beiyuan-M-C-beef-dumpling.webp' },
     { id: 'M-C-10', nameEn: 'Wonton Noodle Soup', nameCn: '馄饨面', price: 16.98, img: '/beiyuan-M-C-wonton-noodle.webp' },
     { id: 'M-C-11', nameEn: 'Pork Dumplings', nameCn: '猪肉水饺', price: 16.98 },
   ],
