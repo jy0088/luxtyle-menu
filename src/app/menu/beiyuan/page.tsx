@@ -214,8 +214,11 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
         onClick={() => setOpen(true)}
       >
         {/* Left image block */}
-        <div style={{ width: 100, minWidth: 100, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30 }}>
-          <span style={{ opacity: 0.35 }}>{emoji}</span>
+        <div style={{ width: 100, minWidth: 100, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30, overflow: 'hidden' }}>
+          {item.img
+            ? <img src={item.img} alt={item.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ opacity: 0.35 }}>{emoji}</span>
+          }
           {item.seasonal && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 8, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>Seasonal</span>}
           {item.largeOnly && <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 8, fontWeight: 700, background: '#D97706', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>L Only</span>}
         </div>
@@ -254,8 +257,11 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
               <div style={{ textAlign: 'center', fontSize: 10, color: '#ccc', marginTop: 4 }}>下滑关闭</div>
             </div>
             {/* Hero image — full width, tall */}
-            <div style={{ width: '100%', height: 240, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12 }}>
-              <span style={{ opacity: 0.25 }}>{emoji}</span>
+            <div style={{ width: '100%', height: 240, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
+              {item.img
+                ? <img src={item.img} alt={item.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span style={{ opacity: 0.25 }}>{emoji}</span>
+              }
               {item.seasonal && <span style={{ position: 'absolute', top: 12, right: 12, fontSize: 11, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>🌿 Seasonal</span>}
               {item.largeOnly && <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#D97706', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>Large Only</span>}
               {item.caffeineF && <span style={{ position: 'absolute', bottom: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#DBEAFE', color: '#1D4ED8', padding: '4px 10px', borderRadius: 999 }}>☆ Caffeine Free</span>}

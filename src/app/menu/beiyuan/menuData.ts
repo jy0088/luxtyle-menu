@@ -1,4 +1,4 @@
-﻿// 北苑南家 Bei Yuan Tea & Boba - Complete Menu Data
+// 北苑南家 Bei Yuan Tea & Boba - Complete Menu Data
 // Updated: Feb 2026
 
 export type TeaBase = 'B' | 'G' | 'O'; // Black / Green / Oolong
@@ -8,12 +8,13 @@ export interface MenuItem {
   nameEn: string;
   nameCn: string;
   price: number;
-  priceL?: number; // Large price (Small + $1 if applicable)
-  teaBases?: TeaBase[]; // available tea bases
-  note?: string; // e.g. "Large Only", "Seasonal", "Caffeine Free"
+  priceL?: number;
+  teaBases?: TeaBase[];
+  note?: string;
   seasonal?: boolean;
   largeOnly?: boolean;
   caffeineF?: boolean;
+  img?: string; // photo path e.g. /beiyuan-M-A-01.webp
 }
 
 export interface MenuSubCategory {
@@ -388,7 +389,7 @@ export const mealSet: MenuCategory = {
   nameCn: '精制套餐组合',
   type: 'items',
   items: [
-    { id: 'M-A-01', nameEn: 'Pork Stew Rice Meal Set', nameCn: '台式卤肉饭套餐', price: 18.95 },
+    { id: 'M-A-01', nameEn: 'Pork Stew Rice Meal Set', nameCn: '台式卤肉饭套餐', price: 18.95, img: '/beiyuan-M-A-01.webp' },
     { id: 'M-A-02', nameEn: 'Pickle Ground Pork Meal Set', nameCn: '台式瓜子肉燥套餐', price: 18.95 },
     { id: 'M-A-03', nameEn: 'Teriyaki Chicken Meal Set', nameCn: '照烧鸡排套餐', price: 18.95 },
     { id: 'M-A-04', nameEn: 'Pork w/ Preserved Dried Vegetables Meal Set', nameCn: '台式梅干扣肉套餐', price: 18.95 },
@@ -539,4 +540,3 @@ export const allCategories = [
   snacks,
   dessert,
 ];
-
