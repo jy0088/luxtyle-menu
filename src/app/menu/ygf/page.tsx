@@ -1,476 +1,549 @@
-'use client';
+"use client";
+import { useState } from "react";
+import Link from "next/link";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+// ─── Types ────────────────────────────────────────────────
+type Allergen = "Fish" | "Shellfish" | "Soy" | "Wheat" | "Gluten" | "Egg" | "Milk" | "Sesame" | "Peanuts";
 
-const Y = {
-  orange: '#D95F1A', orangeLight: '#F07030', orangeBg: '#FFF4ED',
-  orangeDark: '#B34A10', cream: '#FAF5EE', text: '#1A1A1A',
-  sub: '#666', faint: '#aaa', white: '#FFFFFF',
-  overlay: 'rgba(0,0,0,0.55)', gold: '#C9A060',
+interface MenuItem {
+  id: string;
+  zh: string;
+  en: string;
+  img?: string;
+  allergens?: Allergen[];
+  note?: string;
+  new?: boolean;
+}
+
+interface MenuCategory {
+  id: string;
+  emoji: string;
+  zh: string;
+  en: string;
+  items: MenuItem[];
+}
+
+interface Broth {
+  id: string;
+  zh: string;
+  en: string;
+  desc: string;
+  spicy: string;
+  color: string; // gradient or image
+  img?: string;
+  badge?: string;
+  combos: { zh: string; en: string; items: string }[];
+}
+
+interface SauceItem {
+  zh: string;
+  en: string;
+  img?: string;
+  allergens?: Allergen[];
+}
+
+// ─── Broths ───────────────────────────────────────────────
+const BROTHS: Broth[] = [
+  {
+    id: "spicy",
+    zh: "经典草本骨汤",
+    en: "Classic Herbal Beef Bone Broth",
+    desc: "石磨麻辣，香气层次丰富",
+    spicy: "微辣 / 中辣 / 大辣",
+    color: "linear-gradient(135deg,#c0392b,#e67e22)",
+    img: "/ygf-broth-spicy.webp",
+    badge: "经典原创",
+    combos: [
+      { zh: "川味牛杂碗", en: "Sichuan Beef Offal Bowl", items: "牛五花 · 牛百叶 · 黄喉 · 粉丝" },
+      { zh: "麻辣牛肉碗", en: "Spicy Beef Lover Bowl", items: "牛五花 · 牛板翼 · 爆浆牛肉丸 · 米线" },
+      { zh: "麻辣三拼碗", en: "Spicy Surf & Turf Bowl", items: "牛五花 · 手工虾滑 · 巴沙鱼片 · 粉丝" },
+    ],
+  },
+  {
+    id: "tomato",
+    zh: "酸甜番茄汤",
+    en: "Sweet & Sour Tomato Broth",
+    desc: "新鲜番茄熬制，酸甜开胃",
+    spicy: "不辣",
+    color: "linear-gradient(135deg,#c0392b,#e74c3c)",
+    img: "/ygf-broth-tomato.webp",
+    badge: "招牌推荐",
+    combos: [
+      { zh: "番茄牛肉碗", en: "Tomato Beef Bowl", items: "牛五花 · 牛板翼 · 米线" },
+      { zh: "番茄海鲜碗", en: "Tomato Seafood Bowl", items: "去壳虾 · 巴沙鱼片 · 青口 · 米线" },
+      { zh: "番茄清爽碗", en: "Fresh Tomato Veg Bowl", items: "手工虾滑 · 午餐肉 · 粉丝" },
+    ],
+  },
+  {
+    id: "tomyum",
+    zh: "酸辣冬阴功汤",
+    en: "Tom Yum Broth",
+    desc: "泰式香料熬制，酸辣开胃",
+    spicy: "酸辣",
+    color: "linear-gradient(135deg,#e67e22,#f39c12)",
+    img: "/ygf-broth-tomyum.webp",
+    badge: "新品上市",
+    combos: [
+      { zh: "泰式海鲜碗", en: "Thai Seafood Bowl", items: "去壳虾 · 青口 · 巴沙鱼片 · 米线" },
+      { zh: "冬阴功三拼", en: "Tom Yum Trio Bowl", items: "牛五花 · 手工虾滑 · 巴沙鱼片 · 粉丝" },
+      { zh: "冬阴功羊肉碗", en: "Tom Yum Lamb Bowl", items: "羊肉 · 去壳虾 · 午餐肉 · 米线" },
+    ],
+  },
+  {
+    id: "drymix",
+    zh: "石磨醇香麻辣拌",
+    en: "Grind Pleasant Spicy Dry Mix",
+    desc: "无汤干拌，酱汁浓郁香辣",
+    spicy: "微辣（无汤）",
+    color: "linear-gradient(135deg,#d35400,#e67e22)",
+    img: "/ygf-broth-drymix.webp",
+    badge: "酱汁浓郁",
+    combos: [
+      { zh: "麻辣牛肉拌", en: "Spicy Beef Mix", items: "牛五花 · 牛板翼 · 爆浆牛肉丸 · 阳春面" },
+      { zh: "麻辣三拼拌", en: "Spicy Trio Mix", items: "羊肉 · 手工虾滑 · 午餐肉 · 粉丝" },
+      { zh: "学生拌碗", en: "Campus Spicy Bowl", items: "牛五花 · 午餐肉 · 粉丝" },
+    ],
+  },
+  {
+    id: "clear",
+    zh: "滋补清汤",
+    en: "Nourishing Clear Broth",
+    desc: "牛骨慢熬，清甜鲜美",
+    spicy: "不辣",
+    color: "linear-gradient(135deg,#f5c842,#f9e07a)",
+    img: undefined, // temp: use gradient
+    badge: "养生之选",
+    combos: [
+      { zh: "清汤海鲜碗", en: "Light Seafood Bowl", items: "去壳虾 · 青口 · 巴沙鱼片 · 米线" },
+      { zh: "清汤牛肉碗", en: "Classic Beef Soup Bowl", items: "牛板翼 · 牛五花 · 爆浆牛肉丸 · 阳春面" },
+      { zh: "清汤健康碗", en: "Healthy Veg Protein Bowl", items: "巴沙鱼片 · 手工虾滑 · 粉丝" },
+    ],
+  },
+];
+
+// ─── Menu Data ────────────────────────────────────────────
+const MENU: MenuCategory[] = [
+  {
+    id: "meat", emoji: "🥩", zh: "精选肉类", en: "Meats & Offal",
+    items: [
+      { id: "beef-brisket",        zh: "牛五花",    en: "Fatty Beef Slices",          img: "/ygf-meat-beef-brisket.webp" },
+      { id: "beef-flat-iron",      zh: "牛板翼",    en: "Beef Flat Iron",             img: "/ygf-meat-beef-flat-iron.webp" },
+      { id: "lamb",                zh: "羊肉",      en: "Lamb Slices",                img: "/ygf-meat-lamb-slices.webp" },
+      { id: "pork-shoulder",       zh: "猪梅花",    en: "Pork Shoulder",              img: "/ygf-meat-pork-shoulder.webp" },
+      { id: "shrimp-paste",        zh: "手工虾滑",  en: "Handmade Shrimp Paste",      img: "/ygf-seafood-shrimp-paste.webp", allergens: ["Shellfish"] },
+      { id: "beef-aorta",          zh: "黄喉",      en: "Beef Aorta",                 img: "/ygf-meat-beef-aorta.webp" },
+      { id: "premium-omasum",      zh: "牛百叶",    en: "Premium Beef Omasum",        img: "/ygf-meat-premium-beef-omasum.webp" },
+      { id: "beef-omasum",         zh: "黑毛肚",    en: "Black Beef Tripe",           img: "/ygf-meat-beef-omasum.webp" },
+      { id: "frog-legs",           zh: "牛蛙腿",    en: "Frog Legs",                  img: "/ygf-meat-frog-legs.webp", allergens: ["Fish"] },
+      { id: "basa-fillet",         zh: "巴沙鱼片",  en: "Basa Fish Fillet",           img: "/ygf-seafood-basa-fillet.webp", allergens: ["Fish"] },
+      { id: "pork-sausage",        zh: "白油肠",    en: "Pork Sausage",               img: "/ygf-meat-pork-sausage.webp", allergens: ["Soy","Wheat"] },
+      { id: "mini-sausages",       zh: "亲亲肠",    en: "Mini Sausages",              img: "/ygf-meat-mini-sausages.webp", allergens: ["Soy"] },
+      { id: "spam",                zh: "午餐肉",    en: "Spam / Luncheon Meat",       img: "/ygf-meat-spam.webp", allergens: ["Soy","Wheat"] },
+      { id: "beef-tendon",         zh: "卤牛筋",    en: "Braised Beef Tendon",        img: "/ygf-meat-braised-beef-tendon.webp", allergens: ["Soy"] },
+      { id: "pork-intestine",      zh: "卤肥肠",    en: "Braised Pork Intestine",     img: "/ygf-meat-braised-pork-intestine.webp", allergens: ["Soy"] },
+      { id: "honeycomb-tripe",     zh: "卤蜂巢肚",  en: "Braised Honeycomb Tripe",    img: "/ygf-meat-braised-honeycomb-tripe.webp", allergens: ["Soy"] },
+    ],
+  },
+  {
+    id: "seafood", emoji: "🦐", zh: "海鲜丸滑", en: "Seafood & Fish Balls",
+    items: [
+      { id: "fish-roe-ball",       zh: "鱼籽包心丸",  en: "Fish Ball w/ Fish Roe",       img: "/ygf-balls-fish-roe-ball.webp",           allergens: ["Fish","Wheat","Soy"] },
+      { id: "cheese-fish-ball",    zh: "芝士包心丸",  en: "Cheese-Filled Fish Ball",     img: "/ygf-balls-cheese-filled-fish-ball.webp", allergens: ["Fish","Milk","Wheat"] },
+      { id: "fish-roe-lucky-bag",  zh: "鱼籽福袋",   en: "Fish Roe Lucky Bag",          img: "/ygf-balls-fish-roe-lucky-bag.webp",      allergens: ["Fish","Wheat","Soy"], new: true },
+      { id: "soup-fish-ball",      zh: "灌汤鱼丸",   en: "Soup-Filled Fish Ball",       allergens: ["Fish","Wheat"] },
+      { id: "baby-scallops",       zh: "鲜嫩扇贝",   en: "Baby Scallops",               img: "/ygf-seafood-baby-scallops.webp",         allergens: ["Shellfish"] },
+      { id: "shrimp-shell",        zh: "带壳去头大虾", en: "Headless Shell-On Shrimp",  img: "/ygf-seafood-shrimp-shell.webp",          allergens: ["Shellfish"] },
+      { id: "peeled-shrimp",       zh: "去壳虾",     en: "Peeled Shrimp",              img: "/ygf-seafood-peeled-shrimp.webp",         allergens: ["Shellfish"] },
+      { id: "squid-tentacles",     zh: "鱿鱼须",     en: "Squid Tentacles",            img: "/ygf-seafood-squid-tentacles.webp",       allergens: ["Shellfish"] },
+      { id: "squid-balls",         zh: "鱿鱼丸",     en: "Squid Balls",                img: "/ygf-balls-squid-balls.webp",             allergens: ["Shellfish","Fish","Wheat"] },
+      { id: "beef-ball-burst",     zh: "爆浆牛肉丸", en: "Juicy Beef Balls",           img: "/ygf-seafood-beef-ball-burst.webp",       allergens: ["Wheat","Soy"] },
+      { id: "mussels",             zh: "青口贻贝",   en: "Mussels",                    img: "/ygf-seafood-mussels.webp",               allergens: ["Shellfish"] },
+      { id: "lobster-ball",        zh: "仿龙虾球",   en: "Lobster-Style Ball",         img: "/ygf-seafood-lobster-ball.webp",          allergens: ["Fish","Wheat","Soy"] },
+      { id: "pork-meatballs",      zh: "猪肉丸",     en: "Pork Meatballs",             img: "/ygf-balls-pork-meatballs.webp",          allergens: ["Wheat","Soy"] },
+      { id: "crab-sticks",         zh: "蟹棒",       en: "Crab Sticks",                img: "/ygf-seafood-crab-sticks.webp",           allergens: ["Fish","Wheat","Soy"] },
+      { id: "chikuwa",             zh: "竹轮鱼饼",   en: "Chikuwa Fish Cake",          img: "/ygf-seafood-chikuwa.webp",               allergens: ["Fish","Wheat","Soy"] },
+      { id: "cheese-fish-tofu",    zh: "芝士鱼豆腐", en: "Cheese Fish Tofu",           img: "/ygf-seafood-cheese-fish-tofu.webp",      allergens: ["Fish","Milk","Soy","Wheat"] },
+    ],
+  },
+  {
+    id: "tofu", emoji: "🟨", zh: "豆制品", en: "Tofu & Soy",
+    items: [
+      { id: "tofu-puffs",       zh: "豆腐泡",   en: "Tofu Puffs",            img: "/ygf-tofu-tofu-puffs.webp",      allergens: ["Soy"] },
+      { id: "chiba-tofu",       zh: "千叶豆腐", en: "Thousand Layer Tofu",   img: "/ygf-tofu-chiba-tofu.webp",      allergens: ["Soy","Wheat"] },
+      { id: "frozen-tofu",      zh: "冻豆腐",   en: "Frozen Tofu",           img: "/ygf-tofu-frozen-tofu.webp",     allergens: ["Soy"] },
+      { id: "bean-curd-sticks", zh: "腐竹",     en: "Bean Curd Sticks",      img: "/ygf-tofu-bean-curd-sticks.webp",allergens: ["Soy"] },
+      { id: "tofu-skin",        zh: "油豆皮",   en: "Fried Tofu Skin",       img: "/ygf-tofu-tofu-skin.webp",       allergens: ["Soy"] },
+    ],
+  },
+  {
+    id: "veg", emoji: "🥬", zh: "时令蔬菜", en: "Vegetables",
+    items: [
+      { id: "napa-cabbage",  zh: "大白菜", en: "Napa Cabbage",           img: "/ygf-veg-napa-cabbage.webp" },
+      { id: "spinach",       zh: "菠菜",   en: "Spinach",                img: "/ygf-veg-spinach.webp" },
+      { id: "crown-daisy",   zh: "茼蒿",   en: "Crown Daisy",            img: "/ygf-veg-crown-daisy.webp" },
+      { id: "a-choy",        zh: "A菜",    en: "A-Choy",                 img: "/ygf-veg-lettuce.webp" },
+      { id: "lettuce",       zh: "生菜",   en: "Lettuce",                img: "/ygf-veg-lettuce.webp" },
+      { id: "celtuce",       zh: "莴苣片", en: "Celtuce Slices",         img: "/ygf-veg-romaine-lettuce.webp" },
+      { id: "zucchini",      zh: "西葫芦", en: "Zucchini",               img: "/ygf-veg-zucchini.webp" },
+      { id: "lotus-root",    zh: "莲藕片", en: "Lotus Root Slices",      img: "/ygf-veg-lotus-root.webp" },
+      { id: "taro",          zh: "芋头",   en: "Taro",                   img: "/ygf-veg-taro.webp" },
+      { id: "potato",        zh: "土豆片", en: "Potato Slices",          img: "/ygf-veg-potato-slices.webp" },
+      { id: "baby-corn",     zh: "玉米笋", en: "Baby Corn",              img: "/ygf-veg-baby-corn.webp" },
+      { id: "bamboo",        zh: "竹笋",   en: "Bamboo Shoots",          img: "/ygf-veg-bamboo-shoots.webp" },
+      { id: "kelp-knots",    zh: "海带结", en: "Kelp Knots",             img: "/ygf-veg-kelp-knots.webp" },
+      { id: "konjac-knots",  zh: "魔芋结", en: "Konjac Knots",           img: "/ygf-veg-konjac-knots.webp" },
+      { id: "quail-eggs",    zh: "鹌鹑蛋", en: "Quail Eggs",             img: "/ygf-meat-quail-eggs.webp", allergens: ["Egg"] },
+      { id: "gongcai",       zh: "贡菜",   en: "Gongcai",                img: "/ygf-veg-jelly-vegetable.webp" },
+      { id: "nagaimo",       zh: "日本山药",en: "Nagaimo",               img: "/ygf-veg-nagaimo.webp" },
+    ],
+  },
+  {
+    id: "mushroom", emoji: "🍄", zh: "菌菇类", en: "Mushrooms",
+    items: [
+      { id: "king-oyster", zh: "杏鲍菇", en: "King Oyster Mushrooms", img: "/ygf-mushroom-king-oyster.webp" },
+      { id: "beech",       zh: "海鲜菇", en: "Beech Mushrooms",       img: "/ygf-mushroom-beech.webp" },
+      { id: "enoki",       zh: "金针菇", en: "Enoki Mushrooms",       img: "/ygf-mushroom-enoki.webp" },
+    ],
+  },
+  {
+    id: "staple", emoji: "🍜", zh: "主食淀粉", en: "Noodles & Staples",
+    items: [
+      { id: "fried-dough",   zh: "小油条",   en: "Mini Fried Dough Sticks",  img: "/ygf-staple-fried-dough-sticks.webp", allergens: ["Wheat","Gluten"] },
+      { id: "ramen",         zh: "日式拉面", en: "Japanese Ramen Noodles",    img: "/ygf-staple-ramen.webp",              allergens: ["Wheat","Gluten"] },
+      { id: "hand-shaved",   zh: "刀削面",   en: "Hand-Shaved Noodles",       img: "/ygf-staple-hand-shaved-noodles.webp",allergens: ["Wheat","Gluten"] },
+      { id: "plain-noodles", zh: "阳春面",   en: "Plain Noodles",             img: "/ygf-staple-plain-noodles.webp",      allergens: ["Wheat","Gluten"] },
+      { id: "wide-glass",    zh: "火锅宽粉", en: "Wide Glass Noodles",        img: "/ygf-staple-wide-glass-noodles.webp" },
+      { id: "glass-noodles", zh: "冬粉",     en: "Glass Noodles",             img: "/ygf-staple-glass-noodles.webp" },
+      { id: "rice-vermicelli",zh: "米粉",    en: "Rice Vermicelli",           img: "/ygf-staple-rice-vermicelli.webp" },
+      { id: "instant",       zh: "方便面",   en: "Instant Noodles",           img: "/ygf-staple-instant-noodles.webp",    allergens: ["Wheat","Gluten","Soy"] },
+      { id: "rice-cakes",    zh: "年糕",     en: "Rice Cakes",                img: "/ygf-staple-rice-cakes.webp" },
+      { id: "steamed-rice",  zh: "白米饭",   en: "Steamed Rice" },
+    ],
+  },
+];
+
+// ─── Sauces ───────────────────────────────────────────────
+const SAUCE_CATEGORIES = [
+  {
+    zh: "基础酱料", en: "Base Sauces",
+    items: [
+      { zh: "芝麻酱", en: "Sesame Paste",         allergens: ["Sesame"] as Allergen[] },
+      { zh: "腐乳酱", en: "Fermented Tofu Sauce", img: "/ygf-sauce-fermented-tofu.webp", allergens: ["Soy"] as Allergen[] },
+      { zh: "沙茶酱", en: "Shacha Sauce",          allergens: ["Fish","Shellfish","Soy"] as Allergen[] },
+      { zh: "蚝油",   en: "Oyster Sauce",          img: "/ygf-sauce-oyster.webp",         allergens: ["Shellfish"] as Allergen[] },
+      { zh: "酱油",   en: "Soy Sauce",             allergens: ["Soy","Wheat"] as Allergen[] },
+      { zh: "双椒油", en: "Double Chili Oil",      img: "/ygf-sauce-double-chili.webp" },
+      { zh: "辣椒油", en: "Chili Oil",             img: "/ygf-sauce-chili-oil.webp",      allergens: ["Sesame"] as Allergen[] },
+      { zh: "椒麻酱", en: "Sichuan Pepper Sauce",  img: "/ygf-sauce-sichuan-pepper.webp", allergens: ["Sesame","Soy"] as Allergen[] },
+      { zh: "麻辣拌酱",en:"Spicy Dry Mix Sauce",  img: "/ygf-sauce-spicy-mix.webp",      allergens: ["Soy","Sesame","Gluten"] as Allergen[] },
+      { zh: "韭菜花酱",en:"Chive Flower Paste" },
+    ],
+  },
+  {
+    zh: "酸香调味", en: "Tangy & Aromatic",
+    items: [
+      { zh: "柚子醋", en: "Yuzu Ponzu",         allergens: ["Soy","Wheat"] as Allergen[] },
+      { zh: "陈醋",   en: "Aged Black Vinegar" },
+      { zh: "香油",   en: "Sesame Oil",         allergens: ["Sesame"] as Allergen[] },
+    ],
+  },
+  {
+    zh: "新鲜香料", en: "Fresh Toppings",
+    items: [
+      { zh: "蒜泥",   en: "Minced Garlic",    img: "/ygf-sauce-garlic.webp" },
+      { zh: "小米辣", en: "Bird's Eye Chili", img: "/ygf-sauce-chili.webp" },
+      { zh: "香菜",   en: "Cilantro",         img: "/ygf-sauce-cilantro.webp" },
+      { zh: "葱花",   en: "Scallions",        img: "/ygf-sauce-scallion.webp" },
+    ],
+  },
+  {
+    zh: "干料点缀", en: "Dry Garnishes",
+    items: [
+      { zh: "花生碎", en: "Crushed Peanuts",  img: "/ygf-sauce-peanut.webp",  allergens: ["Peanuts"] as Allergen[] },
+      { zh: "熟芝麻", en: "Toasted Sesame",   img: "/ygf-sauce-sesame.webp",  allergens: ["Sesame"] as Allergen[] },
+    ],
+  },
+];
+
+// ─── Allergen badge colors ─────────────────────────────────
+const ALLERGEN_COLOR: Record<Allergen, string> = {
+  Fish: "#2196f3", Shellfish: "#9c27b0", Soy: "#ff9800", Wheat: "#795548",
+  Gluten: "#607d8b", Egg: "#ffc107", Milk: "#4caf50", Sesame: "#e91e63", Peanuts: "#f44336",
 };
 
-// ── Splash ─────────────────────────────────────────────
-function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<'show' | 'exit'>('show');
-  useEffect(() => {
-    const t1 = setTimeout(() => setPhase('exit'), 2000);
-    const t2 = setTimeout(onDone, 2700);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [onDone]);
+// ─── Component ────────────────────────────────────────────
+export default function YGFMenuPage() {
+  const [selectedBroth, setSelectedBroth] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState("meat");
+  const [activeSauceTab, setActiveSauceTab] = useState(0);
+
+  const selectedBrothData = BROTHS.find(b => b.id === selectedBroth);
+
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 100,
-      transition: 'transform 0.65s cubic-bezier(0.4,0,0.2,1), opacity 0.5s',
-      transform: phase === 'exit' ? 'translateY(-100%)' : 'translateY(0)',
-      opacity: phase === 'exit' ? 0 : 1,
-    }}>
-      <img src="/ygf-cover.jpg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      {/* Dark overlay for text readability */}
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)' }} />
-      {/* Brand text only - no logo */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
-        <div style={{ fontSize: 52, fontWeight: 900, color: '#fff', letterSpacing: 3, textShadow: '0 2px 20px rgba(0,0,0,0.6)' }}>
-          杨国福
-        </div>
-        <div style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.85)', letterSpacing: 6, marginTop: 8, textTransform: 'uppercase', textShadow: '0 1px 10px rgba(0,0,0,0.5)' }}>
-          Malatang
-        </div>
-        <div style={{ marginTop: 24, width: 40, height: 2, background: 'rgba(255,255,255,0.5)', borderRadius: 999 }} />
-        <div style={{ marginTop: 16, fontSize: 12, color: 'rgba(255,255,255,0.6)', letterSpacing: 2 }}>
-          San Diego #1
-        </div>
-      </div>
-    </div>
-  );
-}
+    <div style={{ fontFamily: "'Noto Sans SC', 'PingFang SC', sans-serif", background: "#0d0d0d", color: "#f0ede6", minHeight: "100vh" }}>
 
-// ── HOW TO EAT: 3-step horizontal swiper ──────────────
-const STEPS = [
-  {
-    num: '01', title: 'Build Your Bowl', cn: '自选食材',
-    desc: 'Grab a bowl and tongs. Fill it with fresh vegetables, noodles, meats, seafood — anything you love. It all gets cooked together.',
-    icon: '🥣',
-    items: ['🥬 Vegetables', '🥩 Meats', '🦐 Seafood', '🍜 Noodles', '🟡 Fish Balls'],
-  },
-  {
-    num: '02', title: 'Weigh & Choose Broth', cn: '称重选汤底',
-    desc: "We'll weigh your bowl at the counter and cook everything in your chosen broth. Pick from 4 styles.",
-    icon: '⚖️',
-    items: ['🦴 Beef Bone Broth', '🍅 Tomato Broth', '🍋 Tom Yum Broth', '🌶 Dry Spicy Mix'],
-    price: '$13.99 / lb',
-  },
-  {
-    num: '03', title: 'Customize Your Flavor', cn: '自助调味',
-    desc: 'After cooking, head to our self-service sauce bar. Mix your own perfect flavor combination.',
-    icon: '🧂',
-    items: ['Garlic · Green Onion', 'Sesame Sauce · Soy', 'Oyster Sauce · Vinegar', 'Peppercorn Oil · Chili'],
-  },
-];
+      {/* ── Hero / Header ─────────────────────────────── */}
+      <div style={{ background: "linear-gradient(180deg,#1a0a00 0%,#0d0d0d 100%)", padding: "28px 20px 0", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ fontSize: 11, letterSpacing: 4, color: "#c0392b", textTransform: "uppercase", marginBottom: 8 }}>杨国福麻辣烫 · San Diego</div>
+        <h1 style={{ fontSize: 32, fontWeight: 900, margin: 0, letterSpacing: -1, background: "linear-gradient(135deg,#f5c842,#e67e22)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          YGF Malatang
+        </h1>
+        <p style={{ fontSize: 13, color: "#999", margin: "6px 0 0", letterSpacing: 1 }}>Pick Your Broth · Build Your Bowl</p>
 
-function HowToEat({ onDone }: { onDone: () => void }) {
-  const [step, setStep] = useState(0);
-  const startX = useRef<number | null>(null);
-
-  const next = () => { if (step < 2) setStep(s => s + 1); else onDone(); };
-  const prev = () => { if (step > 0) setStep(s => s - 1); };
-
-  const s = STEPS[step];
-  return (
-    <div style={{ height: '100dvh', background: '#0D0D0D', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}
-      onTouchStart={e => { startX.current = e.touches[0].clientX; }}
-      onTouchEnd={e => {
-        if (!startX.current) return;
-        const dx = e.changedTouches[0].clientX - startX.current;
-        if (dx < -40) next(); else if (dx > 40) prev();
-        startX.current = null;
-      }}
-    >
-      {/* Progress dots */}
-      <div style={{ display: 'flex', gap: 6, justifyContent: 'center', padding: '20px 0 0' }}>
-        {[0,1,2].map(i => (
-          <div key={i} style={{ width: i === step ? 24 : 8, height: 8, borderRadius: 999, background: i === step ? Y.orange : '#333', transition: 'all 0.25s' }} />
-        ))}
-      </div>
-
-      {/* Content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 28px' }}>
-        {/* Step number */}
-        <div style={{ fontSize: 11, fontWeight: 700, color: Y.orange, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>
-          STEP {s.num} · HOW TO EAT
-        </div>
-
-        {/* Big icon */}
-        <div style={{ fontSize: 64, marginBottom: 20 }}>{s.icon}</div>
-
-        {/* Title */}
-        <div style={{ fontSize: 30, fontWeight: 900, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{s.title}</div>
-        <div style={{ fontSize: 16, color: Y.orange, marginTop: 6, fontWeight: 600 }}>{s.cn}</div>
-
-        {/* Description */}
-        <div style={{ fontSize: 14, color: '#888', lineHeight: 1.7, textAlign: 'center', marginTop: 16, maxWidth: 300 }}>{s.desc}</div>
-
-        {/* Price callout for step 2 */}
-        {s.price && (
-          <div style={{ marginTop: 20, background: Y.orange, borderRadius: 14, padding: '10px 24px', fontSize: 20, fontWeight: 900, color: '#fff' }}>
-            {s.price}
+        {/* ── Promo Banner ── */}
+        <div style={{ margin: "16px -20px 0", background: "linear-gradient(90deg,#c0392b,#922b21)", padding: "10px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>🎉 开业酬宾 Grand Opening Specials</div>
+          <div style={{ fontSize: 11, color: "#ffc8c8" }}>
+            <span>🍹 全日赠送开业饮品 · Complimentary Drink for All Guests</span>
           </div>
-        )}
+          <div style={{ fontSize: 11, color: "#ffc8c8" }}>
+            <span>🍜 周一至周五 · 每桌第二碗半价 &nbsp;|&nbsp; Mon–Fri: 2nd Bowl 50% Off</span>
+          </div>
+        </div>
+      </div>
 
-        {/* Items */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 20 }}>
-          {s.items.map((item, i) => (
-            <span key={i} style={{ fontSize: 12, background: '#1a1a1a', border: '1px solid #333', color: '#ccc', padding: '5px 12px', borderRadius: 999 }}>{item}</span>
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 0 100px" }}>
+
+        {/* ── Section: 汤底选择 ─────────────────────────── */}
+        <SectionTitle emoji="🍲" zh="选择汤底" en="Choose Your Broth" />
+
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {BROTHS.map(broth => (
+            <div
+              key={broth.id}
+              onClick={() => setSelectedBroth(selectedBroth === broth.id ? null : broth.id)}
+              style={{
+                borderRadius: 14,
+                overflow: "hidden",
+                border: selectedBroth === broth.id ? "2px solid #f5c842" : "2px solid transparent",
+                cursor: "pointer",
+                transition: "border 0.2s",
+                boxShadow: selectedBroth === broth.id ? "0 0 16px rgba(245,200,66,0.3)" : "none",
+              }}
+            >
+              {/* Broth card header */}
+              <div style={{ position: "relative", height: 100, background: broth.color, overflow: "hidden" }}>
+                {broth.img && (
+                  <img src={broth.img} alt={broth.zh}
+                    style={{ position: "absolute", right: 0, top: 0, height: "100%", width: "55%", objectFit: "cover", objectPosition: "center" }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,rgba(0,0,0,0.65) 45%,transparent)" }} />
+                <div style={{ position: "relative", padding: "14px 16px" }}>
+                  {broth.badge && (
+                    <span style={{ fontSize: 9, background: "#f5c842", color: "#000", borderRadius: 4, padding: "2px 6px", fontWeight: 700, letterSpacing: 1 }}>{broth.badge}</span>
+                  )}
+                  <div style={{ fontSize: 18, fontWeight: 900, marginTop: 6, color: "#fff" }}>{broth.zh}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>{broth.en}</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>🌶 {broth.spicy}</div>
+                </div>
+              </div>
+
+              {/* Combos (expanded) */}
+              {selectedBroth === broth.id && (
+                <div style={{ background: "#1a1a1a", padding: "14px 16px" }}>
+                  <div style={{ fontSize: 11, color: "#888", letterSpacing: 1, marginBottom: 10 }}>推荐搭配 · Recommended Combos</div>
+                  {broth.combos.map((combo, i) => (
+                    <div key={i} style={{ background: "#242424", borderRadius: 10, padding: "10px 12px", marginBottom: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: "#f5c842" }}>{combo.zh}</div>
+                          <div style={{ fontSize: 10, color: "#777", marginTop: 1 }}>{combo.en}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#aaa", marginTop: 6 }}>{combo.items}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
-      </div>
 
-      {/* Bottom buttons */}
-      <div style={{ padding: '0 24px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={prev} disabled={step === 0}
-          style={{ background: step === 0 ? 'transparent' : '#1a1a1a', color: step === 0 ? 'transparent' : '#666', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-          ← Back
-        </button>
-        <button onClick={next}
-          style={{ background: Y.orange, color: '#fff', border: 'none', borderRadius: 14, padding: '14px 32px', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: `0 4px 20px ${Y.orange}66` }}>
-          {step < 2 ? "Next →" : "Let's Eat! 🍲"}
-        </button>
-      </div>
-    </div>
-  );
-}
+        {/* ── Section: 调料台 ──────────────────────────── */}
+        <SectionTitle emoji="🥣" zh="调料台" en="Condiment Station" />
 
-// ── MENU: Overview + Detail pages ─────────────────────
-type MenuView = 'overview' | 'broths' | 'sauces' | 'items' | 'promo';
-
-const OVERVIEW_CARDS = [
-  { id: 'broths' as MenuView, icon: '🍲', title: 'Broth Selection', cn: '汤底选择', desc: '4 signature styles', color: '#D95F1A', glow: 'rgba(217,95,26,0.3)' },
-  { id: 'sauces' as MenuView, icon: '🥫', title: 'Sauce Bar', cn: '酱料搭配', desc: 'Self-service · Free', color: '#D97706', glow: 'rgba(217,119,6,0.3)' },
-  { id: 'items' as MenuView, icon: '🥬', title: 'Ingredients', cn: '菜品一览', desc: 'Fresh daily selection', color: '#16A34A', glow: 'rgba(22,163,74,0.3)' },
-  { id: 'promo' as MenuView, icon: '🎉', title: 'Promotions', cn: '当季活动', desc: 'Current deals', color: '#7C3AED', glow: 'rgba(124,58,237,0.3)' },
-];
-
-const BROTHS = [
-  {
-    name: 'Classic Herbal\nBeef Bone Broth', cn: '经典草本骨汤', img: '/ygf-broth-beef.png',
-    badge: '经典原创', tag: 'Signature', spicy: '🌶 Mild · 🌶🌶 Medium · 🌶🌶🌶 Flaming',
-    extra: '+$2.99 / bowl',
-    desc: 'Slow-cooked beef bones with aromatic herbs. Rich, savory, deeply nourishing. The original YGF classic — choose your spice level.',
-    color: '#D95F1A',
-  },
-  {
-    name: 'Sweet & Sour\nTomato Broth', cn: '酸甜番茄汤', img: '/ygf-broth-tomato.png',
-    badge: '招牌推荐', tag: '100% Vegan',
-    spicy: '🟢 Non-Spicy',
-    desc: 'Refreshing tangy broth bursting with natural tomato sweetness. Light, fruity, 100% vegan. Perfect for those who prefer no heat.',
-    color: '#DC2626',
-  },
-  {
-    name: 'Tom Yum Broth', cn: '酸辣冬阴功汤', img: '/ygf-broth-tomyum.png',
-    badge: '新品上市', tag: 'NEW',
-    spicy: '🌶 Hot & Sour',
-    desc: 'Inspired by Thai Tom Yum — bold lemongrass, galangal, and chili. A refreshing hot & sour twist on classic malatang.',
-    color: '#D97706',
-  },
-  {
-    name: 'Grind Pleasant\nSpicy Dry Mix', cn: '石磨醇香麻辣拌', img: '/ygf-broth-drymix.png',
-    badge: '酱汁浓郁', tag: 'No Soup',
-    spicy: '🌶 Mild Spicy',
-    desc: 'No broth, all flavor. Stone-ground Sichuan spices coat every ingredient in a rich aromatic sauce. For the true spice lover.',
-    color: '#7C3AED',
-  },
-];
-
-function BrothDetail({ broth, onBack }: { broth: typeof BROTHS[0]; onBack: () => void }) {
-  return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: Y.cream }}>
-      {/* Image hero */}
-      <div style={{ position: 'relative', height: 260, flexShrink: 0 }}>
-        <img src={broth.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.6) 100%)' }} />
-        <button onClick={onBack} style={{ position: 'absolute', top: 16, left: 16, background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', width: 36, height: 36, color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>←</button>
-        {broth.tag && <span style={{ position: 'absolute', top: 16, right: 16, background: Y.orange, color: '#fff', fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 999 }}>{broth.tag}</span>}
-        {broth.badge && <span style={{ position: 'absolute', bottom: 16, right: 16, background: 'rgba(201,160,96,0.92)', color: '#3a2800', fontSize: 13, fontWeight: 800, padding: '6px 14px', borderRadius: 999 }}>{broth.badge}</span>}
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 22px 32px' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: Y.orange, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Broth · 汤底</div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: Y.text, lineHeight: 1.2, whiteSpace: 'pre-line' }}>{broth.name}</div>
-        <div style={{ fontSize: 16, color: Y.sub, marginTop: 6 }}>{broth.cn}</div>
-        <div style={{ marginTop: 12, fontSize: 13, color: broth.color, fontWeight: 700 }}>{broth.spicy}</div>
-        {broth.extra && <div style={{ marginTop: 8, display: 'inline-block', background: Y.orange, color: '#fff', fontSize: 13, fontWeight: 800, padding: '5px 14px', borderRadius: 999 }}>{broth.extra}</div>}
-        <p style={{ fontSize: 14, color: Y.sub, lineHeight: 1.8, marginTop: 18, padding: '16px', background: '#fff', borderRadius: 16 }}>{broth.desc}</p>
-      </div>
-    </div>
-  );
-}
-
-function BrothsView() {
-  const [selected, setSelected] = useState<number | null>(null);
-  if (selected !== null) return <BrothDetail broth={BROTHS[selected]} onBack={() => setSelected(null)} />;
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
-      <div style={{ fontSize: 13, color: Y.sub, marginBottom: 16, lineHeight: 1.6 }}>
-        Choose your favorite broth — we cook your ingredients right in it. Swipe each card for details.
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {BROTHS.map((b, i) => (
-          <div key={i} onClick={() => setSelected(i)} style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.1)', cursor: 'pointer', background: '#fff', display: 'flex', alignItems: 'stretch', border: '1px solid #eee' }}>
-            <img src={b.img} alt="" style={{ width: 120, objectFit: 'cover', flexShrink: 0 }} />
-            <div style={{ flex: 1, padding: '14px 14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: Y.text, lineHeight: 1.3, whiteSpace: 'pre-line' }}>{b.name}</div>
-                  <div style={{ fontSize: 12, color: Y.sub, marginTop: 2 }}>{b.cn}</div>
-                </div>
-                {b.badge && <span style={{ fontSize: 10, background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 999, fontWeight: 700, whiteSpace: 'nowrap', marginLeft: 8 }}>{b.badge}</span>}
-              </div>
-              <div style={{ fontSize: 11, color: b.color, fontWeight: 600, marginTop: 8 }}>{b.spicy}</div>
-              {b.extra && <div style={{ fontSize: 11, color: Y.orange, fontWeight: 700, marginTop: 4 }}>{b.extra}</div>}
-              <div style={{ fontSize: 11, color: Y.faint, marginTop: 6 }}>Tap for details →</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SaucesView() {
-  const cols = [
-    { title: 'Aromatics 香辛料', items: ['Garlic 大蒜', 'Green Onion 葱', 'Cilantro 香菜', 'Chili Pepper 辣椒'] },
-    { title: 'Seasonings 基础调料', items: ['Salt 盐', 'Sugar 糖', 'Sesame Sauce 芝麻酱', 'Sesame Oil 芝麻油', 'Peppercorn Oil 花椒油'] },
-    { title: 'Sauces 复合酱料', items: ['Satay Sauce 沙茶酱', 'Hoisin Sauce 海鲜酱', 'Oyster Sauce 蚝油', 'Vinegar 醋', 'Soy Sauce 酱油'] },
-  ];
-  const pairings = [
-    { broth: 'Beef Bone Broth', sauce: 'Sesame Sauce + Garlic + Green Onion', icon: '🦴' },
-    { broth: 'Tomato Broth', sauce: 'Sugar + Vinegar + Cilantro', icon: '🍅' },
-    { broth: 'Tom Yum Broth', sauce: 'Chili + Lime + Green Onion', icon: '🍋' },
-    { broth: 'Dry Spicy Mix', sauce: 'Sesame Oil + Garlic + Soy Sauce', icon: '🌶' },
-  ];
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
-      <div style={{ background: Y.orange, borderRadius: 16, padding: '14px 18px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 24 }}>🎁</span>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Free Self-Service Sauce Bar</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>Included with every order · 免费随餐提供</div>
-        </div>
-      </div>
-      <div style={{ fontSize: 13, fontWeight: 800, color: Y.text, marginBottom: 12 }}>All Available Condiments</div>
-      {cols.map((col, i) => (
-        <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: Y.orange, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>{col.title}</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {col.items.map((item, j) => (
-              <span key={j} style={{ fontSize: 12, background: Y.orangeBg, color: Y.orangeDark, padding: '4px 10px', borderRadius: 999, fontWeight: 500 }}>{item}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-      <div style={{ fontSize: 13, fontWeight: 800, color: Y.text, margin: '18px 0 12px' }}>Chef's Pairing Suggestions 搭配推荐</div>
-      {pairings.map((p, i) => (
-        <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'flex-start', gap: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <span style={{ fontSize: 22 }}>{p.icon}</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: Y.text }}>{p.broth}</div>
-            <div style={{ fontSize: 11, color: Y.sub, marginTop: 2 }}>+ {p.sauce}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function IngredientsView() {
-  const cats = [
-    { icon: '🥬', label: 'Vegetables', cn: '蔬菜类', color: '#16A34A', items: ['Napa Cabbage 白菜', 'Spinach 菠菜', 'Lotus Root 藕', 'Corn 玉米', 'Mushroom 香菇', 'Enoki 金针菇', 'Bean Sprouts 豆芽', 'Tofu 豆腐', 'Broccoli 西兰花', 'Potato 土豆'] },
-    { icon: '🥩', label: 'Meats', cn: '肉类', color: '#DC2626', items: ['Beef Slices 牛肉', 'Pork Belly 五花肉', 'Lamb 羊肉', 'Chicken 鸡肉'] },
-    { icon: '🦐', label: 'Seafood', cn: '海鲜类', color: '#0369A1', items: ['Shrimp 虾', 'Fish Tofu 鱼豆腐', 'Crab Stick 蟹棒', 'Fish Cake 鱼饼', 'Clam 蛤蜊'] },
-    { icon: '🍜', label: 'Noodles & Starch', cn: '主食类', color: '#D97706', items: ['Glass Noodles 粉丝', 'Sweet Potato Noodles 红薯粉', 'Rice Cake 年糕', 'Ramen 拉面', 'Udon 乌冬面'] },
-    { icon: '🟡', label: 'Balls & Skewers', cn: '丸子串类', color: '#7C3AED', items: ['Fish Balls 鱼丸', 'Beef Balls 牛肉丸', 'Shrimp Balls 虾丸', 'Mixed Balls 什锦丸', 'Spam 午餐肉'] },
-  ];
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
-      <div style={{ background: '#fff', borderRadius: 14, padding: '12px 16px', marginBottom: 16, border: `1px solid #eee` }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 13, color: Y.sub }}>All ingredients priced at</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: Y.orange }}>$13.99<span style={{ fontSize: 13, fontWeight: 500 }}>/lb</span></div>
-        </div>
-        <div style={{ fontSize: 11, color: Y.faint, marginTop: 4 }}>* Selection varies daily. Ask staff for today's items.</div>
-      </div>
-      {cats.map((cat, i) => (
-        <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ fontSize: 20 }}>{cat.icon}</span>
-            <span style={{ fontSize: 14, fontWeight: 800, color: Y.text }}>{cat.label}</span>
-            <span style={{ fontSize: 11, color: Y.faint }}>{cat.cn}</span>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {cat.items.map((item, j) => (
-              <span key={j} style={{ fontSize: 12, background: `${cat.color}12`, color: cat.color, border: `1px solid ${cat.color}30`, padding: '3px 10px', borderRadius: 999, fontWeight: 500 }}>{item}</span>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PromoView() {
-  const promos = [
-    { icon: '🕐', title: 'Lunch Special', tag: 'Mon–Fri · 11am–3pm', color: Y.orange, deal: '10% OFF', desc: 'Dine-in only. Cannot be combined.', cn: '周一至周五 上午11点–下午3点 堂食享9折' },
-    { icon: '👥', title: 'Group Deal', tag: '4+ Guests', color: '#D97706', deal: 'Free Drink', desc: '1 complimentary drink per table of 4+.', cn: '4人及以上同桌用餐，赠送1杯饮料' },
-    { icon: '⭐', title: 'First Visit', tag: 'New Customers', color: '#7C3AED', deal: 'Free Topping', desc: 'Show this menu on your first visit.', cn: '首次到店顾客，出示此菜单获赠配料' },
-  ];
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
-      <div style={{ fontSize: 13, color: Y.sub, marginBottom: 18, lineHeight: 1.6 }}>
-        Current promotions and seasonal specials. Ask staff for more details!
-      </div>
-      {promos.map((p, i) => (
-        <div key={i} style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', marginBottom: 14, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
-          <div style={{ background: p.color, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontSize: 18 }}>{p.icon}</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{p.title}</span>
-            </div>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', background: 'rgba(0,0,0,0.2)', padding: '2px 8px', borderRadius: 999 }}>{p.tag}</span>
-          </div>
-          <div style={{ padding: '14px 16px' }}>
-            <div style={{ fontSize: 24, fontWeight: 900, color: Y.text }}>{p.deal}</div>
-            <div style={{ fontSize: 13, color: Y.sub, marginTop: 4 }}>{p.desc}</div>
-            <div style={{ fontSize: 11, color: Y.faint, marginTop: 6 }}>{p.cn}</div>
-          </div>
-        </div>
-      ))}
-      <div style={{ background: Y.orangeBg, borderRadius: 16, padding: '16px', border: `2px dashed ${Y.orange}`, textAlign: 'center' }}>
-        <div style={{ fontSize: 18 }}>📢</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: Y.orange, marginTop: 6 }}>More Promotions Coming Soon</div>
-        <div style={{ fontSize: 11, color: Y.faint, marginTop: 4 }}>Ask our staff for today's specials · 询问员工今日特价</div>
-      </div>
-    </div>
-  );
-}
-
-function MenuOverview({ onSelect }: { onSelect: (v: MenuView) => void }) {
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 32px' }}>
-
-      {/* Broth preview FIRST — hero section */}
-      <div style={{ fontSize: 13, fontWeight: 800, color: Y.text, textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 10 }}>
-        🔥 Our Signature Broths
-      </div>
-      <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, scrollSnapType: 'x mandatory' as const, WebkitOverflowScrolling: 'touch' as const }}>
-        {BROTHS.map((b, i) => (
-          <div key={i} onClick={() => onSelect('broths')}
-            style={{ flexShrink: 0, width: 'calc(45vw)', maxWidth: 190, minWidth: 150, borderRadius: 16, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', scrollSnapAlign: 'start' as const }}>
-            <img src={b.img} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
-            <div style={{ background: '#fff', padding: '10px 12px 12px' }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: Y.text, lineHeight: 1.4, whiteSpace: 'pre-line' }}>{b.name}</div>
-              <div style={{ fontSize: 10, color: Y.faint, marginTop: 2 }}>{b.cn}</div>
-              <div style={{ fontSize: 10, color: b.color, fontWeight: 600, marginTop: 4 }}>{b.spicy}</div>
-              {b.extra && <div style={{ fontSize: 10, color: Y.orange, fontWeight: 700, marginTop: 2 }}>{b.extra}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 4 category cards */}
-      <div style={{ marginTop: 20, marginBottom: 12, fontSize: 13, fontWeight: 800, color: Y.text, textTransform: 'uppercase' as const, letterSpacing: 1 }}>
-        Explore Menu
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {OVERVIEW_CARDS.map(card => (
-          <div key={card.id} onClick={() => onSelect(card.id)}
-            style={{ background: '#fff', borderRadius: 18, padding: '18px 14px', cursor: 'pointer', border: `1px solid ${card.color}22`, boxShadow: `0 2px 12px ${card.glow}, 0 1px 4px rgba(0,0,0,0.06)`, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: card.color, borderRadius: '18px 18px 0 0' }} />
-            <div style={{ fontSize: 32, marginBottom: 10 }}>{card.icon}</div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: Y.text, lineHeight: 1.3 }}>{card.title}</div>
-            <div style={{ fontSize: 12, color: card.color, fontWeight: 600, marginTop: 2 }}>{card.cn}</div>
-            <div style={{ fontSize: 11, color: Y.faint, marginTop: 6 }}>{card.desc}</div>
-            <div style={{ marginTop: 12, fontSize: 12, color: card.color, fontWeight: 700 }}>Explore →</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Price banner LAST */}
-      <div style={{ marginTop: 20, background: `linear-gradient(135deg, ${Y.orangeDark}, ${Y.orange})`, borderRadius: 18, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: `0 4px 20px ${Y.orange}44` }}>
-        <div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>Ingredients by weight</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>称重计价 · 自助选菜</div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#fff', lineHeight: 1 }}>$13.99</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>per pound / 磅</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MainMenu() {
-  const [view, setView] = useState<MenuView>('overview');
-
-  const titles: Record<MenuView, { t: string; cn: string }> = {
-    overview: { t: 'Menu', cn: '菜单' },
-    broths: { t: 'Broth Selection', cn: '汤底选择' },
-    sauces: { t: 'Sauce Bar', cn: '酱料吧' },
-    items: { t: 'Ingredients', cn: '菜品一览' },
-    promo: { t: 'Promotions', cn: '当季活动' },
-  };
-
-  return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: Y.cream, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
-      {/* Header */}
-      <div style={{ background: Y.orange, padding: '12px 16px 10px', flexShrink: 0, boxShadow: '0 2px 10px rgba(217,95,26,0.3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/ygf-logo.png" alt="YGF" style={{ height: 36, flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', lineHeight: 1.1 }}>{titles[view].t}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)' }}>{titles[view].cn}</div>
-          </div>
-          {view !== 'overview' && (
-            <button onClick={() => setView('overview')}
-              style={{ background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: 10, padding: '6px 14px', color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              ← Menu
+        {/* Tabs */}
+        <div style={{ display: "flex", overflowX: "auto", gap: 8, padding: "0 16px 12px", scrollbarWidth: "none" }}>
+          {SAUCE_CATEGORIES.map((cat, i) => (
+            <button key={i} onClick={() => setActiveSauceTab(i)}
+              style={{
+                flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                background: activeSauceTab === i ? "#c0392b" : "#1e1e1e",
+                color: activeSauceTab === i ? "#fff" : "#888",
+                transition: "all 0.2s",
+              }}>
+              {SAUCE_CATEGORIES[i].zh}
             </button>
-          )}
+          ))}
         </div>
-        {/* Slogan - only on overview */}
-        {view === 'overview' && (
-          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 13 }}>🔥</span>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.95)', lineHeight: 1.4 }}>
-                Real Bones. Real Heat. Real Flavor.
-              </div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>精心熬制 · 真材实料 · 每日鲜制</div>
+
+        <div style={{ padding: "0 16px", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+          {SAUCE_CATEGORIES[activeSauceTab].items.map((sauce, i) => (
+            <SauceCard key={i} item={sauce} />
+          ))}
+        </div>
+
+        {/* ── Section: 菜品一览 ─────────────────────────── */}
+        <SectionTitle emoji="📋" zh="菜品一览" en="All Ingredients" />
+
+        {/* Category tabs */}
+        <div style={{ display: "flex", overflowX: "auto", gap: 8, padding: "0 16px 14px", scrollbarWidth: "none" }}>
+          {MENU.map(cat => (
+            <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+              style={{
+                flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                background: activeCategory === cat.id ? "#c0392b" : "#1e1e1e",
+                color: activeCategory === cat.id ? "#fff" : "#888",
+                transition: "all 0.2s",
+              }}>
+              {cat.emoji} {cat.zh}
+            </button>
+          ))}
+        </div>
+
+        {MENU.filter(c => c.id === activeCategory).map(cat => (
+          <div key={cat.id} style={{ padding: "0 16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
+              {cat.items.map(item => (
+                <ItemCard key={item.id} item={item} />
+              ))}
             </div>
           </div>
+        ))}
+
+        {/* ── Growth Module ────────────────────────────── */}
+        <SectionTitle emoji="✨" zh="互动专区" en="Connect With Us" />
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <Link href="/menu/ygf/review" style={{
+            display: "flex", alignItems: "center", gap: 14, background: "#1a1a1a",
+            borderRadius: 14, padding: "16px", textDecoration: "none",
+            border: "1px solid #2a2a2a",
+          }}>
+            <span style={{ fontSize: 28 }}>⭐</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#f5c842" }}>Leave a Google Review</div>
+              <div style={{ fontSize: 11, color: "#777", marginTop: 2 }}>帮我们写一条评价，非常感谢！</div>
+            </div>
+            <span style={{ marginLeft: "auto", color: "#555", fontSize: 18 }}>›</span>
+          </Link>
+          <Link href="/menu/ygf/share" style={{
+            display: "flex", alignItems: "center", gap: 14, background: "#1a1a1a",
+            borderRadius: 14, padding: "16px", textDecoration: "none",
+            border: "1px solid #2a2a2a",
+          }}>
+            <span style={{ fontSize: 28 }}>📸</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#E1306C" }}>Share Your Bowl on Instagram</div>
+              <div style={{ fontSize: 11, color: "#777", marginTop: 2 }}>Tag us and get featured 🔥</div>
+            </div>
+            <span style={{ marginLeft: "auto", color: "#555", fontSize: 18 }}>›</span>
+          </Link>
+          <Link href="/menu/ygf/vip" style={{
+            display: "flex", alignItems: "center", gap: 14, background: "#1a1a1a",
+            borderRadius: 14, padding: "16px", textDecoration: "none",
+            border: "1px solid #2a2a2a",
+          }}>
+            <span style={{ fontSize: 28 }}>💬</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#25D366" }}>Join VIP WhatsApp List</div>
+              <div style={{ fontSize: 11, color: "#777", marginTop: 2 }}>早鸟优惠 · 新品抢先知</div>
+            </div>
+            <span style={{ marginLeft: "auto", color: "#555", fontSize: 18 }}>›</span>
+          </Link>
+        </div>
+
+        {/* ── Allergy Notice ───────────────────────────── */}
+        <div style={{ margin: "28px 16px 0", background: "#1a1a1a", borderRadius: 14, padding: "16px", border: "1px solid #2a2a2a" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#f5c842", marginBottom: 8, letterSpacing: 1 }}>⚠️ ALLERGY NOTICE 过敏源提示</div>
+          <p style={{ fontSize: 10, color: "#777", lineHeight: 1.7, margin: 0 }}>
+            Our menu contains or may come into contact with: <strong style={{ color: "#aaa" }}>Fish, Shellfish, Soy, Wheat/Gluten, Sesame, Egg, Milk, Peanuts</strong>.
+            Cross-contact may occur. Please inform our staff of any allergies before ordering.
+          </p>
+          <p style={{ fontSize: 10, color: "#666", lineHeight: 1.7, margin: "8px 0 0" }}>
+            本菜单含有或可能接触以下过敏源：鱼类、甲壳类、大豆、小麦/麸质、芝麻、鸡蛋、乳制品、花生。存在交叉污染风险，请提前告知工作人员。
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────
+function SectionTitle({ emoji, zh, en }: { emoji: string; zh: string; en: string }) {
+  return (
+    <div style={{ padding: "28px 16px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ fontSize: 20 }}>{emoji}</span>
+      <div>
+        <div style={{ fontSize: 17, fontWeight: 800, color: "#f0ede6" }}>{zh}</div>
+        <div style={{ fontSize: 10, color: "#666", letterSpacing: 1, textTransform: "uppercase" }}>{en}</div>
+      </div>
+      <div style={{ flex: 1, height: 1, background: "#222", marginLeft: 8 }} />
+    </div>
+  );
+}
+
+function AllergenBadges({ allergens }: { allergens?: Allergen[] }) {
+  if (!allergens?.length) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 4 }}>
+      {allergens.map(a => (
+        <span key={a} style={{
+          fontSize: 8, padding: "1px 4px", borderRadius: 3,
+          background: ALLERGEN_COLOR[a] + "33",
+          color: ALLERGEN_COLOR[a],
+          fontWeight: 700, letterSpacing: 0.5,
+        }}>{a}</span>
+      ))}
+    </div>
+  );
+}
+
+function ItemCard({ item }: { item: MenuItem }) {
+  return (
+    <div style={{ background: "#1a1a1a", borderRadius: 12, overflow: "hidden", position: "relative" }}>
+      {item.new && (
+        <div style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: "#c0392b", color: "#fff", fontSize: 8, fontWeight: 700, padding: "2px 5px", borderRadius: 4 }}>NEW</div>
+      )}
+      <div style={{ width: "100%", aspectRatio: "1", background: "#111", overflow: "hidden" }}>
+        {item.img ? (
+          <img src={item.img} alt={item.zh}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+          />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#333", fontSize: 24 }}>🍽</div>
         )}
       </div>
-
-      {/* Content */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {view === 'overview' && <MenuOverview onSelect={setView} />}
-        {view === 'broths' && <BrothsView />}
-        {view === 'sauces' && <SaucesView />}
-        {view === 'items' && <IngredientsView />}
-        {view === 'promo' && <PromoView />}
+      <div style={{ padding: "8px 8px 10px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#f0ede6" }}>{item.zh}</div>
+        <div style={{ fontSize: 9, color: "#666", marginTop: 2, lineHeight: 1.3 }}>{item.en}</div>
+        <AllergenBadges allergens={item.allergens} />
       </div>
     </div>
   );
 }
 
-// ── Root ───────────────────────────────────────────────
-type Phase = 'splash' | 'howto' | 'menu';
-
-export default function YGFPage() {
-  const [phase, setPhase] = useState<Phase>('splash');
+function SauceCard({ item }: { item: SauceItem }) {
   return (
-    <>
-      {phase === 'splash' && <SplashScreen onDone={() => setPhase('howto')} />}
-      {phase === 'howto' && <HowToEat onDone={() => setPhase('menu')} />}
-      {phase === 'menu' && <MainMenu />}
-    </>
+    <div style={{ background: "#1a1a1a", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ width: "100%", aspectRatio: "1", background: "#111", overflow: "hidden" }}>
+        {item.img ? (
+          <img src={item.img} alt={item.zh}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+          />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#333", fontSize: 22 }}>🥄</div>
+        )}
+      </div>
+      <div style={{ padding: "7px 8px 9px" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#f0ede6" }}>{item.zh}</div>
+        <div style={{ fontSize: 9, color: "#666", marginTop: 1 }}>{item.en}</div>
+        <AllergenBadges allergens={item.allergens} />
+      </div>
+    </div>
   );
 }

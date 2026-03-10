@@ -34,14 +34,12 @@ export default function YGFSharePage() {
         <h1 style={styles.heading}>Show Off Your Bowl</h1>
         <p style={styles.sub}>Post your YGF creation and tag us — we love seeing what you build.</p>
 
-        {/* Tag us */}
         <div style={styles.tagBox} onClick={() => copyTag(`@${IG_HANDLE}`)}>
           <span style={styles.tagLabel}>TAG US</span>
           <span style={styles.tagValue}>@{IG_HANDLE}</span>
           <span style={styles.tagCopy}>{copied === `@${IG_HANDLE}` ? '✅ Copied!' : 'tap to copy'}</span>
         </div>
 
-        {/* Hashtags — tap any to copy individually */}
         <div style={styles.hashSection}>
           <span style={styles.tagLabel}>HASHTAGS · tap any to copy</span>
           <div style={styles.hashGrid}>
@@ -56,7 +54,6 @@ export default function YGFSharePage() {
           </div>
         </div>
 
-        {/* Main CTA: copy all + open IG in one tap */}
         <button onClick={copyAllAndOpen} style={styles.btn}>
           {copied === 'all'
             ? '✅ Copied! Opening Instagram...'

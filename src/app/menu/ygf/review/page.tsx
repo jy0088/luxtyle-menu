@@ -9,11 +9,8 @@ function openGoogleReview() {
   const isAndroid = /Android/i.test(navigator.userAgent);
 
   if (isIOS || isAndroid) {
-    // 移动端：先跳店铺页面，用户点 "Write a review" 即可
-    // 这是最稳定的方式，Google Maps app 会直接打开店铺
     window.location.href = `https://www.google.com/maps/place/?q=place_id:${GOOGLE_PLACE_ID}`;
   } else {
-    // 桌面端：直接打开写评价
     window.open(
       `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`,
       '_blank'
@@ -47,7 +44,6 @@ export default function YGFReviewPage() {
           </a>
         </div>
 
-        {/* 引导提示 */}
         <div style={styles.hint}>
           <div style={styles.hintStep}><span style={styles.hintNum}>1</span> Tap "Write a Review on Google"</div>
           <div style={styles.hintStep}><span style={styles.hintNum}>2</span> Google Maps opens our store page</div>
