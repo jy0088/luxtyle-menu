@@ -93,7 +93,7 @@ export default function BrothPage({ params }: { params: Promise<{ id: string }> 
                 </div>
                 <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 12, color: C.inkMid }}>主食：</span>
-                  <span style={{ fontSize: 12, background: C.redLight, color: C.red, borderRadius: 6, padding: "3px 10px", fontWeight: 700 }}>{combo.staple}</span>
+                  <span style={{ fontSize: 12, background: "#FEE2E2", color: C.red, borderRadius: 6, padding: "3px 10px", fontWeight: 700 }}>{combo.staple}</span>
                   <span style={{ marginLeft: "auto", fontSize: 12, color: C.gold, fontWeight: 700 }}>{combo.highlight} ›</span>
                 </div>
               </div>
@@ -105,4 +105,4 @@ export default function BrothPage({ params }: { params: Promise<{ id: string }> 
   );
 }
 
-const redLight = "#FEE2E2";
+
