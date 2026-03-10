@@ -93,53 +93,56 @@ export default function YGFPage() {
 // ══════════════════════════════════════════════════════════
 function Splash({ onEnter }: { onEnter: () => void }) {
   return (
-    <div onClick={onEnter} style={{
-      minHeight: "100vh", maxWidth: 480, margin: "0 auto",
-      position: "relative", overflow: "hidden", cursor: "pointer",
-      display: "flex", flexDirection: "column", justifyContent: "flex-end",
-    }}>
-      {/* Full-bleed phoenix image */}
-      <img src="/ygf-phoenix.webp" alt="YGF Malatang"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+    <div style={{ minHeight: "100vh", maxWidth: 480, margin: "0 auto",
+      background: `linear-gradient(170deg, #1a0800 0%, #3d1200 40%, #6b2500 70%, #C8912A 100%)`,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between",
+      padding: "60px 24px 48px", textAlign: "center", position: "relative", overflow: "hidden" }}>
 
-      {/* Top gradient overlay for text legibility */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "45%",
-        background: "linear-gradient(180deg, rgba(60,10,0,0.75) 0%, transparent 100%)", pointerEvents: "none" }} />
+      {/* Background decorative rings */}
+      {[300, 220, 150].map((size, i) => (
+        <div key={i} style={{ position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: size, height: size, borderRadius: "50%",
+          border: `1px solid rgba(200,145,42,${0.1 + i * 0.08})`, pointerEvents: "none" }} />
+      ))}
 
-      {/* Bottom gradient overlay */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "55%",
-        background: "linear-gradient(0deg, rgba(30,5,0,0.92) 0%, rgba(30,5,0,0.6) 60%, transparent 100%)", pointerEvents: "none" }} />
-
-      {/* Top brand text */}
-      <div style={{ position: "absolute", top: 52, left: 0, right: 0, textAlign: "center", zIndex: 2 }}>
-        <div style={{ fontSize: 11, letterSpacing: 5, color: "rgba(245,217,138,0.9)", textTransform: "uppercase" }}>杨国福麻辣烫</div>
-      </div>
-
-      {/* Bottom content */}
-      <div style={{ position: "relative", zIndex: 2, padding: "0 28px 52px", textAlign: "center" }}>
-        <h1 style={{ fontSize: 44, fontWeight: 900, color: "#fff", margin: "0 0 6px", letterSpacing: -1,
-          textShadow: "0 4px 24px rgba(0,0,0,0.5)" }}>YGF Malatang</h1>
-        <div style={{ fontSize: 14, color: C.goldLight, letterSpacing: 3, marginBottom: 20 }}>San Diego</div>
-
-        <div style={{ background: "rgba(200,145,42,0.18)", border: "1px solid rgba(200,145,42,0.4)",
-          borderRadius: 14, padding: "12px 20px", marginBottom: 28 }}>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", lineHeight: 1.9 }}>
-            🎉 开业酬宾 · Grand Opening Specials<br />
-            <span style={{ fontSize: 12, color: C.goldLight }}>全日赠送开业饮品 · Mon–Fri 第二碗半价</span>
-          </div>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0 }}>
+        {/* Phoenix placeholder — swap src when image is ready */}
+        <div style={{ width: 200, height: 200, borderRadius: "50%",
+          background: "radial-gradient(circle at 40% 35%, #ff9a3c, #c0392b, #6b0f0f)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 0 60px rgba(200,145,42,0.5), 0 0 120px rgba(200,145,42,0.2)",
+          marginBottom: 32, overflow: "hidden" }}>
+          {/* Replace this img tag src with actual phoenix image path */}
+          <img src="/ygf-phoenix.webp" alt="YGF Phoenix"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          {/* Fallback emoji shown when image missing */}
+          <span style={{ fontSize: 80, position: "absolute" }}>🔥</span>
         </div>
 
-        <button onClick={onEnter}
-          style={{ width: "100%", padding: "20px 0", borderRadius: 60,
-            background: `linear-gradient(135deg, ${C.gold}, #A87020)`,
-            border: "3px solid rgba(245,217,138,0.5)",
-            cursor: "pointer", fontSize: 18, fontWeight: 800, color: "#fff",
-            letterSpacing: 1, boxShadow: "0 8px 32px rgba(200,145,42,0.45)",
-            fontFamily: "'Noto Sans SC', sans-serif" }}>
-          点击进入菜单 · Enter Menu
-        </button>
-        <div style={{ marginTop: 12, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Tap anywhere to continue</div>
+        <div style={{ fontSize: 11, letterSpacing: 6, color: C.goldLight, textTransform: "uppercase", marginBottom: 12 }}>杨国福麻辣烫</div>
+        <h1 style={{ fontSize: 42, fontWeight: 900, color: "#fff", margin: "0 0 8px", letterSpacing: -1,
+          textShadow: "0 2px 20px rgba(200,145,42,0.6)" }}>YGF Malatang</h1>
+        <div style={{ fontSize: 15, color: C.goldLight, letterSpacing: 2 }}>San Diego</div>
+
+        <div style={{ marginTop: 28, padding: "12px 24px", background: "rgba(200,145,42,0.15)",
+          borderRadius: 12, border: "1px solid rgba(200,145,42,0.3)" }}>
+          <div style={{ fontSize: 13, color: C.goldLight, lineHeight: 1.8 }}>
+            🎉 开业酬宾 · Grand Opening<br />
+            全日赠送开业饮品 · 每桌第二碗半价
+          </div>
+        </div>
       </div>
+
+      <button onClick={onEnter}
+        style={{ width: "100%", maxWidth: 320, padding: "20px 0", borderRadius: 60,
+          background: `linear-gradient(135deg, ${C.gold}, #E8A835)`,
+          border: "none", cursor: "pointer", fontSize: 18, fontWeight: 800, color: "#fff",
+          letterSpacing: 1, boxShadow: "0 8px 32px rgba(200,145,42,0.5)",
+          fontFamily: "'Noto Sans SC', sans-serif" }}>
+        点击进入菜单 &nbsp;·&nbsp; Enter Menu
+      </button>
     </div>
   );
 }
