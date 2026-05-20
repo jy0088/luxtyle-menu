@@ -6,6 +6,7 @@ import {
   allCategories, toppings, freeDrinkOptions,
   MenuCategory, MenuItem, MenuSubCategory,
 } from './menuData';
+import AppShell from '@/components/shell/AppShell';
 
 const monthlySpecials = {
   month: 'March 2026',
@@ -503,37 +504,21 @@ export default function BeiYuanPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
+    <>
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
       {showPopup && <MonthlyPopup onClose={() => setShowPopup(false)} />}
 
-      {/* Sticky Header — 深绿金色品牌风格 */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 40,
-        background: C.brand,
-        borderBottom: `1px solid ${C.brandDark}`,
-        boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
-      }}>
-        {/* Brand row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img
-              src="/beiyuan-logo.png"
-              alt="logo"
-              style={{ width: 44, height: 44, borderRadius: '50%', border: `2px solid ${C.gold}` }}
-            />
-            <div>
-              <div style={{ fontSize: 10, color: C.goldLight, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const }}>Bei Yuan Tea & Boba</div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: C.gold, marginTop: 0, lineHeight: 1.2 }}>北苑南家</div>
-            </div>
-          </div>
+      <AppShell
+        action={
           <button onClick={() => setShowPopup(true)} style={{
             background: C.gold, color: C.brand, border: 'none',
             borderRadius: 999, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
           }}>
             🏷 本月特价
           </button>
-        </div>
+        }
+        nav={
+          <>
 
         {/* Section group pills — swipeable */}
         <div style={{ display: 'flex', gap: 6, padding: '0 16px 8px', overflowX: 'auto', scrollbarWidth: 'none' as const, WebkitOverflowScrolling: 'touch' as const }}>
@@ -589,7 +574,9 @@ export default function BeiYuanPage() {
             })}
           </div>
         )}
-      </div>
+        </>
+      }
+      >
 
       {/* Category Title */}
       {activeCategory && (
@@ -621,6 +608,7 @@ export default function BeiYuanPage() {
         <div style={{ fontSize: 11, color: C.faint }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
         <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
-    </div>
+    </AppShell>
+    </>
   );
 }
