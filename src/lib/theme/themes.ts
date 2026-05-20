@@ -1,8 +1,10 @@
 // src/lib/theme/themes.ts
-// Luxtyle Theme Token — v0 草稿
-// ⚠️ 本文件的色值为 v0 草稿(Claude 按现有代码 + v2 决策给出)。
-// ⚠️ 待 GPT 审核品牌气质后固化为 v1。结构(types.ts)已稳定 —— 改值不改结构。
-// 标 ⚠️ 的字段为草稿/待定,需 GPT 重点审。
+// Luxtyle Theme Token — v1(GPT 审定)
+// 品牌气质定盘:
+//   YGF      = 火焰 / 熬汤 / 沙金(双层视觉:暖白菜单 + 深色火焰 Hero)
+//   Bei Yuan = 东方茶空间 / 玉 / 温润 / 夜茶
+//   Tomo     = 冰晶 / 极光 / 半透明 / 冷凝实验室
+// 规则:只改 token 值,不改结构。types.ts / ThemeProvider 接口保持不变。
 
 import type { BrandTheme, ThemeId } from './types';
 
@@ -41,7 +43,7 @@ export const themes: Record<ThemeId, BrandTheme> = {
     },
   },
 
-  // ── YGF Malatang:火焰橙红 + 暖白沙金(双层视觉) ──
+  // ── YGF Malatang:火焰 / 熬汤 / 沙金(双层视觉) ──
   ygf: {
     id: 'ygf',
     name: 'YGF Malatang',
@@ -50,7 +52,7 @@ export const themes: Record<ThemeId, BrandTheme> = {
     accent: '#FF5A1F', // 火焰橙
     glow: '#FF7A00',
     menuSurface: {
-      // 暖白 —— 主菜单 Body,重阅读(沿用现有代码)
+      // 暖白 —— 主菜单 Body,重阅读
       bg: '#FDFAF5',
       surface: '#FFFFFF',
       surfaceSoft: '#FFF4E6',
@@ -59,17 +61,17 @@ export const themes: Record<ThemeId, BrandTheme> = {
       border: '#E8D9C4',
     },
     heroSurface: {
-      // 深色火焰 —— Splash / Hero / 强销售  ⚠️ surface 以下为草稿
+      // 深色火焰 —— Splash / Hero / 强销售(GPT v1 微调)
       bg: '#1A0E08',
-      surface: '#2A170C',
-      surfaceSoft: '#3A1F0E',
+      surface: '#33180D',
+      surfaceSoft: '#47200F',
       ink: '#FFF1DD',
       inkMuted: '#C8A878',
       border: 'rgba(255,255,255,0.08)',
     },
     gradient: {
       splash: 'linear-gradient(170deg, #1A0800 0%, #3D1200 40%, #6B2500 70%, #C8912A 100%)',
-      hero: 'linear-gradient(160deg, #1A0E08 0%, #6B2500 100%)', // ⚠️ 草稿
+      hero: 'linear-gradient(160deg, #140A05 0%, #4A1808 45%, #8A3A0A 100%)',
     },
     shadow: {
       card: '0 6px 24px rgba(0,0,0,0.10)',
@@ -77,16 +79,16 @@ export const themes: Record<ThemeId, BrandTheme> = {
     },
   },
 
-  // ── Bei Yuan:茶 · 玉绿  ⚠️ accent / heroSurface / 部分浅色值为草稿 ──
+  // ── Bei Yuan:东方茶空间 / 玉 / 温润 / 夜茶 ──
   beiyuan: {
     id: 'beiyuan',
     name: 'Bei Yuan Tea & Boba',
     primary: '#1F7A4D', // 玉绿
-    primaryDark: '#0E3D2A', // ⚠️ 深玉绿,草稿
-    accent: '#C8912A', // ⚠️ 草稿(待 GPT 定)
-    glow: '#4ADE80',
+    primaryDark: '#0E3D2A', // 深玉绿
+    accent: '#7BAE8D', // 温润玉色(GPT v1:替换原金色)
+    glow: 'rgba(123,174,141,0.28)', // 温润柔光(GPT v1:替换原 neon 绿)
     menuSurface: {
-      // ⚠️ 多为草稿
+      // 浅色阅读面 —— GPT v1 本轮未单独定值,沿用现值,可后续微调
       bg: '#FBFAF5',
       surface: '#FFFFFF',
       surfaceSoft: '#F3F6F1',
@@ -95,35 +97,34 @@ export const themes: Record<ThemeId, BrandTheme> = {
       border: '#E5E7E0',
     },
     heroSurface: {
-      // ⚠️ 全部待 GPT 定方向
-      bg: '#0E3D2A',
-      surface: '#15512F',
-      surfaceSoft: '#1C633B',
-      ink: '#EAF5EE',
-      inkMuted: '#9DBCA8',
+      // 夜茶深绿(GPT v1)
+      bg: '#10261D',
+      surface: '#183428',
+      surfaceSoft: '#214536',
+      ink: '#EEF6F1',
+      inkMuted: '#A8BCAF',
       border: 'rgba(255,255,255,0.10)',
     },
     gradient: {
-      // ⚠️ 草稿
-      splash: 'linear-gradient(170deg, #0E3D2A 0%, #1F7A4D 100%)',
-      hero: 'linear-gradient(160deg, #0E3D2A 0%, #1F7A4D 100%)',
+      splash: 'linear-gradient(170deg, #0D1F18 0%, #183428 45%, #2B5A46 100%)',
+      hero: 'linear-gradient(170deg, #0D1F18 0%, #183428 45%, #2B5A46 100%)',
     },
     shadow: {
       card: '0 6px 24px rgba(0,0,0,0.08)',
-      glow: '0 0 32px rgba(74,222,128,0.30)',
+      glow: '0 0 32px rgba(123,174,141,0.28)', // 同步为温润柔光
     },
   },
 
-  // ── Tomo Gelato:冰 · 蓝白  ⚠️ 大量草稿值,待 GPT 定 ──
+  // ── Tomo Gelato:冰晶 / 极光 / 半透明 / 冷凝实验室 ──
   tomo: {
     id: 'tomo',
     name: 'Tomo Gelato',
-    primary: '#3FA9D6', // ⚠️ 冰蓝,草稿
-    primaryDark: '#2A7BA0', // ⚠️ 草稿
-    accent: '#C2773A', // ⚠️ 草稿(沿用现有 logo 暖棕)
-    glow: '#9BDBF2', // ⚠️ 草稿
+    primary: '#6FD6FF', // 冰晶蓝(GPT v1)
+    primaryDark: '#2B6F8E',
+    accent: '#B8F0FF', // 极光浅蓝
+    glow: 'rgba(111,214,255,0.45)',
     menuSurface: {
-      // Mochi 白 —— 部分沿用现有代码
+      // 浅色阅读面 —— GPT v1 本轮未单独定值,沿用现值,可后续微调
       bg: '#FFFBF7',
       surface: '#FFFFFF',
       surfaceSoft: '#F4F8FA',
@@ -132,25 +133,27 @@ export const themes: Record<ThemeId, BrandTheme> = {
       border: '#ECECEC',
     },
     heroSurface: {
-      // ⚠️ 全部待 GPT 定方向
-      bg: '#0E2A38',
-      surface: '#143A4D',
-      surfaceSoft: '#1C4C63',
-      ink: '#EAF6FB',
-      inkMuted: '#9CC2D2',
+      // 冷凝实验室深蓝(GPT v1)
+      bg: '#081A24',
+      surface: '#102938',
+      surfaceSoft: '#16384C',
+      ink: '#F0FBFF',
+      inkMuted: '#A7D3E3',
       border: 'rgba(255,255,255,0.10)',
     },
     gradient: {
-      // ⚠️ 草稿
-      splash: 'linear-gradient(170deg, #0E2A38 0%, #3FA9D6 100%)',
-      hero: 'linear-gradient(160deg, #0E2A38 0%, #3FA9D6 100%)',
+      splash: 'linear-gradient(170deg, #081A24 0%, #12384D 50%, #6FD6FF 100%)',
+      hero: 'linear-gradient(170deg, #081A24 0%, #12384D 50%, #6FD6FF 100%)',
     },
     shadow: {
       card: '0 6px 24px rgba(0,0,0,0.06)',
-      glow: '0 0 32px rgba(155,219,242,0.40)',
+      glow: '0 0 32px rgba(111,214,255,0.45)', // 同步为冰晶蓝
     },
   },
 };
+
+// Tomo 四口味色 —— 待确认实际口味后,以独立 export 加入(不改 BrandTheme 结构)。
+// GPT 草案:vanilla / strawberry / matcha / mango;与当前菜单口味不一致,待 Kevin 确认。
 
 /** 根据当前路由解析主题 id */
 export function resolveThemeId(pathname: string | null): ThemeId {
