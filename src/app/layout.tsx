@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import PWARegister from './PWARegister';
+import { ThemeProvider } from '@/lib/theme/ThemeProvider';
 
 export const viewport: Viewport = {
   themeColor: '#0A0A0A',
@@ -52,7 +53,9 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body>
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
