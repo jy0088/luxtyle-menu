@@ -7,6 +7,7 @@
 
 import { type ReactNode } from 'react';
 import Header from './Header';
+import BottomNav from './BottomNav';
 
 export default function AppShell({
   children,
@@ -33,8 +34,8 @@ export default function AppShell({
       }}
     >
       <Header action={action} nav={nav} showBack={showBack} onBack={onBack} />
-      <main>{children}</main>
-      {/* BottomNav 槽位 —— 下一块填入 */}
+      <main style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>{children}</main>
+      <BottomNav />
     </div>
   );
 }
