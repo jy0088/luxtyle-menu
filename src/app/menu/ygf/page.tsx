@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, type MenuItem, type Allergen } from "./menuData";
+import AppShell from "@/components/shell/AppShell";
 
 // ── Color tokens ──────────────────────────────────────────
 const C = {
@@ -239,33 +240,11 @@ function MainMenu() {
   function pressEnd() { if (pressTimer.current) clearTimeout(pressTimer.current); }
 
   return (
-    <div style={{ minHeight: "100vh", maxWidth: 480, margin: "0 auto",
-      background: C.bg, fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", color: C.ink }}>
-
-      {/* ── Store header ─────────────────────────────── */}
-      <div style={{ background: `linear-gradient(135deg, #3d1200, #6b2500)`, padding: "20px 20px 0", textAlign: "center" }}>
-        <div style={{ fontSize: 11, color: C.goldLight, letterSpacing: 4, textTransform: "uppercase" }}>杨国福麻辣烫 · San Diego</div>
-        <h1 style={{ fontSize: 30, fontWeight: 900, color: "#fff", margin: "6px 0 0",
-          background: `linear-gradient(135deg, ${C.goldLight}, ${C.gold})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-          YGF Malatang
-        </h1>
-
-        {/* Special offer banner — tappable */}
-        <div style={{ margin: "14px -20px 0", background: C.gold, padding: "12px 20px",
-          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <span style={{ fontSize: 16 }}>🎉</span>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>开业酬宾 · Grand Opening Specials</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)" }}>
-              全日赠饮品 &nbsp;·&nbsp; Mon–Fri 第二碗五折 · 2nd Bowl 50% Off
-            </div>
-          </div>
-          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 18, marginLeft: "auto" }}>›</span>
-        </div>
-      </div>
-
-      {/* ── Allergy bar — FIXED, always visible ──────── */}
-      <div style={{ position: "sticky", top: 0, zIndex: 100,
+    <AppShell
+      nav={
+        <>
+      {/* Allergen bar (rendered inside sticky header) */}
+      <div style={{
         background: "#7C1D1D", padding: "10px 16px",
         display: "flex", alignItems: "center", gap: 10,
         borderBottom: "2px solid #9B2222" }}>
@@ -277,7 +256,6 @@ function MainMenu() {
           </div>
         </div>
       </div>
-
       {/* ── Section nav ──────────────────────────────── */}
       <div style={{ display: "flex", padding: "14px 16px", gap: 10, background: C.bg,
         borderBottom: `2px solid ${C.border}` }}>
@@ -298,6 +276,22 @@ function MainMenu() {
           </button>
         ))}
       </div>
+        </>
+      }
+    >
+      <div style={{ fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", color: C.ink }}>
+        {/* Special offer banner — tappable */}
+        <div style={{ background: C.gold, padding: "12px 20px",
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <span style={{ fontSize: 16 }}>🎉</span>
+          <div style={{ textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>开业酬宾 · Grand Opening Specials</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)" }}>
+              全日赠饮品 &nbsp;·&nbsp; Mon–Fri 第二碗五折 · 2nd Bowl 50% Off
+            </div>
+          </div>
+          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 18, marginLeft: "auto" }}>›</span>
+        </div>
 
       {/* ═══════════════════════════════════════════════
           SECTION: 汤品介绍
@@ -488,7 +482,8 @@ function MainMenu() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AppShell>
   );
 }
 

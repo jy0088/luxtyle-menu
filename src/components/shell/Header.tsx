@@ -16,7 +16,7 @@ interface BrandInfo {
 // 各品牌 Header 显示信息。logo 路径在接入对应品牌时补全。
 const BRAND_INFO: Record<string, BrandInfo> = {
   beiyuan: { logo: '/beiyuan-logo.png', cn: '北苑南家', en: 'Bei Yuan Tea & Boba' },
-  ygf: { logo: '', cn: 'YGF 麻辣烫', en: 'YGF Malatang' },
+  ygf: { logo: '', cn: '杨国福麻辣烫', en: 'YGF Malatang' },
   tomo: { logo: '', cn: 'Tomo Gelato', en: 'Tomo Gelato' },
   portal: { logo: '', cn: 'Luxtyle', en: 'Luxtyle' },
 };
