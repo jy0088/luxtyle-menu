@@ -1,22 +1,19 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import {
-  allCategories, toppings, freeDrinkOptions,
+  allCategories, toppings, freeDrinkOptions, mealAddOns,
   MenuCategory, MenuItem, MenuSubCategory,
 } from './menuData';
 import AppShell from '@/components/shell/AppShell';
 
+// 本月特价 — 占位。填入 specials / picks 后,弹窗与「Specials」按钮会自动展示。
 const monthlySpecials = {
-  month: 'March 2026',
-  specials: [
-    { nameEn: 'Honey Peach Aloe Iced Tea', nameCn: '蜜桃芦荟冰茶', price: 5.50, note: '特价 · Limited time' },
-    { nameEn: 'Black Sugar Ginger Jujube Milk Tea', nameCn: '黑糖姜枣奶茶', price: 6.98, note: '本月推荐' },
-    { nameEn: 'Crispy Pork Chop Meal Set', nameCn: '香酥排骨套餐', price: 15.99, note: '含套餐附赠饮料' },
-  ],
-  picks: [] as Array<{nameEn: string; nameCn: string; price: number}>,
+  month: 'May 2026',
+  specials: [] as Array<{ nameEn: string; nameCn: string; price: number; note?: string }>,
+  picks: [] as Array<{ nameEn: string; nameCn: string; price: number }>,
 };
+const hasSpecials = monthlySpecials.specials.length > 0 || monthlySpecials.picks.length > 0;
 
 const C = {
   bg: '#F5F2EC', card: '#FFFFFF', cardImg: '#EBEBEB', muted: '#F0EDE8',
@@ -60,7 +57,7 @@ const TAB_SECTIONS: TabSection[] = [
     color: '#EA580C', colorBg: '#FFF7ED', colorBgActive: '#EA580C', colorText: '#9A3412',
     tabs: [
       { id: 'M-A', nameCn: '精制套餐组合', nameEn: 'Meal Set' },
-      { id: 'FREE-DRINK', nameCn: '套餐附赠饮料', nameEn: 'Free Drink Options' },
+      { id: 'FREE-DRINK', nameCn: '套餐附赠饮料', nameEn: 'Free Drink' },
     ],
   },
   {
@@ -81,6 +78,20 @@ const TAB_SECTIONS: TabSection[] = [
     ],
   },
 ];
+
+// ── Price (with +Tax) ──────────────────────────────────
+function Price({ value, size = 18, color = C.accent, prefix = '' }: {
+  value: number; size?: number; color?: string; prefix?: string;
+}) {
+  return (
+    <span style={{ fontWeight: 800, color, fontSize: size, whiteSpace: 'nowrap' }}>
+      {prefix}${value.toFixed(2)}
+      <span style={{ fontSize: Math.max(9, Math.round(size * 0.42)), fontWeight: 600, color: C.faint, marginLeft: 3 }}>
+        +Tax
+      </span>
+    </span>
+  );
+}
 
 // ── Splash Screen ──────────────────────────────────────
 function SplashScreen({ onDone }: { onDone: () => void }) {
@@ -103,7 +114,6 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
       transform: phase === 'drip' ? 'translateY(-100%)' : 'translateY(0)',
       opacity: phase === 'drip' ? 0 : 1,
     }}>
-      {/* Background cover image only */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
         <img
           src="/beiyuan-cover.png"
@@ -116,13 +126,13 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
 }
 
 // ── Tea Base Badges ────────────────────────────────────
-function TeaBaseBadge({ bases }: { bases: string[] }) {
-  const map: Record<string, string> = { B: '红茶', G: '绿茶', O: '乌龙+$0.5' };
+function TeaBaseBadge({ bases, oolongUpcharge }: { bases: string[]; oolongUpcharge?: boolean }) {
+  const map: Record<string, string> = { B: 'Black Tea', G: 'Green Tea', O: 'Oolong' };
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 3, marginTop: 4 }}>
       {bases.map(b => (
         <span key={b} style={{ fontSize: 10, background: C.accentBg, color: C.accent, padding: '2px 7px', borderRadius: 999, fontWeight: 600 }}>
-          {map[b]}
+          {map[b]}{b === 'O' && oolongUpcharge ? ' +$0.5' : ''}
         </span>
       ))}
     </div>
@@ -133,12 +143,12 @@ function CustomChips({ cat }: { cat: MenuCategory }) {
   const c = cat.customization;
   if (!c) return null;
   const chips: { label: string; bg: string; color: string }[] = [];
-  if (c.sweetness) chips.push({ label: '甜度可调', bg: '#FEF9C3', color: '#854D0E' });
-  if (c.ice) chips.push({ label: '冰量可调', bg: '#E0F2FE', color: '#0369A1' });
-  if (c.iceFixed) chips.push({ label: '冰量固定', bg: '#F3F4F6', color: '#6B7280' });
-  if (c.topping) chips.push({ label: 'Topping 可加', bg: '#F3E8FF', color: '#6D28D9' });
-  if (c.size === 'S+L') chips.push({ label: 'S/L · Large +$1', bg: '#FFF7ED', color: '#C2410C' });
-  if (c.teaBase) chips.push({ label: '茶底可选', bg: '#DCFCE7', color: '#15803D' });
+  if (c.sweetness) chips.push({ label: 'Adjustable Sweetness', bg: '#FEF9C3', color: '#854D0E' });
+  if (c.ice) chips.push({ label: 'Adjustable Ice', bg: '#E0F2FE', color: '#0369A1' });
+  if (c.iceFixed) chips.push({ label: 'Fixed Ice', bg: '#F3F4F6', color: '#6B7280' });
+  if (c.topping) chips.push({ label: 'Add Toppings', bg: '#F3E8FF', color: '#6D28D9' });
+  if (c.size === 'S+L') chips.push({ label: 'S / L · Large +$1', bg: '#FFF7ED', color: '#C2410C' });
+  if (c.teaBase) chips.push({ label: 'Choose Tea Base', bg: '#DCFCE7', color: '#15803D' });
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 4, padding: '8px 0 4px' }}>
       {chips.map(ch => (
@@ -149,17 +159,6 @@ function CustomChips({ cat }: { cat: MenuCategory }) {
     </div>
   );
 }
-
-const cardStyle: React.CSSProperties = {
-  background: C.card, borderRadius: 16, border: `1px solid ${C.border}`,
-  overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
-};
-
-const imgBox = (bg: string): React.CSSProperties => ({
-  width: '100%', height: 110, background: bg,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  position: 'relative', fontSize: 32,
-});
 
 const absBadge = (bg: string, color: string, top?: number, bottom?: number, left?: number, right?: number): React.CSSProperties => ({
   position: 'absolute', fontSize: 9, fontWeight: 700, background: bg, color,
@@ -187,7 +186,7 @@ const sheetStyle: React.CSSProperties = {
   overflow: 'hidden',
 };
 
-function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
+function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: boolean; oolongUpcharge?: boolean }) {
   const [open, setOpen] = useState(false);
   const emoji = isMeal ? '🍱' : '🍵';
   const imgBg = isMeal ? '#FFF7ED' : C.cardImg;
@@ -228,15 +227,15 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
           <div style={{ fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
           <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
           {item.note && <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>{item.note}</div>}
-          {item.teaBases && <TeaBaseBadge bases={item.teaBases} />}
+          {item.teaBases && <TeaBaseBadge bases={item.teaBases} oolongUpcharge={oolongUpcharge} />}
           {item.caffeineF && <span style={{ fontSize: 10, color: '#1D4ED8', marginTop: 3, display: 'block' }}>☆ Caffeine Free</span>}
           {isMeal && (
             <div style={{ marginTop: 5, fontSize: 10, color: '#15803D', background: '#F0FDF4', padding: '2px 8px', borderRadius: 999, display: 'inline-block', alignSelf: 'flex-start' }}>
-              + Free Drink 含饮料
+              + Free Drink Included
             </div>
           )}
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.accent, marginTop: 8 }}>
-            ${item.price.toFixed(2)}
+          <div style={{ marginTop: 8 }}>
+            <Price value={item.price} size={18} />
             {item.priceL && <span style={{ fontSize: 12, fontWeight: 400, color: C.faint, marginLeft: 6 }}>/ L ${item.priceL.toFixed(2)}</span>}
           </div>
         </div>
@@ -255,7 +254,7 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
             {/* Drag handle */}
             <div style={{ padding: '12px 0 0', flexShrink: 0 }}>
               <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto' }} />
-              <div style={{ textAlign: 'center', fontSize: 10, color: '#ccc', marginTop: 4 }}>下滑关闭</div>
+              <div style={{ textAlign: 'center', fontSize: 10, color: '#ccc', marginTop: 4 }}>Swipe down to close</div>
             </div>
             {/* Hero image — full width, tall */}
             <div style={{ width: '100%', height: 240, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
@@ -276,26 +275,26 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
               {item.note && <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>{item.note}</div>}
               {item.teaBases && (
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>茶底选择 Tea Base</div>
-                  <TeaBaseBadge bases={item.teaBases} />
+                  <div style={{ fontSize: 12, fontWeight: 700, color: C.sub, marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>Tea Base · 茶底</div>
+                  <TeaBaseBadge bases={item.teaBases} oolongUpcharge={oolongUpcharge} />
                 </div>
               )}
-              <div style={{ fontSize: 32, fontWeight: 900, color: C.accent, marginTop: 16 }}>
-                ${item.price.toFixed(2)}
+              <div style={{ marginTop: 16 }}>
+                <Price value={item.price} size={32} />
                 {item.priceL && <span style={{ fontSize: 16, fontWeight: 400, color: C.faint, marginLeft: 10 }}>/ Large ${item.priceL.toFixed(2)}</span>}
               </div>
               {/* Customization info */}
               <div style={{ marginTop: 20, background: C.muted, borderRadius: 16, padding: '14px 16px' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>Customization · 定制选项</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-                  <span style={{ fontSize: 12, background: '#FEF9C3', color: '#854D0E', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>甜度可调</span>
-                  <span style={{ fontSize: 12, background: '#E0F2FE', color: '#0369A1', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>冰量可调</span>
-                  <span style={{ fontSize: 12, background: '#F3E8FF', color: '#6D28D9', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Topping 可加</span>
+                  <span style={{ fontSize: 12, background: '#FEF9C3', color: '#854D0E', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Adjustable Sweetness</span>
+                  <span style={{ fontSize: 12, background: '#E0F2FE', color: '#0369A1', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Adjustable Ice</span>
+                  <span style={{ fontSize: 12, background: '#F3E8FF', color: '#6D28D9', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Add Toppings</span>
                 </div>
               </div>
               {isMeal && (
                 <div style={{ background: '#F0FDF4', borderRadius: 16, padding: 16, marginTop: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: C.green, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>🎁 Free Drink · 免费饮料选一</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: C.green, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>🎁 Free Drink · Choose One</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                     {freeDrinkOptions.map((d, i) => (
                       <div key={i} style={{ background: '#fff', borderRadius: 10, padding: '10px 12px' }}>
@@ -304,7 +303,7 @@ function ItemCard({ item, isMeal }: { item: MenuItem; isMeal?: boolean }) {
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>甜度可选 · 默认无冰 · 大杯 +$1</div>
+                  <div style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>Sweetness adjustable · No ice by default · Large +$1</div>
                 </div>
               )}
               {/* Spacer for safe area */}
@@ -334,7 +333,7 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{sub.nameEn}</div>
           <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
           <div style={{ fontSize: 10, color: C.faint, marginTop: 4 }}>{sub.items.length} flavors · tap to choose</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.accent, marginTop: 8 }}>${sub.price.toFixed(2)}</div>
+          <div style={{ marginTop: 8 }}><Price value={sub.price} size={18} /></div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', paddingRight: 14, color: C.faint, fontSize: 18 }}>›</div>
       </div>
@@ -343,20 +342,22 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
         <div style={overlayStyle} onClick={() => setOpen(false)}>
           <div style={sheetStyle} onClick={e => e.stopPropagation()}>
             <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{sub.nameEn}</div>
-            <div style={{ fontSize: 13, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
-            {sub.note && <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>{sub.note}</div>}
-            <div style={{ fontSize: 26, fontWeight: 900, color: C.accent, margin: '10px 0 16px' }}>${sub.price.toFixed(2)}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>口味选择 Flavors</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {sub.items.map((item, i) => (
-                <div key={i} style={{ background: C.muted, borderRadius: 12, padding: '10px 12px', position: 'relative' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{item.nameEn}</div>
-                  <div style={{ fontSize: 10, color: C.sub }}>{item.nameCn}</div>
-                  {item.seasonal && <span style={absBadge('#16A34A', '#fff', 6, undefined, undefined, 6)}>Seasonal</span>}
-                  {item.note && <div style={{ fontSize: 9, color: C.faint, marginTop: 2 }}>{item.note}</div>}
-                </div>
-              ))}
+            <div style={{ padding: '0 22px' }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{sub.nameEn}</div>
+              <div style={{ fontSize: 13, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
+              {sub.note && <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>{sub.note}</div>}
+              <div style={{ margin: '10px 0 16px' }}><Price value={sub.price} size={26} /></div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Flavors · 口味</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {sub.items.map((item, i) => (
+                  <div key={i} style={{ background: C.muted, borderRadius: 12, padding: '10px 12px', position: 'relative' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{item.nameEn}</div>
+                    <div style={{ fontSize: 10, color: C.sub }}>{item.nameCn}</div>
+                    {item.seasonal && <span style={absBadge('#16A34A', '#fff', 6, undefined, undefined, 6)}>Seasonal</span>}
+                    {item.note && <div style={{ fontSize: 9, color: C.faint, marginTop: 2 }}>{item.note}</div>}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -365,16 +366,43 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
   );
 }
 
+// ── Meal Add-ons (M-A / M-B / M-C) ─────────────────────
+function MealAddOnsBlock() {
+  return (
+    <div style={{ marginTop: 14, background: '#FFF7ED', borderRadius: 16, padding: '14px 16px', border: '1px solid #FED7AA' }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: '#EA580C', textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>
+        Add-ons · 加购
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {mealAddOns.map((a, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{a.nameEn}</span>
+              <span style={{ fontSize: 11, color: C.sub, marginLeft: 6 }}>{a.nameCn}</span>
+            </div>
+            <Price value={a.price} size={14} prefix="+" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CategorySection({ cat }: { cat: MenuCategory }) {
   const isMeal = cat.id === 'M-A';
+  const oolongUpcharge = cat.id === 'C-A' || cat.id === 'C-B';
+  const showAddOns = cat.id === 'M-A' || cat.id === 'M-B' || cat.id === 'M-C';
   return (
     <div style={{ padding: '4px 16px 16px' }}>
       <CustomChips cat={cat} />
       {/* Single column list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
-        {cat.type === 'items' && cat.items?.map(item => <ItemCard key={item.id} item={item} isMeal={isMeal} />)}
+        {cat.type === 'items' && cat.items?.map(item => (
+          <ItemCard key={item.id} item={item} isMeal={isMeal} oolongUpcharge={oolongUpcharge} />
+        ))}
         {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} />)}
       </div>
+      {showAddOns && <MealAddOnsBlock />}
     </div>
   );
 }
@@ -383,12 +411,12 @@ function FreeDrinkSection() {
   return (
     <div style={{ padding: '16px 16px 32px' }}>
       <div style={{ background: '#FFF7ED', borderRadius: 16, padding: '14px 16px', marginBottom: 16, border: '1px solid #FED7AA' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#EA580C' }}>🎁 套餐附赠饮料说明</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#EA580C' }}>🎁 Free Drink with Every Meal Set</div>
         <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.7 }}>
-          所有套餐均含一杯免费饮料。可选热饮或冷饮，甜度冰量均可调。如需升级为大杯，需额外加 $1。
+          All meal sets include one complimentary drink — hot or cold, with adjustable sweetness and ice. Upgrade to large +$1.
         </div>
         <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>
-          All meal sets include one complimentary drink. Hot or cold available. Upgrade to large +$1.
+          所有套餐均含一杯免费饮料，冷热皆可、甜度冰量可调，升级大杯加 $1。
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -396,7 +424,7 @@ function FreeDrinkSection() {
           <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '14px 14px', border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{d.nameEn}</div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 3 }}>{d.nameCn}</div>
-            <div style={{ marginTop: 8, fontSize: 11, background: '#FFF7ED', color: '#EA580C', padding: '3px 8px', borderRadius: 999, display: 'inline-block', fontWeight: 600 }}>免费附赠</div>
+            <div style={{ marginTop: 8, fontSize: 11, background: '#FFF7ED', color: '#EA580C', padding: '3px 8px', borderRadius: 999, display: 'inline-block', fontWeight: 600 }}>Included</div>
           </div>
         ))}
       </div>
@@ -414,7 +442,7 @@ function ToppingSection() {
               <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{t.nameEn}</div>
               <div style={{ fontSize: 11, color: C.sub }}>{t.nameCn}</div>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: C.accent }}>+${t.price.toFixed(2)}</div>
+            <Price value={t.price} size={14} prefix="+" />
           </div>
         ))}
       </div>
@@ -423,42 +451,54 @@ function ToppingSection() {
 }
 
 function MonthlyPopup({ onClose }: { onClose: () => void }) {
+  const empty = !hasSpecials;
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.overlay, backdropFilter: 'blur(6px)', padding: 20 }} onClick={onClose}>
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 360, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }} onClick={e => e.stopPropagation()}>
         <div style={{ background: `linear-gradient(135deg,${C.brand} 0%,${C.brandDark} 100%)`, padding: '24px 24px 20px' }}>
-          <div style={{ fontSize: 11, color: C.goldLight, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const }}>北苑南家</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: C.gold, marginTop: 4 }}>每月特价 & 店长推荐</div>
+          <div style={{ fontSize: 11, color: C.goldLight, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase' as const }}>Bei Yuan Tea &amp; Boba</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: C.gold, marginTop: 4 }}>Monthly Specials</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>{monthlySpecials.month}</div>
         </div>
         <div style={{ padding: 20 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>🏷 本月特价</div>
-          {monthlySpecials.specials.map((s, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.accentBg, borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{s.nameEn}</div>
-                <div style={{ fontSize: 11, color: C.sub }}>{s.nameCn}</div>
-                {s.note && <div style={{ fontSize: 10, color: C.faint, textDecoration: 'line-through' }}>{s.note}</div>}
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 900, color: C.accent }}>${s.price.toFixed(2)}</div>
+          {empty && (
+            <div style={{ textAlign: 'center', padding: '24px 8px' }}>
+              <div style={{ fontSize: 30 }}>🍵</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginTop: 8 }}>Specials Coming Soon</div>
+              <div style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>本月特价整理中,敬请期待</div>
             </div>
-          ))}
+          )}
+          {monthlySpecials.specials.length > 0 && (
+            <>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>🏷 This Month&apos;s Specials</div>
+              {monthlySpecials.specials.map((s, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.accentBg, borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{s.nameEn}</div>
+                    <div style={{ fontSize: 11, color: C.sub }}>{s.nameCn}</div>
+                    {s.note && <div style={{ fontSize: 10, color: C.faint }}>{s.note}</div>}
+                  </div>
+                  <Price value={s.price} size={18} />
+                </div>
+              ))}
+            </>
+          )}
           {monthlySpecials.picks.length > 0 && (
             <>
-              <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, margin: '12px 0 8px' }}>⭐ 店长推荐</div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, margin: '12px 0 8px' }}>⭐ Manager&apos;s Picks</div>
               {monthlySpecials.picks.map((p, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FFF7ED', borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{p.nameEn}</div>
                     <div style={{ fontSize: 11, color: C.sub }}>{p.nameCn}</div>
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: C.orange }}>${p.price.toFixed(2)}</div>
+                  <Price value={p.price} size={18} color={C.orange} />
                 </div>
               ))}
             </>
           )}
           <button onClick={onClose} style={{ width: '100%', background: C.brand, color: C.gold, border: 'none', borderRadius: 16, padding: '14px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', marginTop: 4 }}>
-            查看全部菜单 View Menu
+            View Full Menu
           </button>
         </div>
       </div>
@@ -472,10 +512,10 @@ export default function BeiYuanPage() {
   const [splashDone, setSplashDone] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  // Show popup after splash
+  // Show popup after splash — only when there are specials to show
   const handleSplashDone = () => {
     setSplashDone(true);
-    setTimeout(() => setShowPopup(true), 300);
+    if (hasSpecials) setTimeout(() => setShowPopup(true), 300);
   };
 
   useEffect(() => {
@@ -514,7 +554,7 @@ export default function BeiYuanPage() {
             background: C.gold, color: C.brand, border: 'none',
             borderRadius: 999, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
           }}>
-            🏷 本月特价
+            🏷 Specials
           </button>
         }
         nav={
@@ -537,7 +577,7 @@ export default function BeiYuanPage() {
                   transition: 'all 0.15s',
                 }}
               >
-                {section.label} · {section.labelEn}
+                {section.labelEn}
               </button>
             );
           })}
@@ -567,8 +607,8 @@ export default function BeiYuanPage() {
                     boxShadow: isActive ? `0 2px 8px ${activeSection.color}44` : 'none',
                   }}
                 >
-                  <div style={{ fontSize: 15, fontWeight: 800, color: isActive ? activeSection.color : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{tab.nameCn}</div>
-                  <div style={{ fontSize: 11, color: isActive ? activeSection.colorText : 'rgba(255,255,255,0.5)', marginTop: 3, fontWeight: 600 }}>{tab.nameEn}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: isActive ? activeSection.color : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{tab.nameEn}</div>
+                  <div style={{ fontSize: 10, color: isActive ? activeSection.colorText : 'rgba(255,255,255,0.5)', marginTop: 3, fontWeight: 600 }}>{tab.nameCn}</div>
                 </button>
               );
             })}
@@ -605,7 +645,8 @@ export default function BeiYuanPage() {
       </div>
 
       <div style={{ textAlign: 'center', padding: '24px 16px 40px' }}>
-        <div style={{ fontSize: 11, color: C.faint }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
+        <div style={{ fontSize: 11, color: C.faint }}>Prices do not include tax · 价格不含税</div>
+        <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
         <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
     </AppShell>
