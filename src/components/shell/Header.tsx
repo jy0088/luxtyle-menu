@@ -17,7 +17,7 @@ interface BrandInfo {
 const BRAND_INFO: Record<string, BrandInfo> = {
   beiyuan: { logo: '/beiyuan-logo.png', cn: '北苑南家', en: 'Bei Yuan Tea & Boba' },
   ygf: { logo: '', cn: '杨国福麻辣烫', en: 'YGF Malatang' },
-  tomo: { logo: '', cn: 'Tomo Gelato', en: 'Tomo Gelato' },
+  tomo: { logo: '', cn: 'tomo', en: 'Artisan Gelato' },
   portal: { logo: '', cn: 'Luxtyle', en: 'Luxtyle' },
 };
 

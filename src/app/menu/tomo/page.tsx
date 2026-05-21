@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import AppShell from '@/components/shell/AppShell';
 
 // ── Brand ──────────────────────────────────────────────
 const T = {
@@ -292,26 +293,8 @@ export default function TomoPage() {
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       {selectedFlavor && <FlavorModal flavor={selectedFlavor} onClose={() => setSelectedFlavor(null)} />}
 
-      <div style={{
-        minHeight: '100dvh', background: T.bg,
-        fontFamily: '"Georgia", "Times New Roman", serif',
-      }}>
-
-        {/* Header */}
-        <div style={{ padding: '28px 24px 0', textAlign: 'center' }}>
-          <div style={{
-            fontSize: 48, fontWeight: 900, letterSpacing: -2, lineHeight: 1,
-            background: 'linear-gradient(135deg, #C2773A 0%, #4A4E8A 50%, #7A9E5F 100%)',
-            backgroundSize: '200% auto',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            animation: 'shimmer 4s linear infinite',
-          }}>
-            tomo
-          </div>
-          <div style={{ fontSize: 11, color: '#bbb', letterSpacing: 4, textTransform: 'uppercase', fontWeight: 600, marginTop: 2, fontFamily: 'system-ui, sans-serif' }}>
-            Artisan Gelato
-          </div>
-        </div>
+    <AppShell>
+      <div style={{ fontFamily: '"Georgia", "Times New Roman", serif', color: T.text }}>
 
         {/* Tagline */}
         <div style={{ textAlign: 'center', padding: '14px 32px 0', fontFamily: 'system-ui, sans-serif' }}>
@@ -446,6 +429,7 @@ export default function TomoPage() {
           <div style={{ fontSize: 10, color: '#e8e8e8', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
         </div>
       </div>
+    </AppShell>
     </>
   );
 }
