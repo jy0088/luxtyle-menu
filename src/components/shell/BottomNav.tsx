@@ -11,8 +11,8 @@ import { usePathname, useRouter } from 'next/navigation';
 type TabId = 'home' | 'menu' | 'promo' | 'share';
 
 const iconBase: SVGProps<SVGSVGElement> = {
-  width: 24,
-  height: 24,
+  width: 22,
+  height: 22,
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
@@ -55,11 +55,11 @@ function TabIcon({ id }: { id: TabId }) {
   );
 }
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'home', label: '首页' },
-  { id: 'menu', label: '菜单' },
-  { id: 'promo', label: '优惠' },
-  { id: 'share', label: '分享' },
+const TABS: { id: TabId; en: string; zh: string }[] = [
+  { id: 'home', en: 'Home', zh: '首页' },
+  { id: 'menu', en: 'Menu', zh: '菜单' },
+  { id: 'promo', en: 'Deals', zh: '优惠' },
+  { id: 'share', en: 'Share', zh: '分享' },
 ];
 
 export default function BottomNav() {
@@ -142,8 +142,8 @@ export default function BottomNav() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 3,
-                  padding: '8px 4px 7px',
+                  gap: 2,
+                  padding: '7px 4px 6px',
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
@@ -152,8 +152,11 @@ export default function BottomNav() {
                 }}
               >
                 <TabIcon id={tab.id} />
-                <span style={{ fontSize: 10.5, fontWeight: isActive ? 800 : 600, letterSpacing: 0.3 }}>
-                  {tab.label}
+                <span style={{ fontSize: 11, fontWeight: isActive ? 800 : 600, lineHeight: 1.1 }}>
+                  {tab.en}
+                </span>
+                <span style={{ fontSize: 8.5, fontWeight: 500, lineHeight: 1.1, opacity: 0.72 }}>
+                  {tab.zh}
                 </span>
               </button>
             );

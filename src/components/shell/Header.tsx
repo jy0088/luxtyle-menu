@@ -9,16 +9,16 @@ import { useTheme } from '@/lib/theme/ThemeProvider';
 
 interface BrandInfo {
   logo: string;
-  cn: string;
-  en: string;
+  primary: string;   // 主显示名(英文为主)
+  secondary: string; // 副行(中文 / 描述)
 }
 
-// 各品牌 Header 显示信息。logo 路径在接入对应品牌时补全。
+// 各品牌 Header 显示信息。primary 主、secondary 副。logo 路径在接入对应品牌时补全。
 const BRAND_INFO: Record<string, BrandInfo> = {
-  beiyuan: { logo: '/beiyuan-logo.png', cn: '北苑南家', en: 'Bei Yuan Tea & Boba' },
-  ygf: { logo: '', cn: '杨国福麻辣烫', en: 'YGF Malatang' },
-  tomo: { logo: '', cn: 'tomo', en: 'Artisan Gelato' },
-  portal: { logo: '', cn: 'Luxtyle', en: 'Luxtyle' },
+  beiyuan: { logo: '/beiyuan-logo.png', primary: 'Bei Yuan Tea & Boba', secondary: '北苑南家' },
+  ygf: { logo: '', primary: 'YGF Malatang', secondary: '杨国福麻辣烫' },
+  tomo: { logo: '', primary: 'tomo', secondary: 'Artisan Gelato' },
+  portal: { logo: '', primary: 'Luxtyle', secondary: '' },
 };
 
 export default function Header({
@@ -110,28 +110,26 @@ export default function Header({
           <div style={{ minWidth: 0 }}>
             <div
               style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                textTransform: 'uppercase',
-                color: 'var(--lx-hero-ink-muted)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {brand.en}
-            </div>
-            <div
-              style={{
-                fontSize: 19,
-                fontWeight: 900,
-                lineHeight: 1.2,
+                fontSize: 17,
+                fontWeight: 800,
+                lineHeight: 1.15,
                 color: 'var(--lx-accent)',
               }}
             >
-              {brand.cn}
+              {brand.primary}
             </div>
+            {brand.secondary && (
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  marginTop: 1,
+                  color: 'var(--lx-hero-ink-muted)',
+                }}
+              >
+                {brand.secondary}
+              </div>
+            )}
           </div>
         </div>
         {action && <div style={{ flexShrink: 0 }}>{action}</div>}
