@@ -210,11 +210,11 @@ function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: b
     <>
       {/* Horizontal row card */}
       <div
-        style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'stretch' }}
+        style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center' }}
         onClick={() => setOpen(true)}
       >
-        {/* Left image block */}
-        <div style={{ width: 130, minWidth: 130, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30, overflow: 'hidden' }}>
+        {/* Left image block — square thumbnail */}
+        <div style={{ width: 130, minWidth: 130, height: 130, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30, overflow: 'hidden' }}>
           {item.img
             ? <img src={item.img} alt={item.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : <span style={{ opacity: 0.35 }}>{emoji}</span>
@@ -257,7 +257,7 @@ function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: b
               <div style={{ textAlign: 'center', fontSize: 10, color: '#ccc', marginTop: 4 }}>Swipe down to close</div>
             </div>
             {/* Hero image — full width, tall */}
-            <div style={{ width: '100%', height: 240, background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
+            <div style={{ width: '100%', aspectRatio: '4 / 3', background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
               {item.img
                 ? <img src={item.img} alt={item.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <span style={{ opacity: 0.25 }}>{emoji}</span>

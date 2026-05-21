@@ -58,7 +58,7 @@ export const icedFlavoredTea: MenuCategory = {
   type: 'items',
   customization: { sweetness: true, ice: true, topping: true, size: 'fixed', teaBase: true },
   items: [
-    { id: 'C-A-01', nameEn: 'Bubble Ice Tea', nameCn: '泡沫冰茶', price: 4.98, teaBases: ['B','G','O'] },
+    { id: 'C-A-01', nameEn: 'Bubble Ice Tea', nameCn: '泡沫冰茶', price: 4.98, teaBases: ['B','G','O'], img: '/beiyuan-C-A-01.webp' },
     { id: 'C-A-02', nameEn: 'Mango Ice Tea', nameCn: '芒果冰茶', price: 5.98, teaBases: ['B','G','O'] },
     { id: 'C-A-03', nameEn: 'Passion Fruit Tea', nameCn: '百香冰茶', price: 5.98, teaBases: ['B','G','O'] },
     { id: 'C-A-04', nameEn: 'Peach Tea', nameCn: '水蜜桃茶', price: 5.98, teaBases: ['B','G','O'] },
