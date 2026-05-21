@@ -73,7 +73,7 @@ export const icedFlavoredTea: MenuCategory = {
     { id: 'C-A-14b', nameEn: 'White Peach Oolong', nameCn: '白桃香乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14b.webp' },
     { id: 'C-A-14c', nameEn: 'Charcoal-Roasted Oolong', nameCn: '炭烧乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14c.webp' },
     { id: 'C-A-14d', nameEn: 'Coconut Oolong', nameCn: '椰果香乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14d.webp' },
-    { id: 'C-A-14e', nameEn: 'Jin Jun Mei', nameCn: '金骏眉', price: 6.98, note: '冰镇香型乌龙茶系列' },
+    { id: 'C-A-14e', nameEn: 'Jin Jun Mei', nameCn: '金骏眉', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14e.webp' },
   ],
 };
 
