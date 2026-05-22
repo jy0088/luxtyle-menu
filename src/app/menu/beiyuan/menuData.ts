@@ -244,17 +244,18 @@ export const hotTea: MenuCategory = {
   nameEn: 'Hot Traditional / Flavored Tea',
   nameCn: '热传统/调味茶',
   type: 'items',
-  customization: { sweetness: true, topping: true, size: 'S+L' },
+  // 热纯茶:单一杯型,无甜度/大小杯/加料定制。priceL 数据保留备用,详情页不显示。
+  customization: undefined,
   items: [
     { id: 'H-A-01', nameEn: 'Original Black / Green Tea', nameCn: '纯红/绿茶', price: 5.49, teaBases: ['B','G'], img: '/beiyuan-H-A-01.webp' },
     { id: 'H-A-02', nameEn: 'Royal Black Tea', nameCn: '伯爵红茶', price: 5.98, img: '/beiyuan-H-A-02.webp' },
     { id: 'H-A-03', nameEn: 'Rose Black Tea', nameCn: '玫瑰红茶', price: 5.98, img: '/beiyuan-H-A-03.webp' },
-    { id: 'H-A-04', nameEn: 'Dragon Well', nameCn: '龙井', price: 6.98, note: 'Green Tea · 无糖', img: '/beiyuan-H-A-04.webp' },
-    { id: 'H-A-05', nameEn: 'Imperial Gyokuro Genmaicha', nameCn: '玄米茶', price: 6.98, note: 'Green Tea · 无糖', img: '/beiyuan-H-A-05.webp' },
-    { id: 'H-A-06', nameEn: 'Tie Guan Yin', nameCn: '清香铁观音', price: 8.98, note: 'Oolong · 无糖', img: '/beiyuan-H-A-06.webp' },
-    { id: 'H-A-07', nameEn: 'Da Hong Pao', nameCn: '大红袍', price: 8.98, note: 'Oolong · 无糖', img: '/beiyuan-H-A-07.webp' },
-    { id: 'H-A-08', nameEn: 'Jin Jun Mei', nameCn: '金骏眉', price: 8.98, note: 'Black Tea · 无糖', img: '/beiyuan-H-A-08.webp' },
-    { id: 'H-A-09', nameEn: 'Liu Yin Bai Hao', nameCn: '六窨白毫', price: 12.98, note: 'Jasmine · 无糖', img: '/beiyuan-H-A-09.webp' },
+    { id: 'H-A-04', nameEn: 'Dragon Well', nameCn: '龙井', price: 6.98, note: 'Green Tea · Unsweetened', img: '/beiyuan-H-A-04.webp' },
+    { id: 'H-A-05', nameEn: 'Imperial Gyokuro Genmaicha', nameCn: '玄米茶', price: 6.98, note: 'Green Tea · Unsweetened', img: '/beiyuan-H-A-05.webp' },
+    { id: 'H-A-06', nameEn: 'Tie Guan Yin', nameCn: '清香铁观音', price: 8.98, note: 'Oolong · Unsweetened', img: '/beiyuan-H-A-06.webp' },
+    { id: 'H-A-07', nameEn: 'Da Hong Pao', nameCn: '大红袍', price: 8.98, note: 'Oolong · Unsweetened', img: '/beiyuan-H-A-07.webp' },
+    { id: 'H-A-08', nameEn: 'Jin Jun Mei', nameCn: '金骏眉', price: 8.98, note: 'Black Tea · Unsweetened', img: '/beiyuan-H-A-08.webp' },
+    { id: 'H-A-09', nameEn: 'Liu Yin Bai Hao', nameCn: '六窨白毫', price: 12.98, note: 'Jasmine · Unsweetened', img: '/beiyuan-H-A-09.webp' },
   ],
 };
 
@@ -298,6 +299,7 @@ export const houseSpecialHot: MenuCategory = {
       nameEn: 'Fruit Tea Series',
       nameCn: '果茶系列',
       price: 7.98,
+      img: '/beiyuan-H-C-01.webp',
       items: [
         { nameEn: 'Mixed Fruit Tea', nameCn: '综合水果茶' },
         { nameEn: 'Passion Fruit Black Tea', nameCn: '百香红茶' },
@@ -310,6 +312,7 @@ export const houseSpecialHot: MenuCategory = {
       nameEn: 'Wellness Series',
       nameCn: '养生系列',
       price: 7.98,
+      img: '/beiyuan-H-C-02.webp',
       items: [
         { nameEn: 'Honey Ginseng', nameCn: '蜂蜜人参', note: 'Caffeine Free' },
         { nameEn: 'Eight Treasure Chrysanthemum Tea', nameCn: '八宝菊花茶' },
@@ -325,6 +328,7 @@ export const houseSpecialHot: MenuCategory = {
       nameEn: 'Milky Series',
       nameCn: '奶香系列',
       price: 5.98,
+      img: '/beiyuan-H-C-03.webp',
       items: [
         { nameEn: 'Taro Milk Drink', nameCn: '芋头沙奶', note: 'Caffeine Free' },
         { nameEn: 'Honey Dew Milk Drink', nameCn: '哈密瓜沙奶', note: 'Caffeine Free' },

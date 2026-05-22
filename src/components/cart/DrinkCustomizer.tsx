@@ -14,15 +14,24 @@ const C = {
 };
 
 const TEA_BASE_LABEL: Record<TeaBase, TeaBaseLabel> = { B: '红茶', G: '绿茶', O: '乌龙' };
+const TEA_BASE_EN: Record<TeaBase, string> = { B: 'Black', G: 'Green', O: 'Oolong' };
+const SWEET_EN: Record<SweetLevel, string> = {
+  '原糖': 'Full Sugar', '75%': '75%', '50%': '50%', '25%': '25%', '无糖': 'No Sugar',
+};
+const ICE_EN: Record<IceLevel, string> = {
+  '正常冰': 'Regular', '少冰': 'Less', '去冰': 'No Ice',
+};
 const OOLONG_UPCHARGE = 0.5;
 const SIZE_L_UPCHARGE = 1.0;
 
 /** 一组胶囊选择器 */
 function PillGroup<T extends string>({
-  label, options, value, onChange, suffix,
+  label, options, value, onChange, suffix, display,
 }: {
   label: string; options: T[]; value: T;
-  onChange: (v: T) => void; suffix?: Partial<Record<T, string>>;
+  onChange: (v: T) => void;
+  suffix?: Partial<Record<T, string>>;
+  display?: Partial<Record<T, string>>;  // 主显示文字(覆盖 opt 本身)
 }) {
   return (
     <div style={{ marginTop: 16 }}>
@@ -45,7 +54,7 @@ function PillGroup<T extends string>({
                 color: active ? '#fff' : C.text,
               }}
             >
-              {opt}{suffix?.[opt] ? <span style={{
+              {display?.[opt] ?? opt}{suffix?.[opt] ? <span style={{
                 fontSize: 11, opacity: 0.8, marginLeft: 3,
               }}>{suffix[opt]}</span> : null}
             </button>
@@ -124,6 +133,7 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
       {hasSize && !item.largeOnly && (
         <PillGroup<SizeLabel>
           label="杯型 Size" options={['S', 'L']} value={size} onChange={setSize}
+          display={{ S: '小杯 Small', L: '大杯 Large' }}
           suffix={{ L: `+$${SIZE_L_UPCHARGE.toFixed(2)}` }}
         />
       )}
@@ -134,11 +144,13 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
           options={item.teaBases as TeaBase[]}
           value={teaBase}
           onChange={setTeaBase}
+          display={Object.fromEntries(
+            (item.teaBases as TeaBase[]).map(b => [b, `${TEA_BASE_LABEL[b]} ${TEA_BASE_EN[b]}`]),
+          ) as Partial<Record<TeaBase, string>>}
           suffix={Object.fromEntries(
-            (item.teaBases as TeaBase[]).map(b => [
-              b,
-              `${TEA_BASE_LABEL[b]}${oolongUpcharge && b === 'O' ? ` +$${OOLONG_UPCHARGE.toFixed(2)}` : ''}`,
-            ]),
+            (item.teaBases as TeaBase[])
+              .filter(b => oolongUpcharge && b === 'O')
+              .map(b => [b, `+$${OOLONG_UPCHARGE.toFixed(2)}`]),
           ) as Partial<Record<TeaBase, string>>}
         />
       )}
@@ -146,12 +158,18 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
       {hasSweet && (
         <PillGroup<SweetLevel>
           label="甜度 Sweetness" options={SWEET_LEVELS} value={sweet} onChange={setSweet}
+          display={Object.fromEntries(
+            SWEET_LEVELS.map(s => [s, s === '75%' || s === '50%' || s === '25%' ? s : `${s} ${SWEET_EN[s]}`]),
+          ) as Partial<Record<SweetLevel, string>>}
         />
       )}
       {/* 冰量 */}
       {hasIce && (
         <PillGroup<IceLevel>
           label="冰量 Ice" options={ICE_LEVELS} value={ice} onChange={setIce}
+          display={Object.fromEntries(
+            ICE_LEVELS.map(i => [i, `${i} ${ICE_EN[i]}`]),
+          ) as Partial<Record<IceLevel, string>>}
         />
       )}
       {iceFixed && (
@@ -172,7 +190,7 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
           <div style={{
             fontSize: 11, fontWeight: 800, color: C.faint, letterSpacing: 0.6,
             textTransform: 'uppercase', marginBottom: 8,
-          }}>加料 Toppings · 可多选</div>
+          }}>加料 Toppings · 可多选 Multiple</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {toppings.map(t => {
               const on = !!picked[t.id];
@@ -188,8 +206,11 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
                   }}
                 >
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: C.text }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: C.text, display: 'block' }}>
                       {on ? '✓ ' : ''}{t.nameCn}
+                    </span>
+                    <span style={{ fontSize: 10, color: C.sub, display: 'block', marginTop: 1 }}>
+                      {t.nameEn}
                     </span>
                   </span>
                   <span style={{ fontSize: 11, color: C.sub, flexShrink: 0, marginLeft: 6 }}>
