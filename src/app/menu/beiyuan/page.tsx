@@ -6,6 +6,12 @@ import {
   MenuCategory, MenuItem, MenuSubCategory,
 } from './menuData';
 import AppShell from '@/components/shell/AppShell';
+import ImageZoomOverlay from '@/components/ImageZoomOverlay';
+import { CartProvider } from '@/components/cart/CartContext';
+import CartBar from '@/components/cart/CartBar';
+import DrinkCustomizer from '@/components/cart/DrinkCustomizer';
+import { MealSetCustomizer, PlainItemAdder } from '@/components/cart/MealCustomizer';
+import type { Customization } from './menuData';
 
 // 本月特价 — 占位。填入 specials / picks 后,弹窗与「Specials」按钮会自动展示。
 const monthlySpecials = {
@@ -177,8 +183,9 @@ const sheetStyle: React.CSSProperties = {
   overflow: 'hidden',
 };
 
-function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: boolean; oolongUpcharge?: boolean }) {
+function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuItem; isMeal?: boolean; oolongUpcharge?: boolean; custom?: Customization; catId?: string }) {
   const [open, setOpen] = useState(false);
+  const [zoom, setZoom] = useState(false);
   const emoji = isMeal ? '🍱' : '🍵';
   const imgBg = isMeal ? '#FFF7ED' : C.cardImg;
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -250,15 +257,22 @@ function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: b
             {/* Hero image — full width, tall */}
             <div style={{ width: '100%', aspectRatio: '4 / 3', background: imgBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
               {item.img
-                ? <img src={item.img} alt={item.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={item.img} alt={item.nameEn} draggable={false} onContextMenu={e => e.preventDefault()} onClick={() => item.img && setZoom(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in', WebkitTouchCallout: 'none' }} />
                 : <span style={{ opacity: 0.25 }}>{emoji}</span>
               }
+              {item.img && <span style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 11, fontWeight: 700, background: 'rgba(0,0,0,0.4)', color: '#fff', padding: '4px 9px', borderRadius: 999, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>🔍 点图放大</span>}
               {item.seasonal && <span style={{ position: 'absolute', top: 12, right: 12, fontSize: 11, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>🌿 Seasonal</span>}
               {item.largeOnly && <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#D97706', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>Large Only</span>}
               {item.caffeineF && <span style={{ position: 'absolute', bottom: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#DBEAFE', color: '#1D4ED8', padding: '4px 10px', borderRadius: 999 }}>☆ Caffeine Free</span>}
               {/* Close button */}
               <button onClick={() => setOpen(false)} style={{ position: 'absolute', top: 12, right: item.seasonal ? 100 : 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
+            {/* Image reference disclaimer */}
+            {item.img && (
+              <div style={{ flexShrink: 0, padding: '8px 22px 0', fontSize: 10.5, color: C.faint, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span>📷</span><span>图片仅供参考,以实物为准 · Images for reference only</span>
+              </div>
+            )}
             {/* Scrollable content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
               <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{item.nameEn}</div>
@@ -274,34 +288,37 @@ function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: b
                 <Price value={item.price} size={32} />
                 {item.priceL && <span style={{ fontSize: 16, fontWeight: 400, color: C.faint, marginLeft: 10 }}>/ Large ${item.priceL.toFixed(2)}</span>}
               </div>
-              {/* Customization info */}
-              <div style={{ marginTop: 20, background: C.muted, borderRadius: 16, padding: '14px 16px' }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>Customization · 定制选项</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
-                  <span style={{ fontSize: 12, background: '#FEF9C3', color: '#854D0E', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Adjustable Sweetness</span>
-                  <span style={{ fontSize: 12, background: '#E0F2FE', color: '#0369A1', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Adjustable Ice</span>
-                  <span style={{ fontSize: 12, background: '#F3E8FF', color: '#6D28D9', padding: '4px 12px', borderRadius: 999, fontWeight: 600 }}>Add Toppings</span>
-                </div>
-              </div>
-              {isMeal && (
-                <div style={{ background: '#F0FDF4', borderRadius: 16, padding: 16, marginTop: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: C.green, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>🎁 Free Drink · Choose One</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {freeDrinkOptions.map((d, i) => (
-                      <div key={i} style={{ background: '#fff', borderRadius: 10, padding: '10px 12px' }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{d.nameEn}</div>
-                        <div style={{ fontSize: 11, color: C.faint }}>{d.nameCn}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: 11, color: C.faint, marginTop: 10 }}>Sweetness adjustable · No ice by default · Large +$1</div>
-                </div>
-              )}
+              {/* Customization selectors → add to list */}
+              {(() => {
+                const isSnack = catId === 'S-A' || catId === 'S-B';
+                const isPlainMeal = catId === 'M-B' || catId === 'M-C';
+                if (isMeal) {
+                  return <MealSetCustomizer item={item} onAdded={() => setOpen(false)} />;
+                }
+                if (isSnack || isPlainMeal) {
+                  return <PlainItemAdder item={item} onAdded={() => setOpen(false)} />;
+                }
+                // 饮品:有 customization 配置即出选择器
+                if (custom) {
+                  return (
+                    <DrinkCustomizer
+                      item={item}
+                      custom={custom}
+                      oolongUpcharge={!!oolongUpcharge}
+                      onAdded={() => setOpen(false)}
+                    />
+                  );
+                }
+                return <PlainItemAdder item={item} onAdded={() => setOpen(false)} />;
+              })()}
               {/* Spacer for safe area */}
               <div style={{ height: 20 }} />
             </div>
           </div>
         </div>
+      )}
+      {zoom && item.img && (
+        <ImageZoomOverlay src={item.img} alt={item.nameEn} onClose={() => setZoom(false)} />
       )}
     </>
   );
@@ -309,6 +326,7 @@ function ItemCard({ item, isMeal, oolongUpcharge }: { item: MenuItem; isMeal?: b
 
 function SubCard({ sub }: { sub: MenuSubCategory }) {
   const [open, setOpen] = useState(false);
+  const [zoom, setZoom] = useState(false);
   return (
     <>
       {/* Horizontal series card — square thumbnail */}
@@ -342,12 +360,19 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
             {/* Series hero image — full landscape 4:3 */}
             <div style={{ width: '100%', aspectRatio: '4 / 3', background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
               {sub.img
-                ? <img src={sub.img} alt={sub.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={sub.img} alt={sub.nameEn} draggable={false} onContextMenu={e => e.preventDefault()} onClick={() => sub.img && setZoom(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in', WebkitTouchCallout: 'none' }} />
                 : <span style={{ opacity: 0.25 }}>✨</span>
               }
+              {sub.img && <span style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 11, fontWeight: 700, background: 'rgba(0,0,0,0.4)', color: '#fff', padding: '4px 9px', borderRadius: 999, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>🔍 点图放大</span>}
               {sub.note && <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#D97706', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>{sub.note}</span>}
               <button onClick={() => setOpen(false)} style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
+            {/* Image reference disclaimer */}
+            {sub.img && (
+              <div style={{ flexShrink: 0, padding: '8px 22px 0', fontSize: 10.5, color: C.faint, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span>📷</span><span>图片仅供参考,以实物为准 · Images for reference only</span>
+              </div>
+            )}
             {/* Scrollable content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
               <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{sub.nameEn}</div>
@@ -374,6 +399,9 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
             </div>
           </div>
         </div>
+      )}
+      {zoom && sub.img && (
+        <ImageZoomOverlay src={sub.img} alt={sub.nameEn} onClose={() => setZoom(false)} />
       )}
     </>
   );
@@ -411,7 +439,7 @@ function CategorySection({ cat }: { cat: MenuCategory }) {
       {/* Single column list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
         {cat.type === 'items' && cat.items?.map(item => (
-          <ItemCard key={item.id} item={item} isMeal={isMeal} oolongUpcharge={oolongUpcharge} />
+          <ItemCard key={item.id} item={item} isMeal={isMeal} oolongUpcharge={oolongUpcharge} custom={cat.customization} catId={cat.id} />
         ))}
         {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} />)}
       </div>
@@ -557,9 +585,10 @@ export default function BeiYuanPage() {
   };
 
   return (
-    <>
+    <CartProvider>
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
       {showPopup && <MonthlyPopup onClose={() => setShowPopup(false)} />}
+      <CartBar />
 
       <AppShell
         action={
@@ -663,6 +692,6 @@ export default function BeiYuanPage() {
         <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
     </AppShell>
-    </>
+    </CartProvider>
   );
 }
