@@ -160,15 +160,6 @@ function CustomChips({ cat }: { cat: MenuCategory }) {
   );
 }
 
-const absBadge = (bg: string, color: string, top?: number, bottom?: number, left?: number, right?: number): React.CSSProperties => ({
-  position: 'absolute', fontSize: 9, fontWeight: 700, background: bg, color,
-  padding: '2px 6px', borderRadius: 999,
-  ...(top !== undefined ? { top } : {}),
-  ...(bottom !== undefined ? { bottom } : {}),
-  ...(left !== undefined ? { left } : {}),
-  ...(right !== undefined ? { right } : {}),
-});
-
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 50,
   display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -320,18 +311,21 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      {/* Horizontal series card */}
+      {/* Horizontal series card — square thumbnail */}
       <div
-        style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'stretch' }}
+        style={{ background: C.card, borderRadius: 16, border: `1px solid ${C.border}`, overflow: 'hidden', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center' }}
         onClick={() => setOpen(true)}
       >
-        <div style={{ width: 100, minWidth: 100, background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30 }}>
-          <span style={{ opacity: 0.35 }}>✨</span>
+        <div style={{ width: 130, minWidth: 130, height: 130, background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 30, overflow: 'hidden' }}>
+          {sub.img
+            ? <img src={sub.img} alt={sub.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <span style={{ opacity: 0.35 }}>✨</span>
+          }
           {sub.note && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 8, fontWeight: 700, background: '#D97706', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>{sub.note}</span>}
         </div>
-        <div style={{ flex: 1, padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{sub.nameEn}</div>
-          <div style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
+        <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{sub.nameEn}</div>
+          <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{sub.nameCn}</div>
           <div style={{ fontSize: 10, color: C.faint, marginTop: 4 }}>{sub.items.length} flavors · tap to choose</div>
           <div style={{ marginTop: 8 }}><Price value={sub.price} size={18} /></div>
         </div>
@@ -341,20 +335,39 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
       {open && (
         <div style={overlayStyle} onClick={() => setOpen(false)}>
           <div style={sheetStyle} onClick={e => e.stopPropagation()}>
-            <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto 16px' }} />
-            <div style={{ padding: '0 22px' }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: C.text }}>{sub.nameEn}</div>
-              <div style={{ fontSize: 13, color: C.sub, marginTop: 2 }}>{sub.nameCn}</div>
-              {sub.note && <div style={{ fontSize: 11, color: '#D97706', marginTop: 4 }}>{sub.note}</div>}
-              <div style={{ margin: '10px 0 16px' }}><Price value={sub.price} size={26} /></div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Flavors · 口味</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {/* Drag handle */}
+            <div style={{ padding: '12px 0 0', flexShrink: 0 }}>
+              <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto' }} />
+            </div>
+            {/* Series hero image — full landscape 4:3 */}
+            <div style={{ width: '100%', aspectRatio: '4 / 3', background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
+              {sub.img
+                ? <img src={sub.img} alt={sub.nameEn} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span style={{ opacity: 0.25 }}>✨</span>
+              }
+              {sub.note && <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#D97706', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>{sub.note}</span>}
+              <button onClick={() => setOpen(false)} style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+            {/* Scrollable content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{sub.nameEn}</div>
+              <div style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>{sub.nameCn}</div>
+              <div style={{ margin: '14px 0 20px' }}><Price value={sub.price} size={32} /></div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>
+                Flavors · 口味 · {sub.items.length}
+              </div>
+              {/* Flavor cards — large, full width, count-adaptive */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {sub.items.map((item, i) => (
-                  <div key={i} style={{ background: C.muted, borderRadius: 12, padding: '10px 12px', position: 'relative' }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{item.nameEn}</div>
-                    <div style={{ fontSize: 10, color: C.sub }}>{item.nameCn}</div>
-                    {item.seasonal && <span style={absBadge('#16A34A', '#fff', 6, undefined, undefined, 6)}>Seasonal</span>}
-                    {item.note && <div style={{ fontSize: 9, color: C.faint, marginTop: 2 }}>{item.note}</div>}
+                  <div key={i} style={{ background: C.muted, borderRadius: 14, padding: '16px 18px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 17, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
+                      <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
+                      {item.note && <div style={{ fontSize: 11, color: C.faint, marginTop: 4 }}>{item.note}</div>}
+                    </div>
+                    {item.seasonal && (
+                      <span style={{ flexShrink: 0, marginLeft: 12, fontSize: 10, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>Seasonal</span>
+                    )}
                   </div>
                 ))}
               </div>

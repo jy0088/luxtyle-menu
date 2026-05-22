@@ -26,6 +26,7 @@ export interface MenuSubCategory {
   price: number; // base price for all flavors in this sub
   items: { nameEn: string; nameCn: string; note?: string; seasonal?: boolean }[];
   note?: string;
+  img?: string; // series photo path
 }
 
 export interface MenuCategory {
@@ -116,6 +117,7 @@ export const houseSpecialIced: MenuCategory = {
   subcategories: [
     {
       id: 'C-C-01',
+      img: '/beiyuan-C-C-01.webp',
       nameEn: 'Fresh Fruit Flavored Drink',
       nameCn: '果茶系列',
       price: 6.98,
@@ -126,6 +128,7 @@ export const houseSpecialIced: MenuCategory = {
     },
     {
       id: 'C-C-03',
+      img: '/beiyuan-C-C-03.webp',
       nameEn: 'Flavored Milk Drink',
       nameCn: '沙奶系列',
       price: 6.98,
@@ -138,6 +141,7 @@ export const houseSpecialIced: MenuCategory = {
     },
     {
       id: 'C-C-04',
+      img: '/beiyuan-C-C-04.webp',
       nameEn: 'Flavored Yogurt Drink',
       nameCn: '优格系列',
       price: 7.98,
@@ -150,6 +154,7 @@ export const houseSpecialIced: MenuCategory = {
     },
     {
       id: 'C-C-05',
+      img: '/beiyuan-C-C-05.webp',
       nameEn: 'Matcha Flavored Drink',
       nameCn: '抹茶系列',
       price: 7.98,
@@ -172,6 +177,7 @@ export const houseSpecialIcedFood: MenuCategory = {
   subcategories: [
     {
       id: 'C-D-01',
+      img: '/beiyuan-C-D-01.webp',
       nameEn: 'Flavored Jelly Ice',
       nameCn: '风味钻石冰',
       price: 6.98,
@@ -185,6 +191,7 @@ export const houseSpecialIcedFood: MenuCategory = {
     },
     {
       id: 'C-D-02',
+      img: '/beiyuan-C-D-02.webp',
       nameEn: 'Fruit Flavored Snow Ice',
       nameCn: '水果风味雪泥',
       price: 6.98,
@@ -198,6 +205,7 @@ export const houseSpecialIcedFood: MenuCategory = {
     },
     {
       id: 'C-D-03',
+      img: '/beiyuan-C-D-03.webp',
       nameEn: 'Milky Flavored Snow Ice',
       nameCn: '奶香风味雪泥',
       price: 6.98,
@@ -211,6 +219,7 @@ export const houseSpecialIcedFood: MenuCategory = {
     },
     {
       id: 'C-D-04',
+      img: '/beiyuan-C-D-04.webp',
       nameEn: 'Flavored Shaved Ice',
       nameCn: '刨冰类',
       price: 6.98,
