@@ -12,6 +12,7 @@ const C = {
 function lineSpec(l: CartLine): string[] {
   const parts: string[] = [];
   if (l.size && l.size !== '单一') parts.push(l.size === 'L' ? '大杯' : '小杯');
+  if (l.variant) parts.push(l.variant.label);
   if (l.teaBase) parts.push(l.teaBase);
   if (l.sweet) parts.push(l.sweet);
   if (l.ice && l.ice !== '固定') parts.push(l.ice as string);

@@ -155,10 +155,13 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
   );
 }
 
-/** 普通餐食 / 小食:仅数量 + 加入清单 */
+/** 普通餐食 / 小食:仅数量 + 加入清单;有 variants 时多一个形态二选一 */
 export function PlainItemAdder({ item, onAdded }: { item: MenuItem; onAdded: () => void }) {
   const { addLine } = useCart();
   const [qty, setQty] = useState(1);
+  const [variantIdx, setVariantIdx] = useState(0);
+
+  const hasVariants = !!item.variants && item.variants.length > 0;
 
   const handleAdd = () => {
     addLine({
@@ -168,19 +171,46 @@ export function PlainItemAdder({ item, onAdded }: { item: MenuItem; onAdded: () 
       nameEn: item.nameEn,
       basePrice: item.price,
       qty,
+      variant: hasVariants ? item.variants![variantIdx] : null,
     });
     onAdded();
   };
 
   return (
-    <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 14 }}>
-      <QtyBox qty={qty} setQty={setQty} />
-      <button onClick={handleAdd} style={{
-        flex: 1, height: 50, borderRadius: 14, border: 'none', background: C.brand,
-        color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer',
-      }}>
-        加入清单 · ${(item.price * qty).toFixed(2)}
-      </button>
+    <div style={{ marginTop: 20 }}>
+      {/* 形态二选一(如整根/切片),不影响价格 */}
+      {hasVariants && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 800, color: C.faint, letterSpacing: 0.6,
+            textTransform: 'uppercase', marginBottom: 8,
+          }}>形态 Form</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {item.variants!.map((v, i) => {
+              const on = i === variantIdx;
+              return (
+                <button key={i} onClick={() => setVariantIdx(i)} style={{
+                  padding: '8px 16px', borderRadius: 999, cursor: 'pointer', fontSize: 13,
+                  fontWeight: 700,
+                  border: on ? `1.5px solid ${C.brand}` : `1.5px solid ${C.border}`,
+                  background: on ? C.brand : '#fff', color: on ? '#fff' : C.text,
+                }}>
+                  {v.label} {v.labelEn}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <QtyBox qty={qty} setQty={setQty} />
+        <button onClick={handleAdd} style={{
+          flex: 1, height: 50, borderRadius: 14, border: 'none', background: C.brand,
+          color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+        }}>
+          加入清单 · ${(item.price * qty).toFixed(2)}
+        </button>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ export interface MenuItem {
   largeOnly?: boolean;
   caffeineF?: boolean;
   img?: string; // photo path e.g. /beiyuan-M-A-01.webp
+  variants?: { label: string; labelEn: string }[]; // 形态二选一,如整根/切片,不影响价格
 }
 
 export interface MenuSubCategory {
@@ -435,21 +436,20 @@ export const snacks: MenuCategory = {
   nameCn: '精致茶点',
   type: 'items',
   items: [
-    { id: 'S01', nameEn: 'Tea Boiled Eggs (2 pcs)', nameCn: '茶叶蛋', price: 3.98, img: '/beiyuan-S-A-tea-egg.webp' },
-    { id: 'S02', nameEn: 'Fried Wontons', nameCn: '炸馄饨', price: 8.98 },
-    { id: 'S03', nameEn: 'Sweet Garlic Chicken Wings', nameCn: '蒜香蜜汁鸡翅', price: 10.49, note: '可选辣度' },
-    { id: 'S04', nameEn: 'Fried Spicy Chicken Wings', nameCn: '炸鸡翅', price: 10.49 },
-    { id: 'S05', nameEn: 'Fried Tofu', nameCn: '炸豆腐', price: 7.98 },
-    { id: 'S06', nameEn: 'Popcorn Chicken', nameCn: '盐酥鸡', price: 10.49 },
-    { id: 'S08', nameEn: 'Fried Squid Balls', nameCn: '炸花枝丸', price: 8.98, img: '/beiyuan-S-A-squid-balls.webp' },
-    { id: 'S09', nameEn: 'Takoyaki (Octopus Balls)', nameCn: '章鱼烧', price: 10.49 },
-    { id: 'S10', nameEn: 'Spicy Wontons', nameCn: '红油抄手', price: 9.49, img: '/beiyuan-S-A-spicy-wonton.webp' },
-    { id: 'S11', nameEn: 'Taiwan Bok Choy / Cabbage', nameCn: '烫青菜', price: 7.98 },
-    { id: 'S12', nameEn: 'Green Onion Pancake', nameCn: '葱油饼', price: 8.98, note: '可选加蛋', img: '/beiyuan-S-A-scallion-egg-pancake.webp' },
-    { id: 'S13', nameEn: 'Night Market Sausage (3 sticks)', nameCn: '夜市烤香肠（3条）', price: 11.98 },
-    { id: 'S14', nameEn: 'Taiwanese Sausages', nameCn: '台式烤香肠', price: 10.98 },
-    { id: 'S15', nameEn: 'Beef Wrap', nameCn: '牛肉卷', price: 10.98 },
-    { id: 'S16', nameEn: 'Salt & Pepper Squid (400g)', nameCn: '椒盐鱿鱼', price: 11.98 },
+    { id: 'S01', nameEn: 'Tea Boiled Eggs (2 pcs)', nameCn: '茶叶蛋', price: 3.98, img: '/beiyuan-S01.webp' },
+    { id: 'S02', nameEn: 'Fried Wontons', nameCn: '炸馄饨', price: 8.98, img: '/beiyuan-S02.webp' },
+    { id: 'S03', nameEn: 'Sweet Garlic Chicken Wings', nameCn: '蒜香蜜汁鸡翅', price: 10.49, note: '可选辣度', img: '/beiyuan-S03.webp' },
+    { id: 'S04', nameEn: 'Fried Spicy Chicken Wings', nameCn: '炸鸡翅', price: 10.49, img: '/beiyuan-S04.webp' },
+    { id: 'S05', nameEn: 'Fried Tofu', nameCn: '炸豆腐', price: 7.98, img: '/beiyuan-S05.webp' },
+    { id: 'S06', nameEn: 'Popcorn Chicken', nameCn: '盐酥鸡', price: 10.49, img: '/beiyuan-S06.webp' },
+    { id: 'S08', nameEn: 'Fried Squid Balls', nameCn: '炸花枝丸', price: 8.98, img: '/beiyuan-S08.webp' },
+    { id: 'S09', nameEn: 'Takoyaki (Octopus Balls)', nameCn: '章鱼烧', price: 10.49, img: '/beiyuan-S09.webp' },
+    { id: 'S10', nameEn: 'Spicy Wontons', nameCn: '红油抄手', price: 9.49, img: '/beiyuan-S10.webp' },
+    { id: 'S11', nameEn: 'Taiwan Bok Choy / Cabbage', nameCn: '烫青菜', price: 7.98, img: '/beiyuan-S11.webp' },
+    { id: 'S12', nameEn: 'Green Onion Pancake', nameCn: '葱油饼', price: 8.98, note: '可选加蛋', img: '/beiyuan-S12.webp' },
+    { id: 'S14', nameEn: 'Taiwanese Sausages', nameCn: '台式烤香肠', price: 10.98, img: '/beiyuan-S14.webp', variants: [{ label: '整根', labelEn: 'Whole' }, { label: '切片', labelEn: 'Sliced' }] },
+    { id: 'S15', nameEn: 'Beef Wrap', nameCn: '牛肉卷', price: 10.98, img: '/beiyuan-S15.webp' },
+    { id: 'S16', nameEn: 'Salt & Pepper Squid (400g)', nameCn: '椒盐鱿鱼', price: 11.98, img: '/beiyuan-S16.webp' },
   ],
 };
 

@@ -40,6 +40,8 @@ export type CartLine = {
   // mealset 专用
   freeDrink?: { nameCn: string; nameEn: string; sweet: SweetLevel } | null;
   addOns?: { nameCn: string; nameEn: string; price: number }[];
+  // plain 专用:形态二选一(整根/切片),不影响价格
+  variant?: { label: string; labelEn: string } | null;
 };
 
 /** 单行单价 = 基础 + 杯型 + 茶底 + 加料合计 + 套餐加购合计 */
