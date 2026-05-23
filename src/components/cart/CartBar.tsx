@@ -53,7 +53,8 @@ export default function CartBar() {
         <button
           onClick={() => setOpen(true)}
           style={{
-            position: 'fixed', right: 16, bottom: 'calc(20px + env(safe-area-inset-bottom))',
+            position: 'fixed', right: 16,
+            bottom: 'calc(76px + env(safe-area-inset-bottom))',
             zIndex: 60, height: 52, padding: '0 20px 0 16px', borderRadius: 999,
             background: C.brand, color: '#fff', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 10,

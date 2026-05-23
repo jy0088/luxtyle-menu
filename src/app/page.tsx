@@ -7,21 +7,19 @@ const brands = [
     nameEn: 'Bei Yuan Tea & Boba',
     tagline: 'Taiwanese Tea · Food · Boba',
     logo: '/beiyuan-logo.png',
-    color: '#C9A84C',
-    glow: 'rgba(201,168,76,0.35)',
-    border: 'rgba(201,168,76,0.5)',
-    bg: 'rgba(13,74,46,0.6)',
+    color: '#0D4A2E',
+    accent: '#C9A84C',
+    cardBg: '#FFFFFF',
   },
   {
     href: '/menu/ygf',
     nameCn: '杨国福麻辣烫',
     nameEn: 'Yang Guo Fu Malatang',
-    tagline: 'Authentic Malatang · San Diego #1',
+    tagline: 'Authentic Malatang · San Diego',
     logo: '/ygf-logo.png',
-    color: '#FF7A30',
-    glow: 'rgba(217,95,26,0.4)',
-    border: 'rgba(217,95,26,0.6)',
-    bg: 'rgba(180,60,10,0.5)',
+    color: '#C2410C',
+    accent: '#EA580C',
+    cardBg: '#FFFFFF',
   },
   {
     href: '/menu/tomo',
@@ -30,10 +28,9 @@ const brands = [
     tagline: 'Artisan Italian Gelato',
     logo: null,
     emoji: '🍦',
-    color: '#67E8F9',
-    glow: 'rgba(14,116,144,0.4)',
-    border: 'rgba(103,232,249,0.5)',
-    bg: 'rgba(8,90,120,0.5)',
+    color: '#0E7490',
+    accent: '#06B6D4',
+    cardBg: '#FFFFFF',
   },
 ];
 
@@ -41,7 +38,7 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: '100dvh',
-      background: '#0A0A0A',
+      background: 'linear-gradient(180deg, #FBF7F0 0%, #F4ECDF 100%)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       display: 'flex',
       flexDirection: 'column',
@@ -51,27 +48,30 @@ export default function HomePage() {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Subtle background grid */}
+      {/* Soft warm glow accents */}
       <div style={{
-        position: 'absolute', inset: 0, opacity: 0.03,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
+        position: 'absolute', top: '-10%', left: '-15%', width: 320, height: 320,
+        borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,168,76,0.18), transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', bottom: '-12%', right: '-15%', width: 340, height: 340,
+        borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,74,46,0.10), transparent 70%)',
         pointerEvents: 'none',
       }} />
 
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative' }}>
-        <div style={{ fontSize: 11, color: '#555', letterSpacing: 5, fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>
+      <div style={{ textAlign: 'center', marginBottom: 44, position: 'relative' }}>
+        <div style={{ fontSize: 11, color: '#A89B82', letterSpacing: 5, fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>
           Digital Menu
         </div>
         <div style={{
           fontSize: 42, fontWeight: 900, letterSpacing: 8, textTransform: 'uppercase',
-          background: 'linear-gradient(135deg, #fff 0%, #aaa 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          color: '#1F2A24',
         }}>
           LUXTYLE
         </div>
-        <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg, transparent, #555, transparent)', margin: '16px auto 0' }} />
+        <div style={{ width: 44, height: 2, background: 'linear-gradient(90deg, transparent, #C9A84C, transparent)', margin: '16px auto 0' }} />
       </div>
 
       {/* Brand cards */}
@@ -79,33 +79,26 @@ export default function HomePage() {
         {brands.map(brand => (
           <Link key={brand.href} href={brand.href} style={{ textDecoration: 'none' }}>
             <div style={{
-              background: brand.bg,
+              background: brand.cardBg,
               borderRadius: 20,
-              border: `1px solid ${brand.border}`,
+              border: '1px solid rgba(0,0,0,0.06)',
+              borderLeft: `4px solid ${brand.accent}`,
               padding: '18px 20px',
               display: 'flex',
               alignItems: 'center',
               gap: 16,
-              boxShadow: `0 0 30px ${brand.glow}, 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)`,
+              boxShadow: '0 6px 20px rgba(120,100,60,0.12), 0 1px 3px rgba(0,0,0,0.05)',
               cursor: 'pointer',
-              backdropFilter: 'blur(12px)',
               position: 'relative',
               overflow: 'hidden',
             }}>
-              {/* Inner glow top */}
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-                background: `linear-gradient(90deg, transparent, ${brand.color}55, transparent)`,
-              }} />
-
               {/* Logo */}
               <div style={{
                 width: 54, height: 54, borderRadius: '50%',
-                background: 'rgba(0,0,0,0.3)',
-                border: `1.5px solid ${brand.border}`,
+                background: '#FBF7F0',
+                border: `1.5px solid ${brand.accent}33`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, overflow: 'hidden',
-                boxShadow: `0 0 12px ${brand.glow}`,
               }}>
                 {brand.logo ? (
                   <img src={brand.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -115,26 +108,33 @@ export default function HomePage() {
               </div>
 
               {/* Text */}
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: brand.color, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', opacity: 0.9, marginBottom: 4 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 9.5, color: brand.accent, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 4 }}>
                   {brand.tagline}
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+                <div style={{ fontSize: 20, fontWeight: 900, color: brand.color, lineHeight: 1.2 }}>
                   {brand.nameCn}
+                </div>
+                <div style={{ fontSize: 11, color: '#9A8F7C', fontWeight: 500, marginTop: 2 }}>
+                  {brand.nameEn}
                 </div>
               </div>
 
               {/* Arrow */}
-              <div style={{ fontSize: 18, color: brand.color, flexShrink: 0, opacity: 0.8 }}>›</div>
+              <div style={{
+                fontSize: 18, color: '#fff', flexShrink: 0,
+                width: 26, height: 26, borderRadius: '50%', background: brand.accent,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>›</div>
             </div>
           </Link>
         ))}
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: 48, textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#333' }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
-        <div style={{ fontSize: 10, color: '#2a2a2a', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
+      <div style={{ marginTop: 44, textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: '#9A8F7C', fontWeight: 500 }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
+        <div style={{ fontSize: 10, color: '#B8AC97', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
     </div>
   );

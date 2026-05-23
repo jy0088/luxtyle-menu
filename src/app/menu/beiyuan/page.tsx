@@ -9,6 +9,7 @@ import AppShell from '@/components/shell/AppShell';
 import ImageZoomOverlay from '@/components/ImageZoomOverlay';
 import { CartProvider } from '@/components/cart/CartContext';
 import CartBar from '@/components/cart/CartBar';
+import WhatsAppButton from '@/components/WhatsAppButton';
 import DrinkCustomizer from '@/components/cart/DrinkCustomizer';
 import { MealSetCustomizer, PlainItemAdder } from '@/components/cart/MealCustomizer';
 import type { Customization } from './menuData';
@@ -569,19 +570,25 @@ export default function BeiYuanPage() {
   const activeSectionIndex = TAB_SECTIONS.findIndex(s => s.tabs.some(t => t.id === activeTab));
 
   // Swipe to change section
-  const swipeStartX = useRef<number | null>(null);
-  const handleSwipeStart = (e: React.TouchEvent) => { swipeStartX.current = e.touches[0].clientX; };
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const handleSwipeStart = (e: React.TouchEvent) => {
+    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
   const handleSwipeEnd = (e: React.TouchEvent) => {
-    if (swipeStartX.current === null) return;
-    const dx = e.changedTouches[0].clientX - swipeStartX.current;
-    if (Math.abs(dx) > 60) {
-      if (dx < 0 && activeSectionIndex < TAB_SECTIONS.length - 1) {
-        setActiveTab(TAB_SECTIONS[activeSectionIndex + 1].tabs[0].id);
-      } else if (dx > 0 && activeSectionIndex > 0) {
-        setActiveTab(TAB_SECTIONS[activeSectionIndex - 1].tabs[0].id);
-      }
+    if (swipeStart.current === null) return;
+    const dx = e.changedTouches[0].clientX - swipeStart.current.x;
+    const dy = e.changedTouches[0].clientY - swipeStart.current.y;
+    swipeStart.current = null;
+    // 方向锁:只在「明确横向」时切换分类 —— 横向位移须够大、且明显大于纵向,
+    // 否则视为纵向滚动/斜滑,不切换,避免跑偏到别的子菜单
+    const HORIZONTAL_MIN = 70;
+    if (Math.abs(dx) < HORIZONTAL_MIN) return;
+    if (Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    if (dx < 0 && activeSectionIndex < TAB_SECTIONS.length - 1) {
+      setActiveTab(TAB_SECTIONS[activeSectionIndex + 1].tabs[0].id);
+    } else if (dx > 0 && activeSectionIndex > 0) {
+      setActiveTab(TAB_SECTIONS[activeSectionIndex - 1].tabs[0].id);
     }
-    swipeStartX.current = null;
   };
 
   return (
@@ -589,6 +596,7 @@ export default function BeiYuanPage() {
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
       {showPopup && <MonthlyPopup onClose={() => setShowPopup(false)} />}
       <CartBar />
+      <WhatsAppButton />
 
       <AppShell
         action={
