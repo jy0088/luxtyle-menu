@@ -54,7 +54,7 @@ export default function Header({
         top: 0,
         zIndex: 40,
         paddingTop: 'env(safe-area-inset-top)',
-        background: 'color-mix(in srgb, var(--lx-hero-surface) 90%, transparent)',
+        background: 'var(--lx-hero-surface)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--lx-hero-border)',

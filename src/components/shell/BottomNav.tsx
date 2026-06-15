@@ -122,7 +122,7 @@ export default function BottomNav() {
           right: 0,
           zIndex: 40,
           paddingBottom: 'env(safe-area-inset-bottom)',
-          background: 'color-mix(in srgb, var(--lx-hero-surface) 92%, transparent)',
+          background: 'var(--lx-hero-surface)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderTop: '1px solid var(--lx-hero-border)',
