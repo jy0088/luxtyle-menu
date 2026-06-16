@@ -38,8 +38,10 @@ export type CartLine = {
   ice?: IceLevel | '固定' | null;
   toppings?: CartTopping[];
   // mealset 专用
-  freeDrink?: { nameCn: string; nameEn: string; sweet: SweetLevel } | null;
+  freeDrink?: { nameCn: string; nameEn: string; sweet: SweetLevel; price?: number } | null;
   addOns?: { nameCn: string; nameEn: string; price: number }[];
+  // drink 专用:奶基底(臻选原叶茶)
+  milkBase?: { label: string; labelEn: string; price: number } | null;
   // plain 专用:形态二选一(整根/切片),不影响价格
   variant?: { label: string; labelEn: string } | null;
 };
@@ -51,6 +53,8 @@ export function lineUnitPrice(l: CartLine): number {
   p += l.teaBaseUpcharge ?? 0;
   if (l.toppings) p += l.toppings.reduce((s, t) => s + t.price, 0);
   if (l.addOns) p += l.addOns.reduce((s, a) => s + a.price, 0);
+  if (l.milkBase) p += l.milkBase.price;
+  if (l.freeDrink) p += l.freeDrink.price ?? 0;
   return p;
 }
 export function lineSubtotal(l: CartLine): number {

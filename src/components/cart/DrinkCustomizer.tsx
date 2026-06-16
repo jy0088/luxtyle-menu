@@ -6,7 +6,7 @@ import {
   SweetLevel, IceLevel, TeaBaseLabel, SizeLabel,
   SWEET_LEVELS, ICE_LEVELS, DEFAULT_SWEET, DEFAULT_ICE,
 } from './CartContext';
-import { MenuItem, Customization, toppings, TeaBase } from '@/app/menu/beiyuan/menuData';
+import { MenuItem, Customization, toppings, TeaBase, milkBaseOptions } from '@/app/menu/beiyuan/menuData';
 
 const C = {
   brand: '#0D4A2E', text: '#1a1a1a', sub: '#888', faint: '#bbb',
@@ -84,12 +84,14 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
   const hasIce = !!custom.ice;
   const iceFixed = !!custom.iceFixed;
   const hasTopping = !!custom.topping;
+  const hasMilkBase = !!custom.milkBase;
 
   const [size, setSize] = useState<SizeLabel>(item.largeOnly ? 'L' : (hasSize ? 'S' : '单一'));
   const [teaBase, setTeaBase] = useState<TeaBase>(item.teaBases?.[0] ?? 'B');
   const [sweet, setSweet] = useState<SweetLevel>(DEFAULT_SWEET);
   const [ice, setIce] = useState<IceLevel>(DEFAULT_ICE);
   const [picked, setPicked] = useState<Record<string, boolean>>({});
+  const [milkIdx, setMilkIdx] = useState(0); // 默认纯茶(index 0,$0)
   const [qty, setQty] = useState(1);
 
   const toggleTopping = (id: string) =>
@@ -97,6 +99,7 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
 
   const sizeUpcharge = hasSize && size === 'L' ? SIZE_L_UPCHARGE : 0;
   const teaBaseUpcharge = hasTeaBase && oolongUpcharge && teaBase === 'O' ? OOLONG_UPCHARGE : 0;
+  const milkBaseUpcharge = hasMilkBase ? milkBaseOptions[milkIdx].price : 0;
   const pickedToppings: CartTopping[] = useMemo(
     () => toppings.filter(t => picked[t.id]).map(t => ({
       id: t.id, nameCn: t.nameCn, nameEn: t.nameEn, price: t.price,
@@ -104,10 +107,11 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
     [picked],
   );
 
-  const unit = item.price + sizeUpcharge + teaBaseUpcharge
+  const unit = item.price + sizeUpcharge + teaBaseUpcharge + milkBaseUpcharge
     + pickedToppings.reduce((s, t) => s + t.price, 0);
 
   const handleAdd = () => {
+    const mb = milkBaseOptions[milkIdx];
     const line: Omit<CartLine, 'uid'> = {
       kind: 'drink',
       itemId: item.id,
@@ -122,6 +126,7 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
       sweet: hasSweet ? sweet : undefined,
       ice: hasIce ? ice : (iceFixed ? '固定' : null),
       toppings: hasTopping ? pickedToppings : [],
+      milkBase: hasMilkBase ? { label: mb.label, labelEn: mb.labelEn, price: mb.price } : null,
     };
     addLine(line);
     onAdded();
@@ -153,6 +158,31 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
               .map(b => [b, `+$${OOLONG_UPCHARGE.toFixed(2)}`]),
           ) as Partial<Record<TeaBase, string>>}
         />
+      )}
+      {/* 奶基底 */}
+      {hasMilkBase && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 800, color: C.faint, letterSpacing: 0.6,
+            textTransform: 'uppercase', marginBottom: 8,
+          }}>奶基底 Milk Base</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {milkBaseOptions.map((m, i) => {
+              const on = i === milkIdx;
+              return (
+                <button key={i} onClick={() => setMilkIdx(i)} style={{
+                  padding: '8px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 13,
+                  fontWeight: 700,
+                  border: on ? `1.5px solid ${C.brand}` : `1.5px solid ${C.border}`,
+                  background: on ? C.brand : '#fff', color: on ? '#fff' : C.text,
+                }}>
+                  {m.label} {m.labelEn}
+                  {m.price > 0 ? <span style={{ fontSize: 11, opacity: 0.8, marginLeft: 3 }}>+${m.price.toFixed(2)}</span> : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
       {/* 甜度 */}
       {hasSweet && (

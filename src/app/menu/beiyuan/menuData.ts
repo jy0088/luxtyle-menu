@@ -47,6 +47,7 @@ export interface Customization {
   topping?: boolean;
   size?: 'fixed' | 'S+L'; // fixed=1 size, S+L=small/large +$1
   teaBase?: boolean;
+  milkBase?: boolean; // 奶基底选项(臻选原叶茶)
 }
 
 // ─────────────────────────────────────────────
@@ -70,12 +71,6 @@ export const icedFlavoredTea: MenuCategory = {
     { id: 'C-A-08', nameEn: 'Royal Black Tea', nameCn: '伯爵茶', price: 5.98, img: '/beiyuan-C-A-08.webp' },
     { id: 'C-A-09', nameEn: 'Yogurt Green Tea', nameCn: '多多绿茶', price: 5.98, img: '/beiyuan-C-A-09.webp' },
     { id: 'C-A-10', nameEn: 'Chrysanthemum Tea', nameCn: '菊花茶', price: 5.98, caffeineF: true, img: '/beiyuan-C-A-10.webp' },
-    // 冰镇香型乌龙茶系列
-    { id: 'C-A-14a', nameEn: 'Osmanthus Oolong', nameCn: '桂花香乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14a.webp' },
-    { id: 'C-A-14b', nameEn: 'White Peach Oolong', nameCn: '白桃香乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14b.webp' },
-    { id: 'C-A-14c', nameEn: 'Charcoal-Roasted Oolong', nameCn: '炭烧乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14c.webp' },
-    { id: 'C-A-14d', nameEn: 'Coconut Oolong', nameCn: '椰果香乌龙', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14d.webp' },
-    { id: 'C-A-14e', nameEn: 'Jin Jun Mei', nameCn: '金骏眉', price: 6.98, note: '冰镇香型乌龙茶系列', img: '/beiyuan-C-A-14e.webp' },
   ],
 };
 
@@ -97,12 +92,37 @@ export const icedMilkTea: MenuCategory = {
     { id: 'C-B-05', nameEn: 'Thai Tea', nameCn: '泰式奶茶', price: 6.49, img: '/beiyuan-C-B-05.webp' },
     { id: 'C-B-06', nameEn: 'Royal Milk Tea', nameCn: '皇家奶茶', price: 6.49, img: '/beiyuan-C-B-06.webp' },
     { id: 'C-B-07', nameEn: 'Rose Milk Tea', nameCn: '玫瑰奶茶', price: 6.49, img: '/beiyuan-C-B-07.webp' },
-    // 北苑香型乌龙奶茶系列
-    { id: 'C-B-16a', nameEn: 'Osmanthus Oolong Milk Tea', nameCn: '桂花香乌龙奶茶', price: 6.98, note: '北苑香型乌龙奶茶系列', img: '/beiyuan-C-B-16a.webp' },
-    { id: 'C-B-16b', nameEn: 'Charcoal Oolong Milk Tea', nameCn: '炭烧乌龙奶茶', price: 6.98, note: '北苑香型乌龙奶茶系列', img: '/beiyuan-C-B-16b.webp' },
-    { id: 'C-B-16c', nameEn: 'White Peach Oolong Milk Tea', nameCn: '白桃香乌龙奶茶', price: 6.98, note: '北苑香型乌龙奶茶系列', img: '/beiyuan-C-B-16c.webp' },
-    { id: 'C-B-16d', nameEn: 'Jin Jun Mei Milk Tea', nameCn: '金骏眉奶茶', price: 6.98, note: '北苑香型乌龙奶茶系列', img: '/beiyuan-C-B-16d.webp' },
-    { id: 'C-B-16e', nameEn: 'Coconut Oolong Milk Tea', nameCn: '椰果香乌龙奶茶', price: 6.98, note: '北苑香型乌龙奶茶系列', img: '/beiyuan-C-B-16e.webp' },
+  ],
+};
+
+// ─────────────────────────────────────────────
+// 奶基底选项 Milk Base (臻选原叶茶 R-A 专用)
+// 纯茶/招牌奶香 不加价;招牌特调奶/鲜奶 +$0.5
+// ─────────────────────────────────────────────
+export const milkBaseOptions: { label: string; labelEn: string; price: number }[] = [
+  { label: '纯茶', labelEn: 'No Milk', price: 0 },
+  { label: '招牌奶香', labelEn: 'House Creamer', price: 0 },
+  { label: '招牌特调奶', labelEn: 'House Milk Blend', price: 0.5 },
+  { label: '鲜奶', labelEn: 'Fresh Milk', price: 0.5 },
+];
+
+// ─────────────────────────────────────────────
+// CATEGORY: Reserve Tea Collection 臻选原叶茶 (R-A)
+// 单一价 $6.98;甜度/冰/加料可选;奶基底四选一(无茶底选择,茶种固定)
+// ─────────────────────────────────────────────
+export const reserveTea: MenuCategory = {
+  id: 'R-A',
+  nameEn: 'Reserve Tea Collection',
+  nameCn: '臻选原叶茶',
+  type: 'items',
+  customization: { sweetness: true, ice: true, topping: true, size: 'fixed', milkBase: true },
+  items: [
+    { id: 'R-A-01', nameEn: 'Da Hong Pao', nameCn: '大红袍', price: 6.98, img: '/beiyuan-R-A-01.webp' },
+    { id: 'R-A-02', nameEn: 'Jin Jun Mei', nameCn: '金骏眉', price: 6.98, img: '/beiyuan-R-A-02.webp' },
+    { id: 'R-A-03', nameEn: 'Jin Xuan Oolong', nameCn: '金萱乌龙', price: 6.98, img: '/beiyuan-R-A-03.webp' },
+    { id: 'R-A-04', nameEn: 'Osmanthus Oolong', nameCn: '桂花乌龙', price: 6.98, img: '/beiyuan-R-A-04.webp' },
+    { id: 'R-A-05', nameEn: 'White Peach Oolong', nameCn: '白桃乌龙', price: 6.98, img: '/beiyuan-R-A-05.webp' },
+    { id: 'R-A-06', nameEn: 'Coconut Oolong', nameCn: '椰香乌龙', price: 6.98, img: '/beiyuan-R-A-06.webp' },
   ],
 };
 
@@ -341,19 +361,20 @@ export const houseSpecialHot: MenuCategory = {
 // ─────────────────────────────────────────────
 // CATEGORY 8: Rice & Meal Set 精制套餐组合 (M-A)
 // ─────────────────────────────────────────────
-// 套餐附赠饮料选项
-export const freeDrinkOptions = [
-  { nameEn: 'Tapioca Milk Tea', nameCn: '波霸奶茶' },
-  { nameEn: 'Tapioca Milk Green Tea', nameCn: '波霸奶绿' },
-  { nameEn: 'Cold Brew White Peach Oolong', nameCn: '冰镇白桃乌龙' },
-  { nameEn: 'Royal Milk Tea', nameCn: '皇家奶茶' },
-  { nameEn: 'Passion Green Tea', nameCn: '百香绿茶' },
-  { nameEn: 'Taro Milk Drink', nameCn: '芋头沙奶' },
-  { nameEn: 'Coffee Milk Tea', nameCn: '鸳鸯奶茶' },
-  { nameEn: 'Hot Milk Tea', nameCn: '热奶茶' },
-  { nameEn: 'Hot Green Tea', nameCn: '热绿茶' },
-  { nameEn: 'Hot Brown Sugar Milk Tea', nameCn: '热黑糖奶茶' },
-  { nameEn: 'Hot Genmai Tea', nameCn: '热玄米茶' },
+// 套餐附赠饮料选项(含加价;0=免费,部分需加价)
+// ⚠ 截图共10款,另2款待定,补齐后追加到此数组
+export const freeDrinkOptions: { nameEn: string; nameCn: string; price: number }[] = [
+  { nameEn: 'Iced Milk Tea', nameCn: '冰奶茶', price: 0 },
+  { nameEn: 'Iced Milk Green Tea', nameCn: '冰奶绿', price: 0 },
+  { nameEn: 'Iced Black Tea', nameCn: '冰红茶', price: 0 },
+  { nameEn: 'Iced Green Tea', nameCn: '冰绿茶', price: 0 },
+  { nameEn: 'Hot Milk Tea', nameCn: '热奶茶', price: 0.99 },
+  { nameEn: 'Hot Green Tea', nameCn: '热绿茶', price: 0.99 },
+  { nameEn: 'Hot Genmai Tea', nameCn: '玄米茶', price: 1.99 },
+  { nameEn: 'Iced Coffee Milk Tea', nameCn: '鸳鸯奶茶', price: 1.99 },
+  { nameEn: 'Charcoal Roasted Milk Tea', nameCn: '炭焙奶茶', price: 1.99 },
+  { nameEn: 'Hot Milky Matcha', nameCn: '热抹茶鲜奶', price: 2.99 },
+  // TODO: 还有 2 款附赠饮料待定
 ];
 
 // 套餐加购选项 (M-A / M-B / M-C 共用)
@@ -371,18 +392,18 @@ export const mealSet: MenuCategory = {
   nameCn: '精制套餐组合',
   type: 'items',
   items: [
-    { id: 'M-A-01', nameEn: 'Pork Stew Rice Meal Set', nameCn: '台式卤肉饭套餐', price: 19.95, img: '/beiyuan-M-A-01.webp' },
-    { id: 'M-A-02', nameEn: 'Pickle Ground Pork Meal Set', nameCn: '台式瓜子肉燥套餐', price: 19.95, img: '/beiyuan-M-A-02.webp' },
-    { id: 'M-A-03', nameEn: 'Teriyaki Chicken Meal Set', nameCn: '照烧鸡排套餐', price: 19.95, img: '/beiyuan-M-A-03.webp' },
-    { id: 'M-A-04', nameEn: 'Pork w/ Preserved Dried Vegetables Meal Set', nameCn: '台式梅干扣肉套餐', price: 19.95, img: '/beiyuan-M-A-04.webp' },
-    { id: 'M-A-05', nameEn: 'Beef Bowl', nameCn: '牛丼套餐', price: 19.95, img: '/beiyuan-M-A-05.webp' },
-    { id: 'M-A-06', nameEn: 'Teriyaki Eel Meal Set', nameCn: '鳗鱼套餐', price: 24.95, img: '/beiyuan-M-A-06.webp' },
-    { id: 'M-A-07', nameEn: 'Spiced Chicken Meal Set', nameCn: '台式红烧鸡套餐', price: 19.95, img: '/beiyuan-M-A-07.webp' },
-    { id: 'M-A-08', nameEn: 'Beef Stew Rice Meal Set', nameCn: '台式牛肉饭套餐', price: 19.95, img: '/beiyuan-M-A-08.webp' },
-    { id: 'M-A-09', nameEn: 'Spicy Tonkotsu Ramen', nameCn: '辣味豚骨拉面', price: 19.95, note: '辣度可选', img: '/beiyuan-M-A-09.webp' },
-    { id: 'M-A-10', nameEn: 'Pu-Erh Flavored Beef Stew Noodle', nameCn: '台式普洱牛肉面', price: 21.95, img: '/beiyuan-M-A-10.webp' },
-    { id: 'M-A-11', nameEn: 'Meat Balls with Bean Noodle', nameCn: '贡丸冬粉汤', price: 21.95, img: '/beiyuan-M-A-11.webp' },
-    { id: 'M-A-12', nameEn: 'Braised Pork Chop Meal Set', nameCn: '卤排骨套餐', price: 21.95, img: '/beiyuan-M-A-12.webp' },
+    { id: 'M-A-01', nameEn: 'Pork Stew Rice Meal Set', nameCn: '台式卤肉饭套餐', price: 18.95, img: '/beiyuan-M-A-01.webp' },
+    { id: 'M-A-02', nameEn: 'Pickle Ground Pork Meal Set', nameCn: '台式瓜子肉燥套餐', price: 18.95, img: '/beiyuan-M-A-02.webp' },
+    { id: 'M-A-03', nameEn: 'Teriyaki Chicken Meal Set', nameCn: '照烧鸡排套餐', price: 18.95, img: '/beiyuan-M-A-03.webp' },
+    { id: 'M-A-04', nameEn: 'Pork w/ Preserved Dried Vegetables Meal Set', nameCn: '台式梅干扣肉套餐', price: 18.95, img: '/beiyuan-M-A-04.webp' },
+    { id: 'M-A-05', nameEn: 'Beef Bowl', nameCn: '牛丼套餐', price: 18.95, img: '/beiyuan-M-A-05.webp' },
+    { id: 'M-A-06', nameEn: 'Teriyaki Eel Meal Set', nameCn: '鳗鱼套餐', price: 23.95, img: '/beiyuan-M-A-06.webp' },
+    { id: 'M-A-07', nameEn: 'Spiced Chicken Meal Set', nameCn: '台式红烧鸡套餐', price: 18.95, img: '/beiyuan-M-A-07.webp' },
+    { id: 'M-A-08', nameEn: 'Beef Stew Rice Meal Set', nameCn: '台式牛肉饭套餐', price: 18.95, img: '/beiyuan-M-A-08.webp' },
+    { id: 'M-A-09', nameEn: 'Spicy Tonkotsu Ramen', nameCn: '辣味豚骨拉面', price: 18.95, note: '辣度可选', img: '/beiyuan-M-A-09.webp' },
+    { id: 'M-A-10', nameEn: 'Pu-Erh Flavored Beef Stew Noodle', nameCn: '台式普洱牛肉面', price: 20.95, img: '/beiyuan-M-A-10.webp' },
+    { id: 'M-A-11', nameEn: 'Meat Balls with Bean Noodle', nameCn: '贡丸冬粉汤', price: 20.95, img: '/beiyuan-M-A-11.webp' },
+    { id: 'M-A-12', nameEn: 'Braised Pork Chop Meal Set', nameCn: '卤排骨套餐', price: 20.95, img: '/beiyuan-M-A-12.webp' },
   ],
 };
 
@@ -503,6 +524,7 @@ export const toppings = [
 export const allCategories = [
   icedFlavoredTea,
   icedMilkTea,
+  reserveTea,
   houseSpecialIced,
   houseSpecialIcedFood,
   hotTea,

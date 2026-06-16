@@ -46,6 +46,7 @@ const TAB_SECTIONS: TabSection[] = [
     tabs: [
       { id: 'C-A', nameCn: '冰调味茶', nameEn: 'Iced Tea' },
       { id: 'C-B', nameCn: '冰调味奶茶', nameEn: 'Iced Milk Tea' },
+      { id: 'R-A', nameCn: '臻选原叶茶', nameEn: 'Reserve Tea' },
       { id: 'C-C', nameCn: '经典特调冰饮', nameEn: 'Special Iced Drink' },
       { id: 'C-D', nameCn: '经典特制冰品', nameEn: 'Special Iced' },
     ],
@@ -455,10 +456,10 @@ function FreeDrinkSection() {
       <div style={{ background: '#FFF7ED', borderRadius: 16, padding: '14px 16px', marginBottom: 16, border: '1px solid #FED7AA' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#EA580C' }}>🎁 Free Drink with Every Meal Set</div>
         <div style={{ fontSize: 12, color: C.sub, marginTop: 6, lineHeight: 1.7 }}>
-          All meal sets include one complimentary drink — hot or cold, with adjustable sweetness and ice. Upgrade to large +$1.
+          Every meal set includes one drink — select from the options below. Premium drinks carry a small upcharge.
         </div>
         <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>
-          所有套餐均含一杯免费饮料，冷热皆可、甜度冰量可调，升级大杯加 $1。
+          所有套餐均含一杯饮料，从以下选项中选择；部分饮品需小额加价。
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -466,7 +467,9 @@ function FreeDrinkSection() {
           <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '14px 14px', border: '1px solid #F0EDE8', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{d.nameEn}</div>
             <div style={{ fontSize: 12, color: C.sub, marginTop: 3 }}>{d.nameCn}</div>
-            <div style={{ marginTop: 8, fontSize: 11, background: '#FFF7ED', color: '#EA580C', padding: '3px 8px', borderRadius: 999, display: 'inline-block', fontWeight: 600 }}>Included</div>
+            <div style={{ marginTop: 8, fontSize: 11, background: d.price > 0 ? '#FEF3C7' : '#FFF7ED', color: d.price > 0 ? '#B45309' : '#EA580C', padding: '3px 8px', borderRadius: 999, display: 'inline-block', fontWeight: 600 }}>
+              {d.price > 0 ? `+$${d.price.toFixed(2)}` : 'Included 免费'}
+            </div>
           </div>
         ))}
       </div>

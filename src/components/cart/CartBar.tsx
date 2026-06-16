@@ -14,10 +14,11 @@ function lineSpec(l: CartLine): string[] {
   if (l.size && l.size !== '单一') parts.push(l.size === 'L' ? '大杯' : '小杯');
   if (l.variant) parts.push(l.variant.label);
   if (l.teaBase) parts.push(l.teaBase);
+  if (l.milkBase) parts.push(l.milkBase.label + (l.milkBase.price ? ` +$${l.milkBase.price.toFixed(2)}` : ''));
   if (l.sweet) parts.push(l.sweet);
   if (l.ice && l.ice !== '固定') parts.push(l.ice as string);
   if (l.toppings && l.toppings.length) parts.push(...l.toppings.map(t => `+${t.nameCn}`));
-  if (l.freeDrink) parts.push(`赠饮:${l.freeDrink.nameCn}(${l.freeDrink.sweet})`);
+  if (l.freeDrink) parts.push(`赠饮:${l.freeDrink.nameCn}(${l.freeDrink.sweet})${l.freeDrink.price ? ` +$${l.freeDrink.price.toFixed(2)}` : ''}`);
   if (l.addOns && l.addOns.length) parts.push(...l.addOns.map(a => `+${a.nameCn}`));
   return parts;
 }

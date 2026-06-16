@@ -45,7 +45,8 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
   const [addOns, setAddOns] = useState<Record<number, boolean>>({});
 
   const chosenAddOns = mealAddOns.filter((_, i) => addOns[i]);
-  const unit = item.price + chosenAddOns.reduce((s, a) => s + a.price, 0);
+  const drinkUpcharge = freeDrinkOptions[drinkIdx].price;
+  const unit = item.price + drinkUpcharge + chosenAddOns.reduce((s, a) => s + a.price, 0);
 
   const handleAdd = () => {
     const d = freeDrinkOptions[drinkIdx];
@@ -56,7 +57,7 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
       nameEn: item.nameEn,
       basePrice: item.price,
       qty,
-      freeDrink: { nameCn: d.nameCn, nameEn: d.nameEn, sweet: drinkSweet },
+      freeDrink: { nameCn: d.nameCn, nameEn: d.nameEn, sweet: drinkSweet, price: d.price },
       addOns: chosenAddOns.map(a => ({ nameCn: a.nameCn, nameEn: a.nameEn, price: a.price })),
     };
     addLine(line);
@@ -70,7 +71,7 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
         <div style={{
           fontSize: 11, fontWeight: 800, color: C.orange, letterSpacing: 0.6,
           textTransform: 'uppercase', marginBottom: 8,
-        }}>🎁 附赠饮品 · 选一杯 Free Drink</div>
+        }}>🎁 附赠饮品 · 选一杯 Free Drink<span style={{ fontSize: 10, fontWeight: 600, color: C.sub, marginLeft: 4 }}>(部分需加价)</span></div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {freeDrinkOptions.map((d, i) => {
             const on = i === drinkIdx;
@@ -84,6 +85,9 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
                   {on ? '✓ ' : ''}{d.nameCn}
                 </div>
                 <div style={{ fontSize: 10, color: C.sub, marginTop: 1 }}>{d.nameEn}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: d.price > 0 ? C.orange : '#16a34a', marginTop: 3 }}>
+                  {d.price > 0 ? `+$${d.price.toFixed(2)}` : '免费 Free'}
+                </div>
               </button>
             );
           })}
