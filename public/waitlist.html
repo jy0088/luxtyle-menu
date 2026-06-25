@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Luxtyle · Brands Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&family=Noto+Sans+SC:wght@500;700;900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#574A78; --ink2:#8E80AD; --line:#EFE6FF;
+    --accent:#FF7A45; --accent-d:#F2872F;
+    --grape:#A98CFF; --grape-d:#7E5AE0; --mint:#6FE0AD; --mint-d:#33B987;
+    --coral:#FF6B6B; --coral-d:#E84545; --wa:#3FD071; --wa-d:#22A957;
+    --gold:#F2C14E; --gold2:#FFD877; --vermil:#E8402F; --inkbg:#1C1322;
+    --r:26px; --r-sm:16px;
+    --disp:'Fredoka','Baloo 2',sans-serif; --cute:'ZCOOL KuaiLe',sans-serif;
+    --gc:'ZCOOL QingKe HuangYou',sans-serif; --body:'Nunito','Noto Sans SC',sans-serif;
+    --puffy:0 10px 26px rgba(120,90,180,.16), inset 0 2px 4px rgba(255,255,255,.95), inset 0 -4px 9px rgba(170,140,220,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{font-family:var(--body); color:var(--ink);
+    background:linear-gradient(160deg,#FFE6F3,#F0E7FF 40%,#E2F1FF 72%,#E6FBF1);
+    display:flex; align-items:center; justify-content:center; padding:18px;}
+  .phone{width:100%; max-width:402px; height:min(852px,95vh); position:relative; overflow:hidden; border-radius:40px;
+    background:linear-gradient(165deg,#FFEBF6,#EEE9FF 45%,#E4F3FF 75%,#E6FBF1);
+    box-shadow:0 24px 60px rgba(130,90,190,.30), 0 0 0 9px #fff, 0 0 0 12px #FFE0F0; display:flex; flex-direction:column;}
+  .demo-bar{position:relative; z-index:5; flex:0 0 auto; background:rgba(28,19,34,.95); color:#fff; font-size:11px;
+    display:flex; align-items:center; gap:8px; padding:7px 14px; justify-content:space-between; font-weight:700}
+  .demo-bar b{color:var(--gold)}
+  .demo-bar button{font-weight:800; font-size:11px; color:#1C1322; background:var(--gold); border:none;
+    border-radius:20px; padding:5px 11px; cursor:pointer; font-family:var(--body); display:none}
+  .stage{position:relative; z-index:2; flex:1 1 auto; overflow:hidden}
+  .screen{position:absolute; inset:0; padding:18px 20px 22px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;
+    opacity:0; transform:translateY(16px) scale(.98); pointer-events:none; transition:all .4s cubic-bezier(.2,.8,.2,1)}
+  .screen.active{opacity:1; transform:none; pointer-events:auto}
+
+  /* ===== LUXTYLE 国潮 PORTAL ===== */
+  #s-portal{background:
+    radial-gradient(120% 80% at 80% -10%, #50212A 0%, transparent 55%),
+    radial-gradient(120% 90% at -10% 110%, #3A1530 0%, transparent 50%),
+    linear-gradient(160deg,#241531,#160C1B); padding:0; gap:0; overflow:hidden}
+  .portal-inner{position:relative; z-index:2; padding:26px 22px 22px; display:flex; flex-direction:column; gap:16px; min-height:100%}
+  .watermark{position:absolute; right:-18px; top:40px; font-family:var(--gc); font-size:230px; line-height:.8; z-index:1;
+    color:rgba(242,193,78,.07); pointer-events:none; user-select:none}
+  .lux-head{display:flex; flex-direction:column; gap:3px; z-index:2}
+  .lux-logo{font-family:var(--disp); font-weight:800; font-size:34px; letter-spacing:5px;
+    background:linear-gradient(120deg,#FFE6A8,#F2C14E 45%,#E8A23B); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .lux-sub{font-family:var(--gc); font-size:16px; color:#F3D9A6; letter-spacing:2px}
+  .lux-tag{font-size:12.5px; color:#C9A9D6; font-weight:700; margin-top:2px}
+  .pick-lab{display:flex; align-items:center; gap:8px; color:#E9CFA0; font-family:var(--disp); font-weight:600; font-size:13px; letter-spacing:1px; margin-top:4px; z-index:2}
+  .pick-lab::before,.pick-lab::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(242,193,78,.35),transparent)}
+  .bcards{display:flex; flex-direction:column; gap:13px; z-index:2}
+  .bcard{position:relative; display:flex; align-items:center; gap:14px; cursor:pointer; padding:15px 16px; border-radius:22px;
+    background:linear-gradient(150deg,rgba(255,255,255,.10),rgba(255,255,255,.04)); border:1.5px solid rgba(242,193,78,.22);
+    box-shadow:0 10px 24px rgba(0,0,0,.28), inset 0 1px 1px rgba(255,255,255,.12); transition:transform .15s, border-color .2s}
+  .bcard:active{transform:scale(.98)}
+  .bcard .seal{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-family:var(--cute);font-size:27px;color:#fff;flex:0 0 auto;
+    box-shadow:0 6px 14px rgba(0,0,0,.3), inset 0 2px 3px rgba(255,255,255,.35)}
+  .bcard .bn{font-family:var(--disp); font-weight:700; font-size:18px; color:#FBF0DE; line-height:1.1}
+  .bcard .bcn{font-family:var(--cute); font-size:12px; color:#C9A9D6; margin-top:1px}
+  .bcard .chev{margin-left:auto; color:#F2C14E; font-size:22px}
+  .pill{display:inline-flex; align-items:center; gap:5px; font-family:var(--disp); font-weight:600; font-size:11px; padding:3px 9px; border-radius:20px; margin-top:5px}
+  .pill::before{content:""; width:7px;height:7px;border-radius:50%}
+  .pill.busy{background:rgba(232,69,69,.18); color:#FF9E96} .pill.busy::before{background:#FF6B6B}
+  .pill.low{background:rgba(111,224,173,.16); color:#8FE9C4} .pill.low::before{background:#6FE0AD}
+  .pill.walk{background:rgba(95,208,192,.16); color:#8FE3DA} .pill.walk::before{background:#5FD0C0}
+  .lux-foot{margin-top:auto; text-align:center; color:#9A82AD; font-size:11px; font-weight:700; z-index:2; padding-top:10px}
+  .lux-foot b{color:#F2C14E}
+
+  /* ===== shared brand-page bits ===== */
+  .back{display:inline-flex; align-items:center; gap:5px; align-self:flex-start; background:rgba(255,255,255,.7);
+    border:none; border-radius:50px; padding:8px 14px 8px 11px; font-family:var(--disp); font-weight:600; font-size:13px; color:var(--ink); cursor:pointer; box-shadow:var(--puffy)}
+  .brand{display:flex; align-items:center; gap:11px}
+  .brand .mark{width:46px;height:46px;border-radius:16px; background:linear-gradient(160deg,var(--accent),var(--accent-d));
+    display:grid;place-items:center;color:#fff; font-family:var(--cute);font-size:24px; box-shadow:0 8px 18px rgba(0,0,0,.18), inset 0 2px 4px rgba(255,255,255,.5)}
+  .brand .cn{font-family:var(--disp); font-weight:700; font-size:19px; color:var(--ink); line-height:1}
+  .brand .sub-cn{font-family:var(--cute); font-size:12px; color:var(--ink2); margin-top:1px}
+  .brand .st{margin-left:auto}
+  .pill.busy.lite{background:#FFE2DF;color:#D9483B}.pill.low.lite{background:#DCF7E9;color:#2A9E6C}.pill.walk.lite{background:#DBF6F2;color:#2A9E94}
+
+  h1{font-family:var(--disp); font-weight:700; color:var(--ink); margin:2px 0 0; font-size:26px; line-height:1.18}
+  h1 .zh{display:block; font-family:var(--cute); font-weight:400; font-size:14px; color:var(--ink2); margin-top:3px}
+  .sub{color:var(--ink2); font-size:13px; font-weight:700}
+
+  .tabs{display:flex; gap:6px; background:rgba(255,255,255,.7); border-radius:50px; padding:6px; box-shadow:var(--puffy)}
+  .tabs button{flex:1; border:none; background:none; cursor:pointer; font-family:var(--disp); font-weight:600; font-size:15px;
+    color:var(--ink2); padding:11px 6px; border-radius:50px; transition:all .28s; line-height:1.05}
+  .tabs button .zh{font-family:var(--cute); font-size:10px; display:block; opacity:.8}
+  .tabs button.on{color:#fff; background:linear-gradient(160deg,var(--accent),var(--accent-d)); box-shadow:0 6px 14px rgba(0,0,0,.2), inset 0 2px 3px rgba(255,255,255,.4)}
+
+  .card{background:linear-gradient(180deg,#FFFFFF,#FBF5FF); border:2px solid #fff; border-radius:var(--r); padding:16px; box-shadow:var(--puffy)}
+  label.field{display:block; margin-bottom:13px} label.field:last-child{margin-bottom:0}
+  .field .lab{font-family:var(--disp); font-weight:600; font-size:13.5px; color:var(--ink); margin-bottom:7px; display:flex; gap:6px; align-items:baseline}
+  .field .lab .zh{font-family:var(--cute); color:var(--ink2); font-size:11px; font-weight:400}
+  input.txt{width:100%; font-family:var(--body); font-size:16px; font-weight:700; color:var(--ink); background:#F7F1FF;
+    border:2px solid #EEE6FF; border-radius:var(--r-sm); padding:13px 15px; outline:none; transition:all .2s; box-shadow:inset 0 2px 5px rgba(150,120,200,.08)}
+  input.txt:focus{border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px rgba(0,0,0,.06)}
+  input.txt::placeholder{color:#BBA9DD; font-weight:600}
+  .pax{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .pax .cnt{font-family:var(--disp); font-weight:700; font-size:30px; color:var(--accent-d); min-width:52px; text-align:center; line-height:1}
+  .pax .cnt small{font-family:var(--body); font-size:11px; color:var(--ink2); font-weight:700; display:block}
+  .step{width:50px;height:50px;border-radius:50%;border:none;cursor:pointer; font-size:26px; color:#fff; display:grid; place-items:center;
+    background:linear-gradient(160deg,var(--accent),var(--accent-d)); box-shadow:0 6px 13px rgba(0,0,0,.2), inset 0 2px 3px rgba(255,255,255,.4); transition:transform .12s}
+  .step:active{transform:scale(.88)}
+  .pax .pearls{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:120px}
+  .pax .pearls i{width:13px;height:13px;border-radius:50%;background:linear-gradient(160deg,var(--accent),var(--accent-d));display:block; box-shadow:inset 0 1px 2px rgba(255,255,255,.5)}
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{font-family:var(--disp); font-weight:600; font-size:14px; color:var(--ink); background:#F7F1FF; border:2px solid #EEE6FF;
+    border-radius:50px; padding:9px 15px; cursor:pointer; transition:all .2s; text-align:center; line-height:1.05}
+  .chip small{display:block; font-family:var(--body); font-size:10px; color:var(--ink2); font-weight:700}
+  .chip.on{background:linear-gradient(160deg,var(--accent),var(--accent-d)); border-color:#fff; color:#fff; box-shadow:0 6px 13px rgba(0,0,0,.18), inset 0 2px 3px rgba(255,255,255,.4)}
+  .chip.on small{color:rgba(255,255,255,.85)}
+
+  .btn{width:100%; border:none; cursor:pointer; font-family:var(--disp); font-weight:700; font-size:17px; color:#fff; padding:16px;
+    border-radius:var(--r); transition:all .12s; display:flex; align-items:center; justify-content:center; gap:8px; text-shadow:0 1px 2px rgba(0,0,0,.1); line-height:1.1}
+  .btn .zh{font-family:var(--cute); font-weight:400; font-size:12px; opacity:.92; text-shadow:none}
+  .btn:active{transform:translateY(5px)}
+  .btn.brand{background:linear-gradient(180deg,var(--accent),var(--accent-d)); box-shadow:0 7px 0 rgba(0,0,0,.18),0 14px 22px rgba(0,0,0,.14),inset 0 2px 3px rgba(255,255,255,.55)}
+  .btn.brand:active{box-shadow:0 2px 0 rgba(0,0,0,.18),inset 0 2px 3px rgba(255,255,255,.55)}
+  .btn.mint{background:linear-gradient(180deg,#86EBBC,#3FCB8E); box-shadow:0 7px 0 #2A9E6C,0 14px 22px rgba(51,185,135,.3),inset 0 2px 3px rgba(255,255,255,.7)}
+  .btn.mint:active{box-shadow:0 2px 0 #2A9E6C,inset 0 2px 3px rgba(255,255,255,.7)}
+  .btn.wa{background:linear-gradient(180deg,#52DC85,#2DBB63); box-shadow:0 7px 0 #1E9A4F,0 14px 22px rgba(45,187,99,.3),inset 0 2px 3px rgba(255,255,255,.6)}
+  .btn.wa:active{box-shadow:0 2px 0 #1E9A4F,inset 0 2px 3px rgba(255,255,255,.6)}
+  .btn.ghost{background:linear-gradient(180deg,#FFFFFF,#F4ECFF); color:var(--grape-d); box-shadow:0 6px 0 #E3D6FF,0 10px 18px rgba(140,100,210,.18),inset 0 2px 3px rgba(255,255,255,.9); text-shadow:none}
+  .btn.ghost:active{box-shadow:0 2px 0 #E3D6FF,inset 0 2px 3px rgba(255,255,255,.9)}
+  .btn.warn{background:linear-gradient(180deg,#FFFFFF,#FFF0F0); color:var(--coral-d); box-shadow:0 6px 0 #FFD6D6,0 10px 18px rgba(232,69,69,.14),inset 0 2px 3px rgba(255,255,255,.9); text-shadow:none}
+  .btn.warn:active{box-shadow:0 2px 0 #FFD6D6,inset 0 2px 3px rgba(255,255,255,.9)}
+  .btn[disabled]{opacity:.55; transform:none; box-shadow:none; filter:grayscale(.2)}
+  .spacer{flex:1; min-height:4px}
+  .hint{font-size:12px; color:var(--ink2); text-align:center; font-weight:700; line-height:1.5}
+  .hint b{color:var(--accent-d)}
+
+  .otp{display:flex; gap:10px; justify-content:center}
+  .otp input{width:54px; height:64px; text-align:center; font-family:var(--disp); font-weight:700; font-size:27px; color:var(--accent-d);
+    background:#fff; border:2px solid #EEE6FF; border-radius:var(--r-sm); outline:none; box-shadow:var(--puffy)}
+  .otp input:focus{border-color:var(--accent); box-shadow:0 0 0 4px rgba(0,0,0,.06)}
+  .resend{text-align:center; font-size:13px; color:var(--ink2); font-weight:700}
+  .resend button{background:none; border:none; color:var(--accent-d); font-weight:800; font-family:var(--body); cursor:pointer; font-size:13px}
+  .resend button[disabled]{color:#C7B6E6; cursor:default}
+
+  .numwrap{display:flex; flex-direction:column; align-items:center; gap:2px}
+  .numwrap .k{font-family:var(--disp); font-weight:600; font-size:13px; color:var(--ink2)}
+  .numwrap b{font-family:var(--disp); font-weight:700; font-size:42px; color:var(--accent-d); line-height:1; text-shadow:0 3px 0 rgba(0,0,0,.08)}
+  .bowl{width:160px; height:128px; margin-top:2px}
+  .statrow{display:flex; gap:12px}
+  .stat{flex:1; background:linear-gradient(180deg,#FFFFFF,#FBF5FF); border:2px solid #fff; border-radius:var(--r); padding:13px; text-align:center; box-shadow:var(--puffy)}
+  .stat .v{font-family:var(--disp); font-weight:700; font-size:26px; color:var(--grape-d); line-height:1}
+  .stat .v small{font-family:var(--body); font-size:12px; color:var(--ink2); font-weight:700}
+  .stat .k{font-size:11px; color:var(--ink2); font-weight:700; margin-top:5px; font-family:var(--disp)}
+  .countpill{display:flex; align-items:center; justify-content:center; gap:8px; background:linear-gradient(160deg,#FFF1F8,#F3ECFF);
+    border:2px dashed var(--accent); border-radius:50px; padding:11px; font-family:var(--disp); font-weight:600; color:var(--accent-d); font-size:14px}
+  .countpill b{font-size:18px}
+  .feat-card{border-radius:var(--r); padding:15px; box-shadow:var(--puffy); display:flex; align-items:center; gap:13px; cursor:pointer; transition:transform .12s; border:2px solid #fff}
+  .feat-card:active{transform:scale(.98)}
+  .feat-card .ic{width:54px;height:54px;border-radius:16px;background:#fff;display:grid;place-items:center;font-size:30px;flex:0 0 auto; box-shadow:0 5px 12px rgba(120,90,180,.2), inset 0 2px 3px rgba(255,255,255,.8)}
+  .feat-card .tt{font-family:var(--disp); font-weight:700; font-size:16px}
+  .feat-card .tt .zh{font-family:var(--cute); font-weight:400; font-size:11px; display:block; opacity:.85}
+  .feat-card .ds{font-size:11.5px; font-weight:700; margin-top:2px}
+  .game-card{background:linear-gradient(140deg,#FFE9C2,#FFD0E4)} .game-card .tt{color:#C77A2E} .game-card .ds{color:#C77A2E}
+  .wa-card{background:linear-gradient(140deg,#D9F8E5,#C9F0FF)} .wa-card .tt{color:var(--wa-d)} .wa-card .ds{color:#2A9E6C}
+  .feat-card.done{opacity:.92}
+  .coupon{display:flex; align-items:center; gap:12px; background:linear-gradient(180deg,#FFFFFF,#F2FFF8); border:2px dashed var(--mint-d); border-radius:var(--r); padding:13px; box-shadow:var(--puffy)}
+  .coupon .ic{font-size:28px} .coupon .tt{font-family:var(--disp); font-weight:700; font-size:16px; color:var(--mint-d)}
+  .coupon .tt .zh{font-family:var(--cute); font-weight:400; font-size:11px; opacity:.85} .coupon .ds{font-size:11px; color:var(--ink2); font-weight:700}
+  .walk-hero{text-align:center; padding:8px 0}
+  .walk-hero .big{font-family:var(--disp); font-weight:700; font-size:30px; color:var(--accent-d)} .walk-hero .big .zh{display:block; font-family:var(--cute); font-weight:400; font-size:15px; color:var(--ink); margin-top:3px}
+
+  .called-hero{text-align:center} .called-hero .big{font-family:var(--disp); font-weight:700; font-size:30px; color:var(--mint-d); line-height:1.15}
+  .called-hero .big .zh{display:block; font-family:var(--cute); font-weight:400; font-size:15px; color:var(--ink); margin-top:2px}
+  .called-hero .sm{color:var(--ink2); font-size:12.5px; font-weight:700; margin-top:5px}
+  .ring{width:146px;height:146px;margin:2px auto 0;position:relative} .ring svg{transform:rotate(-90deg)}
+  .ring .lbl{position:absolute; inset:0; display:grid; place-items:center; text-align:center}
+  .ring .lbl b{font-family:var(--disp); font-weight:700; font-size:33px; color:var(--accent-d); line-height:1} .ring .lbl span{font-size:10px; color:var(--ink2); font-weight:700}
+  .three{display:flex; flex-direction:column; gap:10px}
+  .center{align-items:center; text-align:center; justify-content:center} .emo{font-size:62px; line-height:1} .center h1{margin-top:4px} .center .sub{max-width:280px}
+  .summary{width:100%; background:linear-gradient(180deg,#FFFFFF,#FBF5FF); border:2px solid #fff; border-radius:var(--r); box-shadow:var(--puffy); overflow:hidden}
+  .summary .row{display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border-bottom:1.5px solid #F0E8FF} .summary .row:last-child{border-bottom:none}
+  .summary .row .k{color:var(--ink2); font-weight:700; font-family:var(--disp); font-size:12px} .summary .row .k .zh{font-family:var(--cute); font-weight:400}
+  .summary .row .v{font-family:var(--disp); font-weight:700; color:var(--accent-d); font-size:18px}
+
+  .modal{position:absolute; inset:0; background:rgba(28,19,34,.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:20px; z-index:30} .modal.show{display:flex}
+  .sheet{background:linear-gradient(170deg,#FFF0F8,#F1ECFF); border-radius:30px; padding:18px 18px 20px; width:100%; max-width:340px; box-shadow:0 20px 50px rgba(28,19,34,.4), inset 0 2px 4px rgba(255,255,255,.9); text-align:center; position:relative; border:3px solid #fff}
+  .sheet h2{font-family:var(--disp); font-weight:700; color:var(--accent-d); font-size:21px; margin:2px 0} .sheet h2 .zh{font-family:var(--cute); font-weight:400; font-size:13px; color:var(--ink2); display:block}
+  .wheelwrap{position:relative; width:244px; height:244px; margin:8px auto 2px}
+  .pointer{position:absolute; top:-6px; left:50%; transform:translateX(-50%); z-index:3; width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:24px solid var(--coral-d); filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+  .wheel{width:100%;height:100%;border-radius:50%;border:9px solid #fff;box-shadow:0 12px 28px rgba(28,19,34,.3), inset 0 0 0 3px #FFE0F0; transition:transform 4.4s cubic-bezier(.13,.7,.16,1)}
+  .wheel .seg{position:absolute; inset:0; display:grid; place-items:start center; padding-top:16px}
+  .wheel .seg span{font-family:var(--disp); font-weight:700; font-size:12px; color:#fff; width:74px; text-align:center; line-height:1.18; text-shadow:0 1px 2px rgba(0,0,0,.3)}
+  .hub{position:absolute; top:50%; left:50%; width:48px; height:48px; transform:translate(-50%,-50%); background:linear-gradient(160deg,var(--accent),var(--accent-d)); border-radius:50%; border:5px solid #fff; z-index:2; display:grid; place-items:center; font-family:var(--disp); font-weight:700; color:#fff; font-size:13px; box-shadow:0 6px 14px rgba(0,0,0,.3)}
+  .sheet .close{position:absolute; top:10px; right:14px; background:none; border:none; font-size:24px; color:var(--ink2); cursor:pointer}
+  @media (prefers-reduced-motion: reduce){.screen{transition:none}.wheel{transition:none}.bob{animation:none!important}}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}} .bob{animation:bob 3s ease-in-out infinite}
+  @keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}} .pop{animation:pop .45s cubic-bezier(.2,1.3,.5,1) both}
+  @media (max-width:480px){
+    body{padding:0; align-items:stretch; background:#160C1B}
+    .phone{max-width:none; width:100%; height:100vh; height:100dvh; border-radius:0; box-shadow:none}
+    .demo-bar{padding-top:calc(7px + env(safe-area-inset-top))}
+    .screen{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="demo-bar"><span><b>DEMO</b> · Luxtyle portal · 测试中</span>
+    <button id="simBtn" onclick="simulateReady()">▶ Simulate "table ready"</button></div>
+  <div class="stage">
+
+    <!-- PORTAL -->
+    <section class="screen active" id="s-portal">
+      <div class="watermark">潮</div>
+      <div class="portal-inner">
+        <div class="lux-head">
+          <div class="lux-logo">LUXTYLE</div>
+          <div class="lux-sub">国潮 · 一门三味</div>
+          <div class="lux-tag">Three brands, one door · 选个店开始</div>
+        </div>
+        <div class="pick-lab">PICK A BRAND 选品牌</div>
+        <div class="bcards" id="bcards"></div>
+        <div class="lux-foot">7315 Clairemont Mesa Blvd · San Diego<br>powered by <b>Luxtyle</b></div>
+      </div>
+    </section>
+
+    <!-- BRAND HUB -->
+    <section class="screen" id="s-hub">
+      <button class="back" onclick="go('s-portal')">‹ Brands <span style="font-family:var(--cute)">换店</span></button>
+      <div class="brand"><div class="mark" id="h-mark">杨</div>
+        <div><div class="cn" id="h-name">YGF Malatang</div><div class="sub-cn" id="h-cn">杨国福麻辣烫</div></div>
+        <div class="st" id="h-status"></div></div>
+      <div id="hub-body" style="display:flex;flex-direction:column;gap:14px;flex:1"></div>
+    </section>
+
+    <!-- OTP -->
+    <section class="screen center" id="s-otp">
+      <div class="emo bob">📲</div><h1>Enter your code<span class="zh">输入验证码</span></h1>
+      <div class="sub" id="otp-sub">Code sent</div>
+      <div class="otp" id="otp-box"><input class="txt" maxlength="1" inputmode="numeric"><input class="txt" maxlength="1" inputmode="numeric"><input class="txt" maxlength="1" inputmode="numeric"><input class="txt" maxlength="1" inputmode="numeric"></div>
+      <div class="hint" style="margin-top:2px">demo code 演示码: <b>1234</b></div>
+      <div class="resend">Didn't get it? <button id="resendBtn" onclick="resend()">Resend (<span id="rs">30</span>s)</button></div>
+      <div class="spacer"></div>
+      <button class="btn brand" onclick="verify()">Verify <span class="zh">确认</span></button>
+      <button class="btn ghost" onclick="go('s-hub')">← Back <span class="zh">返回</span></button>
+    </section>
+
+    <!-- WAIT -->
+    <section class="screen" id="s-wait">
+      <div class="brand"><div class="mark" id="w-mark">杨</div><div><div class="cn">You're in line!</div><div class="sub-cn" id="w-brand">杨国福麻辣烫</div></div></div>
+      <div class="numwrap"><div class="k">your number <span style="font-family:var(--cute)">你的号码</span></div><b id="w-num">#18</b><div class="bowl bob" id="bowlGfx"></div></div>
+      <div class="statrow"><div class="stat"><div class="v" id="w-ahead">4</div><div class="k">parties ahead 前面</div></div>
+        <div class="stat"><div class="v" id="w-eta">~20<small>m</small></div><div class="k">est. wait 预计</div></div></div>
+      <div class="countpill">⏳ about <b id="w-count">20:00</b> · we'll text you</div>
+      <div class="feat-card wa-card" id="waCard" onclick="joinChannel()"><div class="ic">💚</div>
+        <div><div class="tt" id="wa-tt">Join the channel<span class="zh" id="wa-cn">加入频道</span></div><div class="ds">First-timers get a welcome gift 🎁 新人迎新礼</div></div></div>
+      <div class="feat-card game-card" id="gameCard" onclick="openWheel()"><div class="ic">🎡</div>
+        <div><div class="tt" style="color:#C77A2E">Spin while you wait<span class="zh">边等边玩</span></div><div class="ds">A little treat for waiting 🎁 等位小惊喜</div></div></div>
+      <div id="couponSlot"></div>
+      <div class="spacer"></div>
+      <div class="hint">Wander off — we'll text when your table's ready 📲<br><b>可以去逛逛，桌好了发短信</b></div>
+      <button class="btn warn" onclick="go('s-cancel')">Leave the line <span class="zh">取消候位</span></button>
+    </section>
+
+    <!-- CALLED -->
+    <section class="screen" id="s-called">
+      <div class="called-hero"><div class="emo pop">🎉</div><div class="big">Your table's ready!<span class="zh">轮到你啦～</span></div>
+        <div class="sm">Respond before the timer runs out · 请在倒计时内回应</div></div>
+      <div class="ring"><svg width="146" height="146"><circle cx="73" cy="73" r="63" fill="none" stroke="#FFE0F0" stroke-width="13"/>
+        <circle id="ringArc" cx="73" cy="73" r="63" fill="none" stroke="#33B987" stroke-width="13" stroke-linecap="round" stroke-dasharray="395.8" stroke-dashoffset="0"/></svg>
+        <div class="lbl"><div><b id="c-count">10:00</b><span>to respond 响应</span></div></div></div>
+      <div class="three">
+        <button class="btn mint" onclick="go('s-confirm')">✅ I'm coming! <span class="zh">马上到</span></button>
+        <button class="btn ghost" id="extBtn" onclick="extend()">⏱️ Give me 10 min <span class="zh" id="extLbl">延长 10 分钟</span></button>
+        <button class="btn warn" onclick="go('s-cancel')">😢 Cancel <span class="zh">取消</span></button></div>
+    </section>
+
+    <!-- CONFIRMED -->
+    <section class="screen center" id="s-confirm">
+      <div class="emo pop">🍜</div><h1>Yay, see you soon!<span class="zh">太好了，等你哦～</span></h1>
+      <div class="sub">Show your number at the counter <b id="cf-num">#18</b><br>到前台报号码</div>
+      <div class="coupon" id="cf-coupon" hidden><div class="ic">🎁</div><div style="text-align:left"><div class="tt" id="cf-prize"></div><div class="ds">show at checkout · 结账出示</div></div></div>
+      <div class="spacer"></div><div class="hint">Questions? WhatsApp 858-268-8198</div>
+      <button class="btn ghost" onclick="resetAll()">↺ Restart demo</button>
+    </section>
+
+    <!-- RESERVED -->
+    <section class="screen center" id="s-reserved">
+      <div class="emo pop">📅</div><h1>You're booked!<span class="zh">预约成功 🎊</span></h1>
+      <div class="sub">Give your name when you arrive · 到点报名字即可</div>
+      <div class="summary" id="resv-summary"></div>
+      <div class="feat-card wa-card" onclick="joinChannel('r')" style="width:100%"><div class="ic">💚</div><div style="text-align:left"><div class="tt" style="color:var(--wa-d)">Join the channel<span class="zh">加入频道</span></div><div class="ds">New members get a welcome gift 🎁</div></div></div>
+      <div class="spacer"></div><div class="hint">We'll text a reminder before your time ⏰</div>
+      <button class="btn ghost" onclick="resetAll()">↺ Restart demo</button>
+    </section>
+
+    <!-- CHANNEL JOINED -->
+    <section class="screen center" id="s-channel">
+      <div class="emo pop">🎁</div><h1>Welcome gift unlocked!<span class="zh">迎新礼到手啦～</span></h1>
+      <div class="sub">Thanks for joining <b id="ch-brand">YGF</b> on WhatsApp<br>感谢加入频道</div>
+      <div class="coupon" style="margin-top:4px"><div class="ic">🧧</div><div style="text-align:left"><div class="tt">Free topping next order<span class="zh">下单免费加料一份</span></div><div class="ds">auto-saved · 已存入手机</div></div></div>
+      <div class="spacer"></div><button class="btn wa" id="ch-back">Back <span class="zh">返回</span></button>
+    </section>
+
+    <!-- CANCELLED / MISSED -->
+    <section class="screen center" id="s-cancel"><div class="emo">👋</div><h1>Cancelled<span class="zh">已取消</span></h1>
+      <div class="sub">Come back soon! · 下次再来呀～</div><div class="spacer"></div><button class="btn brand" onclick="resetAll()">Start again <span class="zh">重新开始</span></button></section>
+    <section class="screen center" id="s-missed"><div class="emo">⌛</div><h1>Oops, missed it<span class="zh">哎呀，过号啦</span></h1>
+      <div class="sub">The window closed — rejoin anytime · 可重新排队</div><div class="spacer"></div><button class="btn brand" onclick="resetAll()">Rejoin <span class="zh">重新排队</span></button></section>
+  </div>
+
+  <div class="modal" id="wheelModal"><div class="sheet"><button class="close" onclick="closeWheel()">×</button>
+    <h2>Spin the wheel 🎡<span class="zh">等位转盘</span></h2>
+    <div class="wheelwrap"><div class="pointer"></div><div class="wheel" id="wheel"></div><div class="hub">GO</div></div>
+    <button class="btn brand" id="spinBtn" style="margin-top:10px" onclick="spin()">Spin! <span class="zh">转！</span></button></div></div>
+</div>
+
+<script>
+const BRANDS={
+  ygf:{en:'YGF Malatang',cn:'杨国福麻辣烫',mark:'杨',accent:'#FF7A45',accentD:'#F2872F',seal:'linear-gradient(160deg,#FF8B4D,#F2702F)',
+       status:'busy',statusTxt:'~20 min wait',ahead:4,eta:20,waitlist:true,reserve:true,mascot:'bowl',channel:'YGF'},
+  by:{en:'Bei Yuan',cn:'北苑南家',mark:'北',accent:'#E87FB0',accentD:'#D45C95',seal:'linear-gradient(160deg,#F08FBE,#D45C95)',
+      status:'low',statusTxt:'no wait now',ahead:0,eta:5,waitlist:true,reserve:true,mascot:'cup',channel:'Bei Yuan'},
+  tomo:{en:'Tomo Gelato',cn:'Tomo',mark:'冰',accent:'#5FD0C0',accentD:'#33B0A0',seal:'linear-gradient(160deg,#74D9CB,#33B0A0)',
+        status:'walk',statusTxt:'walk-in',waitlist:false,reserve:false,mascot:'gelato',channel:'Tomo'}
+};
+const S={brand:null,mode:'wait',wpax:2,rpax:2,num:18,ahead:4,eta:20,date:null,time:null,name:'',phone:'',prize:null,extended:false,joined:false,backTo:'s-wait'};
+let waitTimer=null,calledTimer=null,resendTimer=null;
+
+function renderPortal(){
+  const map={busy:'busy',low:'low',walk:'walk'};
+  document.getElementById('bcards').innerHTML=Object.entries(BRANDS).map(([k,b])=>
+    `<div class="bcard" onclick="enterBrand('${k}')">
+      <div class="seal" style="background:${b.seal}">${b.mark}</div>
+      <div><div class="bn">${b.en}</div><div class="bcn">${b.cn}</div>
+        <span class="pill ${map[b.status]}">${b.statusTxt}</span></div>
+      <div class="chev">›</div></div>`).join('');
+}
+renderPortal();
+
+function enterBrand(k){const b=BRANDS[k];S.brand=k;
+  document.documentElement.style.setProperty('--accent',b.accent);
+  document.documentElement.style.setProperty('--accent-d',b.accentD);
+  document.getElementById('h-mark').textContent=b.mark;
+  document.getElementById('h-name').textContent=b.en;
+  document.getElementById('h-cn').textContent=b.cn;
+  const sm={busy:'busy lite',low:'low lite',walk:'walk lite'};
+  document.getElementById('h-status').innerHTML=`<span class="pill ${sm[b.status]}">${b.statusTxt}</span>`;
+  buildHub(b); go('s-hub');}
+
+function buildHub(b){
+  const waCard=`<div class="feat-card wa-card" onclick="joinChannel('h')"><div class="ic">💚</div>
+    <div><div class="tt" style="color:var(--wa-d)">Join ${b.en} channel<span class="zh">加入${b.cn}频道</span></div>
+    <div class="ds">New members get a welcome gift 🎁 新人迎新礼</div></div></div>`;
+  let body='';
+  if(b.waitlist){
+    body=`<div class="tabs"><button id="tab-wait" class="on" onclick="setTab('wait')">🍜 Waitlist<span class="zh">等位</span></button>
+      ${b.reserve?`<button id="tab-resv" onclick="setTab('resv')">📅 Reserve<span class="zh">预约</span></button>`:''}</div>
+    <div id="panel-wait" style="display:flex;flex-direction:column;gap:14px;flex:1">
+      <div><h1>Join the waitlist<span class="zh">${b.status==='low'?'现在基本不用等，也可取号 🌿':'现在来吃？先排个号 🌶️'}</span></h1></div>
+      <div class="card">
+        <label class="field"><div class="lab">Your name <span class="zh">称呼</span></div><input class="txt" id="w-name" placeholder="e.g. Kevin / 小王"></label>
+        <label class="field"><div class="lab">Party size <span class="zh">几位</span></div>
+          <div class="pax"><button class="step" onclick="pax('w',-1)">−</button><div class="cnt"><div id="w-pax-n">2</div><small>guests</small></div><div class="pearls" id="w-pax-pearls"></div><button class="step" onclick="pax('w',1)">＋</button></div></label>
+        <label class="field" style="margin-bottom:0"><div class="lab">Phone <span class="zh">手机号</span></div><input class="txt" id="w-phone" placeholder="(858) 268-8198" inputmode="tel"></label></div>
+      ${waCard}
+      <div class="spacer"></div>
+      <button class="btn brand" onclick="submitWait()">Join the line <span class="zh">取号排队</span></button>
+      <div class="hint">We'll text a 4-digit code 📩 发码确认手机</div></div>`;
+    if(b.reserve){body+=`<div id="panel-resv" style="display:none;flex-direction:column;gap:13px;flex:1">
+      <div><h1>Reserve a table<span class="zh">晚点来？提前订位 📅</span></h1></div>
+      <div class="card">
+        <label class="field"><div class="lab">Date <span class="zh">哪天</span></div><div class="chips" id="date-chips"></div></label>
+        <label class="field"><div class="lab">Time <span class="zh">几点</span></div><div class="chips" id="time-chips"></div></label>
+        <label class="field"><div class="lab">Party size <span class="zh">几位</span></div>
+          <div class="pax"><button class="step" onclick="pax('r',-1)">−</button><div class="cnt"><div id="r-pax-n">2</div><small>guests</small></div><div class="pearls" id="r-pax-pearls"></div><button class="step" onclick="pax('r',1)">＋</button></div></label></div>
+      <div class="card" style="padding:14px">
+        <label class="field"><div class="lab">Name <span class="zh">称呼</span></div><input class="txt" id="r-name" placeholder="e.g. Kevin / 小王"></label>
+        <label class="field" style="margin-bottom:0"><div class="lab">Phone <span class="zh">手机号</span></div><input class="txt" id="r-phone" placeholder="(858) 268-8198" inputmode="tel"></label></div>
+      <div class="spacer"></div>
+      <button class="btn brand" onclick="submitResv()">Reserve <span class="zh">确认预约</span></button>
+      <div class="hint">We'll text a confirmation + reminder ⏰</div></div>`;}
+  } else {
+    body=`<div class="walk-hero"><div class="emo bob">🍨</div><div class="big">Walk right in!<span class="zh">直接进来就好～</span></div></div>
+      <div class="card" style="text-align:center"><div class="sub">No line for gelato — grab a scoop anytime.<br>冰淇淋无需排队，随到随享 🍦</div></div>
+      ${waCard}
+      <div class="spacer"></div>
+      <div class="hint">Want a heads-up on new flavors? Join the channel above ⬆️</div>`;
+  }
+  document.getElementById('hub-body').innerHTML=body;
+  renderPax('w');renderPax('r'); if(b.reserve)buildChips();
+}
+
+function setTab(t){S.mode=t;
+  document.getElementById('tab-wait').classList.toggle('on',t==='wait');
+  const rt=document.getElementById('tab-resv'); if(rt)rt.classList.toggle('on',t==='resv');
+  document.getElementById('panel-wait').style.display=t==='wait'?'flex':'none';
+  const rp=document.getElementById('panel-resv'); if(rp)rp.style.display=t==='resv'?'flex':'none';}
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('simBtn').style.display=(id==='s-wait')?'block':'none';
+  if(id==='s-called')startCalled();
+  if(id!=='s-called'&&calledTimer){clearInterval(calledTimer);calledTimer=null;}
+  if(['s-cancel','s-confirm','s-missed','s-reserved','s-portal'].includes(id)&&waitTimer)clearInterval(waitTimer);
+  if(id==='s-confirm'){document.getElementById('cf-num').textContent='#'+S.num;
+    if(S.prize){const c=document.getElementById('cf-coupon');c.hidden=false;document.getElementById('cf-prize').innerHTML=S.prize;}}}
+
+function pax(w,d){const k=w+'pax';S[k]=Math.max(1,Math.min(12,S[k]+d));renderPax(w);}
+function renderPax(w){const n=document.getElementById(w+'-pax-n');if(!n)return;n.textContent=S[w+'pax'];
+  document.getElementById(w+'-pax-pearls').innerHTML='<i></i>'.repeat(S[w+'pax']);}
+
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function buildChips(){const dc=document.getElementById('date-chips');if(!dc)return;const today=new Date();let html='';
+  for(let i=0;i<5;i++){const d=new Date(today);d.setDate(today.getDate()+i);const lab=i===0?'Today':i===1?'Tmrw':DOW[d.getDay()];const md=(d.getMonth()+1)+'/'+d.getDate();
+    html+=`<div class="chip${i===0?' on':''}" onclick="pickDate(this,'${lab} ${md}')">${lab}<small>${md}</small></div>`;}
+  dc.innerHTML=html;S.date='Today '+((today.getMonth()+1)+'/'+today.getDate());
+  const times=['11:30','12:00','12:30','13:00','17:30','18:00','18:30','19:00'];
+  document.getElementById('time-chips').innerHTML=times.map((t,i)=>`<div class="chip${i===5?' on':''}" onclick="pickTime(this,'${t}')">${t}</div>`).join('');S.time='18:00';}
+function pickDate(el,v){document.querySelectorAll('#date-chips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');S.date=v;}
+function pickTime(el,v){document.querySelectorAll('#time-chips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');S.time=v;}
+
+function valPhone(p){return p.replace(/\D/g,'').length>=7;}
+function submitWait(){S.name=document.getElementById('w-name').value.trim();S.phone=document.getElementById('w-phone').value.trim();
+  if(!S.name){alert('Tell us your name 😊');return;}if(!valPhone(S.phone)){alert('That phone looks off 🙏');return;}
+  S.mode='wait';document.getElementById('otp-sub').textContent='Code sent to '+S.phone;go('s-otp');startResend();setTimeout(()=>document.querySelector('#otp-box input').focus(),350);}
+function submitResv(){S.name=document.getElementById('r-name').value.trim();S.phone=document.getElementById('r-phone').value.trim();
+  if(!S.name){alert('Add a name 😊');return;}if(!valPhone(S.phone)){alert('That phone looks off 🙏');return;}
+  S.mode='resv';document.getElementById('otp-sub').textContent='Code sent to '+S.phone;go('s-otp');startResend();setTimeout(()=>document.querySelector('#otp-box input').focus(),350);}
+
+const otpInputs=[...document.querySelectorAll('#otp-box input')];
+otpInputs.forEach((inp,i)=>{inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'');if(inp.value&&i<3)otpInputs[i+1].focus();});
+  inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!inp.value&&i>0)otpInputs[i-1].focus();});});
+function verify(){const code=otpInputs.map(i=>i.value).join('');
+  if(code!=='1234'){otpInputs.forEach(i=>i.value='');otpInputs[0].focus();document.getElementById('otp-sub').textContent='Wrong code — demo code is 1234';return;}
+  if(S.mode==='wait'){go('s-wait');startWait();}else{showReserved();go('s-reserved');}}
+function startResend(){let t=30;const b=document.getElementById('resendBtn'),rs=document.getElementById('rs');b.disabled=true;rs.textContent=t;clearInterval(resendTimer);
+  resendTimer=setInterval(()=>{t--;rs.textContent=t;if(t<=0){clearInterval(resendTimer);b.disabled=false;b.innerHTML='Resend';}},1000);}
+function resend(){document.getElementById('resendBtn').innerHTML='Resend (<span id="rs">30</span>s)';startResend();}
+
+function showReserved(){const b=BRANDS[S.brand];document.getElementById('resv-summary').innerHTML=
+  `<div class="row"><span class="k">BRAND <span class="zh">门店</span></span><span class="v">${b.en}</span></div>
+   <div class="row"><span class="k">DATE <span class="zh">日期</span></span><span class="v">${S.date}</span></div>
+   <div class="row"><span class="k">TIME <span class="zh">时间</span></span><span class="v">${S.time}</span></div>
+   <div class="row"><span class="k">PARTY <span class="zh">人数</span></span><span class="v">${S.rpax} guests</span></div>`;}
+
+function startWait(){const b=BRANDS[S.brand];S.ahead=b.ahead;S.eta=b.eta;
+  document.getElementById('w-mark').textContent=b.mark;document.getElementById('w-brand').textContent=b.cn;
+  document.getElementById('w-num').textContent='#'+S.num;document.getElementById('w-ahead').textContent=S.ahead;
+  document.getElementById('w-eta').innerHTML='~'+S.eta+'<small>m</small>';
+  document.getElementById('wa-tt').innerHTML='Join '+b.en+' channel<span class="zh" id="wa-cn">加入'+b.cn+'频道</span>';
+  drawMascot(b.mascot,0.3);
+  let total=S.eta*60;const el=document.getElementById('w-count');clearInterval(waitTimer);
+  waitTimer=setInterval(()=>{total--;if(total<0)total=0;el.textContent=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
+    drawMascot(b.mascot,0.28+(1-total/(S.eta*60))*0.5);},1000);}
+
+function drawMascot(type,fill){const f=Math.max(0,Math.min(1,fill));const a=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#FF7A45';
+  let svg='';
+  if(type==='cup'){const top=98-(f*66);
+    svg=`<svg viewBox="0 0 160 128"><path d="M48 30 L112 30 L104 116 Q103 122 96 122 L64 122 Q57 122 56 116 Z" fill="#fff" stroke="#FFD9EC" stroke-width="3"/>
+    <clipPath id="mc"><path d="M50 32 L110 32 L102 115 Q101.5 120 96 120 L64 120 Q58.5 120 58 115 Z"/></clipPath>
+    <g clip-path="url(#mc)"><rect x="46" y="${top}" width="68" height="90" fill="${a}" opacity=".85"/>
+    <circle cx="62" cy="108" r="5" fill="#3A2A4A"/><circle cx="78" cy="112" r="5" fill="#3A2A4A"/><circle cx="94" cy="108" r="5" fill="#3A2A4A"/><circle cx="70" cy="116" r="5" fill="#3A2A4A"/><circle cx="88" cy="116" r="5" fill="#3A2A4A"/></g>
+    <rect x="42" y="22" width="76" height="12" rx="6" fill="${a}"/><rect x="72" y="4" width="10" height="22" rx="5" fill="#FF6B6B" transform="rotate(12 77 15)"/>
+    <circle cx="70" cy="70" r="4" fill="#574A78"/><circle cx="90" cy="70" r="4" fill="#574A78"/><path d="M74 78 Q80 84 86 78" stroke="#574A78" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
+  } else if(type==='gelato'){const top=70-(f*30);
+    svg=`<svg viewBox="0 0 160 128"><path d="M58 60 L102 60 L92 122 Q91 126 80 126 Q69 126 68 122 Z" fill="#F6E7C8" stroke="#E8CfA0" stroke-width="2.5"/>
+    <path d="M58 60 L102 60 M64 76 L96 76 M70 92 L90 92" stroke="#E0C088" stroke-width="2" fill="none" opacity=".6"/>
+    <ellipse cx="80" cy="52" rx="34" ry="26" fill="${a}"/><ellipse cx="64" cy="44" rx="18" ry="15" fill="#FFFFFF" opacity=".25"/>
+    <circle cx="72" cy="50" r="3.5" fill="#3A2A4A"/><circle cx="90" cy="50" r="3.5" fill="#3A2A4A"/><circle cx="64" cy="56" r="4" fill="#FFB3C8" opacity=".7"/><circle cx="98" cy="56" r="4" fill="#FFB3C8" opacity=".7"/>
+    <path d="M76 58 Q81 63 86 58" stroke="#3A2A4A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="80" cy="22" r="6" fill="#FF6B6B"/></svg>`;
+  } else { const top=84-(f*42);const ing=[['#FF6B6B',48],['#6FE0AD',72],['#FFC83D',96],['#FF6B6B',112],['#6FE0AD',124]];
+    const bits=ing.map(([c,x],i)=>`<circle cx="${x}" cy="${top+11+(i%2)*8}" r="${i%2?4:6}" fill="${c}"/>`).join('');
+    svg=`<svg viewBox="0 0 160 128"><g opacity=".5"><path d="M62 16 q7 -9 0 -18" stroke="#C9B6F0" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M88 18 q7 -9 0 -18" stroke="#C9B6F0" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+    <path d="M18 42 L142 42 Q140 100 116 112 Q98 120 80 120 Q62 120 44 112 Q20 100 18 42 Z" fill="#fff" stroke="#FFD9EC" stroke-width="3"/>
+    <clipPath id="bc"><path d="M21 45 L139 45 Q137 98 114 109 Q97 117 80 117 Q63 117 46 109 Q23 98 21 45 Z"/></clipPath>
+    <g clip-path="url(#bc)"><rect x="16" y="${top}" width="128" height="82" fill="${a}"/><rect x="16" y="${top}" width="128" height="7" fill="#FF6B6B" opacity=".5"/>${bits}</g>
+    <ellipse cx="80" cy="42" rx="62" ry="9" fill="none" stroke="#FFD9EC" stroke-width="3"/>
+    <circle cx="60" cy="78" r="4" fill="#574A78"/><circle cx="100" cy="78" r="4" fill="#574A78"/><circle cx="52" cy="86" r="5" fill="#FFB3C8" opacity=".7"/><circle cx="108" cy="86" r="5" fill="#FFB3C8" opacity=".7"/>
+    <path d="M72 88 Q80 96 88 88" stroke="#574A78" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M10 40 L18 48 M150 40 L142 48" stroke="#FF6B6B" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+  }
+  document.getElementById('bowlGfx').innerHTML=svg;}
+
+function joinChannel(from){const b=BRANDS[S.brand]; S.backTo=from==='r'?'s-reserved':from==='h'?'s-hub':'s-wait';
+  if(S.joined){go(S.backTo);return;}
+  S.joined=true;document.getElementById('ch-brand').textContent=b.en;
+  document.getElementById('ch-back').onclick=()=>{markJoined();go(S.backTo);};go('s-channel');}
+function markJoined(){[...document.querySelectorAll('.wa-card')].forEach(c=>{c.classList.add('done');const ds=c.querySelector('.ds');if(ds)ds.textContent="You're in! 已加入 ✓";});}
+
+const PRIZES=[{t:'Free meat\n免费午餐肉',c:'#FF6B6B'},{t:'20% off broth\n锅底8折',c:'#6FE0AD'},{t:'Extra veggie\n加菜券',c:'#FFC83D'},{t:'Drink BOGO\n饮料买一送一',c:'#FF8FC0'},{t:'10% off\n全单9折',c:'#A98CFF'},{t:'Spin again\n再转一次',c:'#62C4FF'}];
+let wheelBuilt=false,spinning=false;
+function buildWheel(){const seg=360/PRIZES.length;const grad=PRIZES.map((p,i)=>`${p.c} ${i*seg}deg ${(i+1)*seg}deg`).join(',');
+  const w=document.getElementById('wheel');w.style.background=`conic-gradient(${grad})`;
+  w.innerHTML=PRIZES.map((p,i)=>{const ang=i*seg+seg/2;return `<div class="seg" style="transform:rotate(${ang}deg)"><span>${p.t.replace(/\n/g,'<br>')}</span></div>`;}).join('');wheelBuilt=true;}
+function openWheel(){if(S.prize)return;if(!wheelBuilt)buildWheel();document.getElementById('wheelModal').classList.add('show');}
+function closeWheel(){document.getElementById('wheelModal').classList.remove('show');}
+function spin(){if(spinning)return;spinning=true;const btn=document.getElementById('spinBtn');btn.disabled=true;btn.textContent='Spinning…';
+  const idx=1;const seg=360/PRIZES.length;const target=360*5+(360-(idx*seg+seg/2));document.getElementById('wheel').style.transform=`rotate(${target}deg)`;
+  setTimeout(()=>{S.prize=PRIZES[idx].t.replace('\n',' <span class="zh">')+'</span>';closeWheel();
+    const card=document.getElementById('gameCard');card.classList.add('done');card.querySelector('.tt').innerHTML='Coupon won! 🎉<span class="zh">已抽到补偿券</span>';card.querySelector('.ds').textContent='Saved to your order';card.onclick=null;
+    document.getElementById('couponSlot').innerHTML=`<div class="coupon pop"><div class="ic">🎁</div><div><div class="tt">${S.prize}</div><div class="ds">waiting coupon · show in-store 等位券到店出示</div></div></div>`;spinning=false;},4500);}
+
+function simulateReady(){if(waitTimer)clearInterval(waitTimer);go('s-called');}
+function startCalled(){S.extended=false;document.getElementById('extBtn').disabled=false;document.getElementById('extLbl').textContent='延长 10 分钟';runCalled(10*60);}
+function runCalled(total){const full=total,arc=document.getElementById('ringArc'),C=395.8,el=document.getElementById('c-count');clearInterval(calledTimer);
+  calledTimer=setInterval(()=>{total--;el.textContent=String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
+    arc.style.strokeDashoffset=C*(1-total/full);arc.style.stroke=total<full*0.25?'#E84545':'#33B987';
+    if(total<=0){clearInterval(calledTimer);go('s-missed');}},1000);}
+function extend(){if(S.extended)return;S.extended=true;document.getElementById('extBtn').disabled=true;document.getElementById('extLbl').textContent='extended ✓ 已延长';runCalled(10*60);}
+
+function resetAll(){if(waitTimer)clearInterval(waitTimer);if(calledTimer)clearInterval(calledTimer);
+  S.prize=null;S.joined=false;S.wpax=2;S.rpax=2;
+  document.getElementById('couponSlot').innerHTML='';
+  const g=document.getElementById('gameCard');if(g){g.classList.remove('done');g.onclick=openWheel;}
+  document.getElementById('cf-coupon').hidden=true;go('s-portal');}
+</script>
+</body>
+</html>
