@@ -17,6 +17,14 @@ const SWEET_EN: Record<SweetLevel, string> = { '原糖': 'Full Sugar', '75%': ''
 const ICE_EN: Record<IceLevel, string> = { '正常冰': 'Regular', '少冰': 'Less', '去冰': 'No Ice' };
 const withEn = (cn: string, en?: string) => (en ? `${cn} ${en}` : cn);
 
+// 冷热标记(仅饮品):按品项 ID 前缀判断。H-* 热,C-*/R-* 冰
+function tempTag(l: CartLine): { cn: string; en: string; bg: string; fg: string } | null {
+  if (l.kind !== 'drink') return null;
+  if (l.itemId.startsWith('H-')) return { cn: '热', en: 'Hot', bg: '#FEE2E2', fg: '#B91C1C' };
+  if (l.itemId.startsWith('C-') || l.itemId.startsWith('R-')) return { cn: '冰', en: 'Iced', bg: '#DBEAFE', fg: '#1D4ED8' };
+  return null;
+}
+
 /** 把一行的定制选项拼成一句可读描述 */
 function lineSpec(l: CartLine): string[] {
   const parts: string[] = [];
@@ -132,8 +140,14 @@ export default function CartBar() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
-                          {l.nameCn}
+                        <div style={{ fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          {(() => { const tt = tempTag(l); return tt ? (
+                            <span style={{
+                              fontSize: 10.5, fontWeight: 800, background: tt.bg, color: tt.fg,
+                              padding: '1px 7px', borderRadius: 999, flexShrink: 0,
+                            }}>{tt.cn} {tt.en}</span>
+                          ) : null; })()}
+                          <span>{l.nameCn}</span>
                         </div>
                         {l.nameEn && (
                           <div style={{ fontSize: 12, fontWeight: 400, color: C.sub, marginTop: 1 }}>

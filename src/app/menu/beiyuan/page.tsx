@@ -326,9 +326,12 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
   );
 }
 
-function SubCard({ sub }: { sub: MenuSubCategory }) {
+function SubCard({ sub, custom, catId }: { sub: MenuSubCategory; custom?: Customization; catId?: string }) {
   const [open, setOpen] = useState(false);
   const [zoom, setZoom] = useState(false);
+  const [selIdx, setSelIdx] = useState<number | null>(null);
+  const oolongUpcharge = catId === 'C-A' || catId === 'C-B';
+  const close = () => { setOpen(false); setSelIdx(null); };
   return (
     <>
       {/* Horizontal series card — square thumbnail */}
@@ -353,7 +356,7 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
       </div>
 
       {open && (
-        <div style={overlayStyle} onClick={() => setOpen(false)}>
+        <div style={overlayStyle} onClick={close}>
           <div style={sheetStyle} onClick={e => e.stopPropagation()}>
             {/* Drag handle */}
             <div style={{ padding: '12px 0 0', flexShrink: 0 }}>
@@ -367,7 +370,7 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
               }
               {sub.img && <span style={{ position: 'absolute', bottom: 12, right: 12, fontSize: 11, fontWeight: 700, background: 'rgba(0,0,0,0.4)', color: '#fff', padding: '4px 9px', borderRadius: 999, pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>🔍 点图放大</span>}
               {sub.note && <span style={{ position: 'absolute', top: 12, left: 12, fontSize: 11, fontWeight: 700, background: '#D97706', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>{sub.note}</span>}
-              <button onClick={() => setOpen(false)} style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <button onClick={close} style={{ position: 'absolute', top: 12, right: 12, width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', color: '#fff', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
             {/* Image reference disclaimer */}
             {sub.img && (
@@ -380,24 +383,55 @@ function SubCard({ sub }: { sub: MenuSubCategory }) {
               <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{sub.nameEn}</div>
               <div style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>{sub.nameCn}</div>
               <div style={{ margin: '14px 0 20px' }}><Price value={sub.price} size={32} /></div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>
-                Flavors · 口味 · {sub.items.length}
-              </div>
-              {/* Flavor cards — large, full width, count-adaptive */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {sub.items.map((item, i) => (
-                  <div key={i} style={{ background: C.muted, borderRadius: 14, padding: '16px 18px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 17, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
-                      <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
-                      {item.note && <div style={{ fontSize: 11, color: C.faint, marginTop: 4 }}>{item.note}</div>}
-                    </div>
-                    {item.seasonal && (
-                      <span style={{ flexShrink: 0, marginLeft: 12, fontSize: 10, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>Seasonal</span>
-                    )}
+              {selIdx === null ? (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>
+                    选口味 Choose Flavor · {sub.items.length}
                   </div>
-                ))}
-              </div>
+                  {/* Flavor cards — tap to select & customize */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {sub.items.map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelIdx(i)}
+                        style={{ background: C.muted, borderRadius: 14, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1.5px solid ${C.border}`, cursor: 'pointer', textAlign: 'left', width: '100%' }}
+                      >
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ fontSize: 17, fontWeight: 700, color: C.text, lineHeight: 1.3, display: 'block' }}>{item.nameEn}</span>
+                          <span style={{ fontSize: 13, color: C.sub, marginTop: 3, display: 'block' }}>{item.nameCn}</span>
+                          {item.note && <span style={{ fontSize: 11, color: C.faint, marginTop: 4, display: 'block' }}>{item.note}</span>}
+                        </span>
+                        <span style={{ flexShrink: 0, marginLeft: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {item.seasonal && (
+                            <span style={{ fontSize: 10, fontWeight: 700, background: '#16A34A', color: '#fff', padding: '4px 10px', borderRadius: 999 }}>Seasonal</span>
+                          )}
+                          <span style={{ color: C.brand, fontSize: 22, fontWeight: 700, lineHeight: 1 }}>›</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setSelIdx(null)}
+                    style={{ background: 'none', border: 'none', color: C.brand, fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0, marginBottom: 12 }}
+                  >‹ 换口味 Change flavor</button>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{sub.items[selIdx].nameEn}</div>
+                  <div style={{ fontSize: 14, color: C.sub, marginTop: 3 }}>{sub.items[selIdx].nameCn}</div>
+                  {(() => {
+                    const f = sub.items[selIdx];
+                    const flavorItem: MenuItem = {
+                      id: `${sub.id}-${String(selIdx + 1).padStart(2, '0')}`,
+                      nameEn: f.nameEn, nameCn: f.nameCn, price: sub.price,
+                      note: f.note, seasonal: f.seasonal,
+                    };
+                    return custom
+                      ? <DrinkCustomizer item={flavorItem} custom={custom} oolongUpcharge={oolongUpcharge} onAdded={close} />
+                      : <PlainItemAdder item={flavorItem} onAdded={close} />;
+                  })()}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -443,7 +477,7 @@ function CategorySection({ cat }: { cat: MenuCategory }) {
         {cat.type === 'items' && cat.items?.map(item => (
           <ItemCard key={item.id} item={item} isMeal={isMeal} oolongUpcharge={oolongUpcharge} custom={item.customization ?? cat.customization} catId={cat.id} />
         ))}
-        {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} />)}
+        {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} custom={cat.customization} catId={cat.id} />)}
       </div>
       {showAddOns && <MealAddOnsBlock />}
     </div>
