@@ -1,25 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { useCart, CartLine, lineUnitPrice, lineSubtotal } from './CartContext';
+import {
+  useCart, CartLine, lineUnitPrice, lineSubtotal,
+  TeaBaseLabel, SweetLevel, IceLevel,
+} from './CartContext';
 
 const C = {
   brand: '#0D4A2E', text: '#1a1a1a', sub: '#888', faint: '#bbb',
   muted: '#F0EDE8', border: '#E8E4DE', gold: '#C9A84C',
 };
 
+// 选项英文显示映射(茶底/甜度/冰量是数据 key,本身不带英文)
+const TEA_BASE_EN: Record<TeaBaseLabel, string> = { '红茶': 'Black', '绿茶': 'Green', '乌龙': 'Oolong' };
+const SWEET_EN: Record<SweetLevel, string> = { '原糖': 'Full Sugar', '75%': '', '50%': '', '25%': '', '无糖': 'No Sugar' };
+const ICE_EN: Record<IceLevel, string> = { '正常冰': 'Regular', '少冰': 'Less', '去冰': 'No Ice' };
+const withEn = (cn: string, en?: string) => (en ? `${cn} ${en}` : cn);
+
 /** 把一行的定制选项拼成一句可读描述 */
 function lineSpec(l: CartLine): string[] {
   const parts: string[] = [];
-  if (l.size && l.size !== '单一') parts.push(l.size === 'L' ? '大杯' : '小杯');
-  if (l.variant) parts.push(l.variant.label);
-  if (l.teaBase) parts.push(l.teaBase);
-  if (l.milkBase) parts.push(l.milkBase.label + (l.milkBase.price ? ` +$${l.milkBase.price.toFixed(2)}` : ''));
-  if (l.sweet) parts.push(l.sweet);
-  if (l.ice && l.ice !== '固定') parts.push(l.ice as string);
-  if (l.toppings && l.toppings.length) parts.push(...l.toppings.map(t => `+${t.nameCn}`));
-  if (l.freeDrink) parts.push(`赠饮:${l.freeDrink.nameCn}(${l.freeDrink.sweet})${l.freeDrink.price ? ` +$${l.freeDrink.price.toFixed(2)}` : ''}`);
-  if (l.addOns && l.addOns.length) parts.push(...l.addOns.map(a => `+${a.nameCn}`));
+  if (l.size && l.size !== '单一') parts.push(l.size === 'L' ? '大杯 Large' : '小杯 Small');
+  if (l.variant) parts.push(withEn(l.variant.label, l.variant.labelEn));
+  if (l.teaBase) parts.push(withEn(l.teaBase, TEA_BASE_EN[l.teaBase]));
+  if (l.milkBase) parts.push(withEn(l.milkBase.label, l.milkBase.labelEn) + (l.milkBase.price ? ` +$${l.milkBase.price.toFixed(2)}` : ''));
+  if (l.sweet) parts.push(withEn(l.sweet, SWEET_EN[l.sweet]));
+  if (l.ice && l.ice !== '固定') parts.push(withEn(l.ice, ICE_EN[l.ice as IceLevel]));
+  if (l.toppings && l.toppings.length) parts.push(...l.toppings.map(t => `+${t.nameCn} ${t.nameEn}`));
+  if (l.freeDrink) parts.push(`赠饮 Free: ${l.freeDrink.nameCn} ${l.freeDrink.nameEn} (${l.freeDrink.sweet})${l.freeDrink.price ? ` +$${l.freeDrink.price.toFixed(2)}` : ''}`);
+  if (l.addOns && l.addOns.length) parts.push(...l.addOns.map(a => `+${a.nameCn} ${a.nameEn}`));
   return parts;
 }
 
@@ -125,12 +134,12 @@ export default function CartBar() {
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>
                           {l.nameCn}
-                          {staffView && l.nameEn && (
-                            <span style={{ fontSize: 12, fontWeight: 400, color: C.sub, marginLeft: 6 }}>
-                              {l.nameEn}
-                            </span>
-                          )}
                         </div>
+                        {l.nameEn && (
+                          <div style={{ fontSize: 12, fontWeight: 400, color: C.sub, marginTop: 1 }}>
+                            {l.nameEn}
+                          </div>
+                        )}
                         {spec.length > 0 && (
                           <div style={{
                             fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 1.5,

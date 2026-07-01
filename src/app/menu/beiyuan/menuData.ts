@@ -18,6 +18,7 @@ export interface MenuItem {
   caffeineF?: boolean;
   img?: string; // photo path e.g. /beiyuan-M-A-01.webp
   variants?: { label: string; labelEn: string }[]; // 形态二选一,如整根/切片,不影响价格
+  customization?: Customization; // 单品覆盖:优先于分类的 customization(如 H-A-01 纯红/绿茶需茶底二选一)
 }
 
 export interface MenuSubCategory {
@@ -268,7 +269,7 @@ export const hotTea: MenuCategory = {
   // 热纯茶:单一杯型,无甜度/大小杯/加料定制。priceL 数据保留备用,详情页不显示。
   customization: undefined,
   items: [
-    { id: 'H-A-01', nameEn: 'Original Black / Green Tea', nameCn: '纯红/绿茶', price: 5.49, teaBases: ['B','G'], img: '/beiyuan-H-A-01.webp' },
+    { id: 'H-A-01', nameEn: 'Original Black / Green Tea', nameCn: '纯红/绿茶', price: 5.49, teaBases: ['B','G'], img: '/beiyuan-H-A-01.webp', customization: { teaBase: true, sweetness: true, topping: true, size: 'fixed' } },
     { id: 'H-A-02', nameEn: 'Royal Black Tea', nameCn: '伯爵红茶', price: 5.98, img: '/beiyuan-H-A-02.webp' },
     { id: 'H-A-03', nameEn: 'Rose Black Tea', nameCn: '玫瑰红茶', price: 5.98, img: '/beiyuan-H-A-03.webp' },
     { id: 'H-A-04', nameEn: 'Dragon Well', nameCn: '龙井', price: 6.98, note: 'Green Tea · Unsweetened', img: '/beiyuan-H-A-04.webp' },

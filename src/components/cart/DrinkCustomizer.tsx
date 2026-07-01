@@ -28,7 +28,7 @@ const SIZE_L_UPCHARGE = 1.0;
 function PillGroup<T extends string>({
   label, options, value, onChange, suffix, display,
 }: {
-  label: string; options: T[]; value: T;
+  label: string; options: T[]; value: T | null;
   onChange: (v: T) => void;
   suffix?: Partial<Record<T, string>>;
   display?: Partial<Record<T, string>>;  // 主显示文字(覆盖 opt 本身)
@@ -87,7 +87,7 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
   const hasMilkBase = !!custom.milkBase;
 
   const [size, setSize] = useState<SizeLabel>(item.largeOnly ? 'L' : (hasSize ? 'S' : '单一'));
-  const [teaBase, setTeaBase] = useState<TeaBase>(item.teaBases?.[0] ?? 'B');
+  const [teaBase, setTeaBase] = useState<TeaBase | null>(null); // 不预选,强制客人点
   const [sweet, setSweet] = useState<SweetLevel>(DEFAULT_SWEET);
   const [ice, setIce] = useState<IceLevel>(DEFAULT_ICE);
   const [picked, setPicked] = useState<Record<string, boolean>>({});
@@ -110,7 +110,10 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
   const unit = item.price + sizeUpcharge + teaBaseUpcharge + milkBaseUpcharge
     + pickedToppings.reduce((s, t) => s + t.price, 0);
 
+  const needsTeaBase = hasTeaBase && teaBase === null; // 必选茶底但还没选
+
   const handleAdd = () => {
+    if (needsTeaBase) return; // 强制先选茶底
     const mb = milkBaseOptions[milkIdx];
     const line: Omit<CartLine, 'uid'> = {
       kind: 'drink',
@@ -121,7 +124,7 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
       qty,
       size: hasSize ? size : '单一',
       sizeUpcharge,
-      teaBase: hasTeaBase ? TEA_BASE_LABEL[teaBase] : undefined,
+      teaBase: hasTeaBase && teaBase ? TEA_BASE_LABEL[teaBase] : undefined,
       teaBaseUpcharge,
       sweet: hasSweet ? sweet : undefined,
       ice: hasIce ? ice : (iceFixed ? '固定' : null),
@@ -281,13 +284,14 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
         </div>
         <button
           onClick={handleAdd}
+          disabled={needsTeaBase}
           style={{
             flex: 1, height: 50, borderRadius: 14, border: 'none',
-            background: C.brand, color: '#fff', fontSize: 15, fontWeight: 800,
-            cursor: 'pointer',
+            background: needsTeaBase ? C.faint : C.brand, color: '#fff', fontSize: 15, fontWeight: 800,
+            cursor: needsTeaBase ? 'not-allowed' : 'pointer',
           }}
         >
-          加入清单 · ${(unit * qty).toFixed(2)}
+          {needsTeaBase ? '请先选茶底 · Select Tea Base' : `加入清单 · $${(unit * qty).toFixed(2)}`}
         </button>
       </div>
       <div style={{ fontSize: 10.5, color: C.faint, textAlign: 'center', marginTop: 8 }}>

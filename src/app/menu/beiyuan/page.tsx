@@ -441,7 +441,7 @@ function CategorySection({ cat }: { cat: MenuCategory }) {
       {/* Single column list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
         {cat.type === 'items' && cat.items?.map(item => (
-          <ItemCard key={item.id} item={item} isMeal={isMeal} oolongUpcharge={oolongUpcharge} custom={cat.customization} catId={cat.id} />
+          <ItemCard key={item.id} item={item} isMeal={isMeal} oolongUpcharge={oolongUpcharge} custom={item.customization ?? cat.customization} catId={cat.id} />
         ))}
         {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} />)}
       </div>
