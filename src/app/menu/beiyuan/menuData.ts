@@ -5,6 +5,10 @@
 
 export type TeaBase = 'B' | 'G' | 'O'; // Black / Green / Oolong
 
+// 门店 —— 标在单品/系列上表示「只有这家店有」,省略 at 即两店都有。
+// 例: { id:'X-01', ..., at:'miramesa' }  只在 Mira Mesa 出现
+export type StoreId = 'clairemont' | 'miramesa';
+
 export interface MenuItem {
   id: string;
   nameEn: string;
@@ -17,6 +21,7 @@ export interface MenuItem {
   largeOnly?: boolean;
   caffeineF?: boolean;
   img?: string; // photo path e.g. /beiyuan-M-A-01.webp
+  at?: StoreId; // 仅此门店供应;省略 = 两店都有
   variants?: { label: string; labelEn: string }[]; // 形态二选一,如整根/切片,不影响价格
   customization?: Customization; // 单品覆盖:优先于分类的 customization(如 H-A-01 纯红/绿茶需茶底二选一)
 }
@@ -29,6 +34,7 @@ export interface MenuSubCategory {
   items: { nameEn: string; nameCn: string; note?: string; seasonal?: boolean }[];
   note?: string;
   img?: string; // series photo path
+  at?: StoreId; // 仅此门店供应;省略 = 两店都有
 }
 
 export interface MenuCategory {
@@ -446,6 +452,7 @@ export const noodles: MenuCategory = {
     { id: 'M-C-09', nameEn: 'Beef Soup with Dumplings', nameCn: '牛肉汤水饺', price: 18.98, img: '/beiyuan-M-C-09.webp' },
     { id: 'M-C-10', nameEn: 'Wonton Noodle Soup', nameCn: '馄饨面', price: 17.98, img: '/beiyuan-M-C-10.webp' },
     { id: 'M-C-11', nameEn: 'Pork Dumplings', nameCn: '猪肉水饺', price: 17.98, img: '/beiyuan-M-C-11.webp' },
+    { id: 'M-C-12', nameEn: 'Spicy Braised Chicken Rice Combo', nameCn: '黄焖鸡米饭套餐', price: 18.98, img: '/beiyuan-M-C-12.webp' },
   ],
 };
 

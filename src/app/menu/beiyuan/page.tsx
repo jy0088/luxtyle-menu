@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   allCategories, toppings, freeDrinkOptions, mealAddOns,
-  MenuCategory, MenuItem, MenuSubCategory,
+  MenuCategory, MenuItem, MenuSubCategory, StoreId,
 } from './menuData';
 import AppShell from '@/components/shell/AppShell';
 import ImageZoomOverlay from '@/components/ImageZoomOverlay';
@@ -14,13 +14,44 @@ import DrinkCustomizer from '@/components/cart/DrinkCustomizer';
 import { MealSetCustomizer, PlainItemAdder } from '@/components/cart/MealCustomizer';
 import type { Customization } from './menuData';
 
-// 本月特价 — 占位。填入 specials / picks 后,弹窗与「Specials」按钮会自动展示。
+// 本月特价 —— 「🏷 Specials」按钮打开的列表。清空数组即下架。
 const monthlySpecials = {
-  month: 'May 2026',
-  specials: [] as Array<{ nameEn: string; nameCn: string; price: number; note?: string }>,
+  month: 'September 2026',
+  specials: [
+    { nameEn: 'Spicy Beef Wide Noodle Soup', nameCn: '香辣牛肉板面', price: 14.98, was: 17.98, note: 'New item 新品' },
+  ] as Array<{ nameEn: string; nameCn: string; price: number; was?: number; note?: string }>,
   picks: [] as Array<{ nameEn: string; nameCn: string; price: number }>,
 };
 const hasSpecials = monthlySpecials.specials.length > 0 || monthlySpecials.picks.length > 0;
+
+// 临时活动海报 —— active:true 时,进店弹的是海报而不是 Monthly Specials 弹窗。
+// 活动结束把 active 改成 false 即可恢复原弹窗,其余不用动。
+const PROMO = {
+  active: true,
+  img: '/promo/banmian-4x5.webp',
+  alt: 'Spicy Beef Wide Noodle Soup 香辣牛肉板面',
+  autoCloseMs: 3000,
+};
+
+// 门店 —— 首页用 ?store=clairemont / ?store=miramesa 带进来,记在 localStorage
+const STORES: Record<StoreId, string> = {
+  clairemont: 'Clairemont Mesa',
+  miramesa: 'Mira Mesa',
+};
+function isStore(v: unknown): v is StoreId {
+  return v === 'clairemont' || v === 'miramesa';
+}
+/** 按门店过滤:没标 at 的一律保留 */
+function forStore<T extends { at?: StoreId }>(list: T[], store: StoreId): T[] {
+  return list.filter(x => !x.at || x.at === store);
+}
+function categoryForStore(cat: MenuCategory | null | undefined, store: StoreId) {
+  if (!cat) return cat ?? null;
+  const out: MenuCategory = { ...cat };
+  if (out.items) out.items = forStore(out.items, store);
+  if (out.subcategories) out.subcategories = forStore(out.subcategories, store);
+  return out;
+}
 
 const C = {
   bg: '#F5F2EC', card: '#FFFFFF', cardImg: '#EBEBEB', muted: '#F0EDE8',
@@ -529,6 +560,28 @@ function ToppingSection() {
   );
 }
 
+function PromoPopup({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, PROMO.autoCloseMs);
+    return () => clearTimeout(t);
+  }, [onClose]);
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.overlay, backdropFilter: 'blur(6px)', padding: 20 }}
+      onClick={onClose}
+    >
+      <div style={{ position: 'relative', width: '100%', maxWidth: 330, borderRadius: 22, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={PROMO.img} alt={PROMO.alt} style={{ display: 'block', width: '100%' }} />
+        <button onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.42)', border: 'none', color: '#fff', fontSize: 17, lineHeight: 1, cursor: 'pointer' }}>×</button>
+        <div style={{ background: '#fff', padding: '9px 12px 11px', textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: C.sub, lineHeight: 1.5 }}>
+          图片仅供参考、以实物为准<br />Pictures are for reference only
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MonthlyPopup({ onClose }: { onClose: () => void }) {
   const empty = !hasSpecials;
   return (
@@ -557,7 +610,10 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
                     <div style={{ fontSize: 11, color: C.sub }}>{s.nameCn}</div>
                     {s.note && <div style={{ fontSize: 10, color: C.faint }}>{s.note}</div>}
                   </div>
-                  <Price value={s.price} size={18} />
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    {s.was && <s style={{ fontSize: 12, color: C.faint, fontWeight: 700 }}>${s.was.toFixed(2)}</s>}
+                    <Price value={s.price} size={18} />
+                  </div>
                 </div>
               ))}
             </>
@@ -588,13 +644,26 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
 export default function BeiYuanPage() {
   const [activeTab, setActiveTab] = useState('C-A');
   const [showPopup, setShowPopup] = useState(false);
+  const [showPromo, setShowPromo] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  // Show popup after splash — only when there are specials to show
+  // 门店:优先读 ?store=,否则读上次记住的,默认 Clairemont
+  const [store, setStore] = useState<StoreId>('clairemont');
+  useEffect(() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get('store');
+      if (isStore(q)) { setStore(q); localStorage.setItem('by_store', q); return; }
+      const saved = localStorage.getItem('by_store');
+      if (isStore(saved)) setStore(saved);
+    } catch {}
+  }, []);
+
+  // 启动页结束后弹窗:活动期弹海报,否则弹 Monthly Specials
   const handleSplashDone = () => {
     setSplashDone(true);
-    if (hasSpecials) setTimeout(() => setShowPopup(true), 300);
+    if (PROMO.active) setTimeout(() => setShowPromo(true), 300);
+    else if (hasSpecials) setTimeout(() => setShowPopup(true), 300);
   };
 
   useEffect(() => {
@@ -602,7 +671,8 @@ export default function BeiYuanPage() {
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [activeTab]);
 
-  const activeCategory = (activeTab === 'T' || activeTab === 'FREE-DRINK') ? null : allCategories.find(c => c.id === activeTab);
+  const rawCategory = (activeTab === 'T' || activeTab === 'FREE-DRINK') ? null : allCategories.find(c => c.id === activeTab);
+  const activeCategory = useMemo(() => categoryForStore(rawCategory, store), [rawCategory, store]);
   const activeSection = TAB_SECTIONS.find(s => s.tabs.some(t => t.id === activeTab));
   const activeSectionIndex = TAB_SECTIONS.findIndex(s => s.tabs.some(t => t.id === activeTab));
 
@@ -631,18 +701,30 @@ export default function BeiYuanPage() {
   return (
     <CartProvider>
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
+      {showPromo && <PromoPopup onClose={() => setShowPromo(false)} />}
       {showPopup && <MonthlyPopup onClose={() => setShowPopup(false)} />}
       <CartBar />
       <WhatsAppButton />
 
       <AppShell
         action={
-          <button onClick={() => setShowPopup(true)} style={{
-            background: C.gold, color: C.brand, border: 'none',
-            borderRadius: 999, padding: '8px 16px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-          }}>
-            🏷 Specials
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              background: 'rgba(255,255,255,0.14)', color: C.goldLight,
+              borderRadius: 999, padding: '5px 10px', fontSize: 10.5, fontWeight: 800,
+              whiteSpace: 'nowrap',
+            }}>
+              📍 {STORES[store]}
+            </span>
+            <button onClick={() => setShowPopup(true)} style={{
+              background: C.gold, color: C.brand, border: 'none',
+              borderRadius: 999, padding: '8px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}>
+              🏷 Specials
+            </button>
+          </div>
         }
         nav={
           <>
