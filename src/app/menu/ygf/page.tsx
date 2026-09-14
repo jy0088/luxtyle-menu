@@ -241,13 +241,18 @@ function MainMenu() {
   // 小福有话说 —— 进菜单后延时弹出,当天只弹一次
   const [psst, setPsst] = useState(false);
   useEffect(() => {
+    // 网址加 ?psst=1 可强制弹出,方便店内测试(不写入记录)
+    let force = false;
+    try { force = new URLSearchParams(window.location.search).get("psst") === "1"; } catch {}
     const today = new Date().toDateString();
-    try {
-      if (localStorage.getItem("ygf_psst") === today) return;
-    } catch { return; }
+    if (!force) {
+      try {
+        if (localStorage.getItem("ygf_psst") === today) return;
+      } catch { return; }
+    }
     const t = setTimeout(() => {
       setPsst(true);
-      try { localStorage.setItem("ygf_psst", today); } catch {}
+      if (!force) { try { localStorage.setItem("ygf_psst", today); } catch {} }
     }, 1200);
     return () => clearTimeout(t);
   }, []);
