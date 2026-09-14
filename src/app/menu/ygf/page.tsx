@@ -3,6 +3,10 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, type MenuItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
+import PsstWidget from "@/components/ygf/PsstWidget";
+
+// 杨国福 WhatsApp 频道
+const YGF_CHANNEL = "https://whatsapp.com/channel/0029VbDtDTY9RZAO8pD1k33z";
 
 // ── Color tokens ──────────────────────────────────────────
 const C = {
@@ -234,12 +238,27 @@ function MainMenu() {
   const [enlargedItem, setEnlargedItem] = useState<MenuItem | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 小福有话说 —— 进菜单后延时弹出,当天只弹一次
+  const [psst, setPsst] = useState(false);
+  useEffect(() => {
+    const today = new Date().toDateString();
+    try {
+      if (localStorage.getItem("ygf_psst") === today) return;
+    } catch { return; }
+    const t = setTimeout(() => {
+      setPsst(true);
+      try { localStorage.setItem("ygf_psst", today); } catch {}
+    }, 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   function pressStart(item: MenuItem) {
     pressTimer.current = setTimeout(() => setEnlargedItem(item), 500);
   }
   function pressEnd() { if (pressTimer.current) clearTimeout(pressTimer.current); }
 
   return (
+    <>
     <AppShell
       nav={
         <>
@@ -484,6 +503,9 @@ function MainMenu() {
       )}
       </div>
     </AppShell>
+
+    <PsstWidget open={psst} onClose={() => setPsst(false)} channelUrl={YGF_CHANNEL} />
+    </>
   );
 }
 

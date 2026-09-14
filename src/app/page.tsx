@@ -1,38 +1,80 @@
 import Link from 'next/link';
 
-const brands = [
+type Brand = {
+  href: string;
+  nameCn: string;
+  nameEn: string;
+  /** 门店 —— 两家北苑靠这行区分,视觉上必须最先被扫到 */
+  location: string;
+  logo: string | null;
+  emoji?: string;
+  color: string;
+  accent: string;
+};
+
+const brands: Brand[] = [
   {
-    href: '/menu/beiyuan',
+    href: '/menu/beiyuan?store=clairemont',
     nameCn: '北苑南家',
     nameEn: 'Bei Yuan Tea & Boba',
-    tagline: 'Taiwanese Tea · Food · Boba',
+    location: 'Clairemont Mesa',
     logo: '/beiyuan-logo.png',
     color: '#0D4A2E',
     accent: '#C9A84C',
-    cardBg: '#FFFFFF',
+  },
+  {
+    href: '/menu/beiyuan?store=miramesa',
+    nameCn: '北苑南家',
+    nameEn: 'Bei Yuan Tea & Boba',
+    location: 'Mira Mesa',
+    logo: '/beiyuan-logo.png',
+    color: '#0D4A2E',
+    accent: '#C9A84C',
   },
   {
     href: '/menu/ygf',
     nameCn: '杨国福麻辣烫',
     nameEn: 'Yang Guo Fu Malatang',
-    tagline: 'Authentic Malatang · San Diego',
+    location: 'Clairemont Mesa',
     logo: '/ygf-logo.png',
     color: '#C2410C',
     accent: '#EA580C',
-    cardBg: '#FFFFFF',
   },
   {
     href: '/menu/tomo',
     nameCn: 'Tomo 意式冰淇淋',
     nameEn: 'Tomo Gelato',
-    tagline: 'Artisan Italian Gelato',
+    location: 'Clairemont Mesa',
     logo: null,
     emoji: '🍦',
     color: '#0E7490',
     accent: '#06B6D4',
-    cardBg: '#FFFFFF',
   },
 ];
+
+const stores = [
+  { name: 'Clairemont Mesa', addr: '7315 Clairemont Mesa Blvd, San Diego, CA' },
+  { name: 'Mira Mesa', addr: '9003 Mira Mesa Blvd, San Diego, CA' },
+];
+
+function PinIcon({ color }: { color: string }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path
+        d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"
+        fill={color}
+        opacity="0.18"
+      />
+      <path
+        d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="10" r="2.6" fill={color} />
+    </svg>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -44,7 +86,7 @@ export default function HomePage() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '40px 24px',
+      padding: '36px 24px',
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -61,7 +103,7 @@ export default function HomePage() {
       }} />
 
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 44, position: 'relative' }}>
+      <div style={{ textAlign: 'center', marginBottom: 34, position: 'relative' }}>
         <div style={{ fontSize: 11, color: '#A89B82', letterSpacing: 5, fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>
           Digital Menu
         </div>
@@ -75,18 +117,18 @@ export default function HomePage() {
       </div>
 
       {/* Brand cards */}
-      <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ width: '100%', maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 13 }}>
         {brands.map(brand => (
           <Link key={brand.href} href={brand.href} style={{ textDecoration: 'none' }}>
             <div style={{
-              background: brand.cardBg,
+              background: '#FFFFFF',
               borderRadius: 20,
               border: '1px solid rgba(0,0,0,0.06)',
               borderLeft: `4px solid ${brand.accent}`,
-              padding: '18px 20px',
+              padding: '16px 18px',
               display: 'flex',
               alignItems: 'center',
-              gap: 16,
+              gap: 15,
               boxShadow: '0 6px 20px rgba(120,100,60,0.12), 0 1px 3px rgba(0,0,0,0.05)',
               cursor: 'pointer',
               position: 'relative',
@@ -94,7 +136,7 @@ export default function HomePage() {
             }}>
               {/* Logo */}
               <div style={{
-                width: 54, height: 54, borderRadius: '50%',
+                width: 52, height: 52, borderRadius: '50%',
                 background: '#FBF7F0',
                 border: `1.5px solid ${brand.accent}33`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -109,13 +151,25 @@ export default function HomePage() {
 
               {/* Text */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 9.5, color: brand.accent, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 4 }}>
-                  {brand.tagline}
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: brand.color, lineHeight: 1.2 }}>
+                <div style={{ fontSize: 19, fontWeight: 900, color: brand.color, lineHeight: 1.2 }}>
                   {brand.nameCn}
                 </div>
-                <div style={{ fontSize: 11, color: '#9A8F7C', fontWeight: 500, marginTop: 2 }}>
+
+                {/* 门店 —— 两家北苑的唯一区分点,加重处理 */}
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  marginTop: 5,
+                  background: `${brand.accent}1F`,
+                  borderRadius: 7,
+                  padding: '3px 8px 3px 6px',
+                }}>
+                  <PinIcon color={brand.accent} />
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: brand.color, letterSpacing: 0.1 }}>
+                    {brand.location}
+                  </span>
+                </div>
+
+                <div style={{ fontSize: 11, color: '#9A8F7C', fontWeight: 500, marginTop: 4 }}>
                   {brand.nameEn}
                 </div>
               </div>
@@ -132,9 +186,15 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: 44, textAlign: 'center' }}>
-        <div style={{ fontSize: 11, color: '#9A8F7C', fontWeight: 500 }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
-        <div style={{ fontSize: 10, color: '#B8AC97', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
+      <div style={{ marginTop: 34, textAlign: 'center' }}>
+        {stores.map(s => (
+          <div key={s.name} style={{ fontSize: 11, color: '#9A8F7C', fontWeight: 500, marginBottom: 3 }}>
+            <span style={{ fontWeight: 800, color: '#7E735F' }}>{s.name}</span>
+            {'  ·  '}
+            {s.addr}
+          </div>
+        ))}
+        <div style={{ fontSize: 10, color: '#B8AC97', marginTop: 7 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
     </div>
   );

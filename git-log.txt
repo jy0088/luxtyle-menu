@@ -1,0 +1,577 @@
+﻿commit 2c7efae0bb03a0a33b4aa19e2a43fe102c99615e
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-06-30
+
+    fix: τâ¡σÑ╢Φî╢ΦíÑΦî╢σ║ò + Φ┤¡τë⌐Φ╜ªσå╖τâ¡µáçΦ«░ + τ║»Φî╢σÄ╗topping + τ│╗σêùσÅúσæ│σÅ»ΘÇë
+
+M	src/app/menu/beiyuan/menuData.ts
+M	src/app/menu/beiyuan/page.tsx
+M	src/components/cart/CartBar.tsx
+
+commit 13af6888fa4c251fa76a6b492759970c37929101
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-06-30
+
+    fix(cart): τ║»τ║ó/τ╗┐Φî╢σ╝║σê╢ΘÇëΦî╢σ║ò + µ╕àσìòΣ╕¡Φï▒σÅîΦ»¡µÿ╛τñ║
+
+M	src/app/menu/beiyuan/menuData.ts
+M	src/app/menu/beiyuan/page.tsx
+M	src/components/cart/CartBar.tsx
+M	src/components/cart/DrinkCustomizer.tsx
+
+commit 181f8aef325dcacd27a90b4f4f6580ddc0cca906
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-06-24
+
+    Add Luxtyle waitlist prototype (front-end only)
+
+A	public/waitlist.html
+
+commit 3c44987323dfe7e2f72d8e2ecd82329bf2f0a9f2
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-06-16
+
+    feat(BY): Φç╗ΘÇëσÄƒσÅ╢Φî╢τ▒╗τ¢«+σÑ╢σƒ║σ║ò∩╝¢σÑùΘñÉ-∩╝¢ΘÖäΦ╡áΘÑ«µûÖµö╣σèáΣ╗╖σê╢
+
+A	public/beiyuan-R-A-01.webp
+A	public/beiyuan-R-A-02.webp
+A	public/beiyuan-R-A-03.webp
+A	public/beiyuan-R-A-04.webp
+A	public/beiyuan-R-A-05.webp
+A	public/beiyuan-R-A-06.webp
+M	src/app/menu/beiyuan/menuData.ts
+M	src/app/menu/beiyuan/page.tsx
+M	src/components/cart/CartBar.tsx
+M	src/components/cart/CartContext.tsx
+M	src/components/cart/DrinkCustomizer.tsx
+M	src/components/cart/MealCustomizer.tsx
+
+commit 9184376f0c3f714b1ad24f6f9ddb2380412d673a
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-06-15
+
+    fix: Σ┐«σñì manifest.json(µ£ëµòê JSONπÇüstandalone σà¿σ▒ÅπÇüΘöüτ½ûσ▒Å)
+
+M	public/manifest.json
+
+commit ff46e74ddffa85093b9a8eaf7befe5b338b0e2b9
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-06-15
+
+    fix(shell): τö¿τ║»Φë▓ hero ΦâîµÖ»,Σ┐«σñìµùºτëê Safari Σ╕èσ»╝Φê¬Σ╕ìσÅ»Φºü
+
+M	src/components/shell/BottomNav.tsx
+M	src/components/shell/Header.tsx
+
+commit ccda044ed0e9fd3ff26e5d52d396efd36c075454
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-23
+
+    fix: warm-white home, cart overlap, menu drift, zoom pan; add WhatsApp 18582688225
+
+M	src/app/menu/beiyuan/page.tsx
+M	src/app/page.tsx
+M	src/components/ImageZoomOverlay.tsx
+A	src/components/WhatsAppButton.tsx
+M	src/components/cart/CartBar.tsx
+
+commit ab992d0fe9c5821f7706d7c2bab3f489b9690ae3
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-23
+
+    feat: BY S-B desserts images (11), complete menu imagery
+
+A	public/beiyuan-S-B-01.webp
+A	public/beiyuan-S-B-02.webp
+A	public/beiyuan-S-B-03.webp
+A	public/beiyuan-S-B-04.webp
+A	public/beiyuan-S-B-05.webp
+A	public/beiyuan-S-B-06.webp
+A	public/beiyuan-S-B-07.webp
+A	public/beiyuan-S-B-08.webp
+A	public/beiyuan-S-B-09.webp
+A	public/beiyuan-S-B-10.webp
+A	public/beiyuan-S-B-11.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit baa0552a9d621daf0a0f466a676b41706f68073a
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-23
+
+    feat: BY S-A snacks images (14), merge sausage SKU with whole/sliced variant
+
+A	public/beiyuan-S01.webp
+A	public/beiyuan-S02.webp
+A	public/beiyuan-S03.webp
+A	public/beiyuan-S04.webp
+A	public/beiyuan-S05.webp
+A	public/beiyuan-S06.webp
+A	public/beiyuan-S08.webp
+A	public/beiyuan-S09.webp
+A	public/beiyuan-S10.webp
+A	public/beiyuan-S11.webp
+A	public/beiyuan-S12.webp
+A	public/beiyuan-S14.webp
+A	public/beiyuan-S15.webp
+A	public/beiyuan-S16.webp
+M	src/app/menu/beiyuan/menuData.ts
+M	src/components/cart/CartBar.tsx
+M	src/components/cart/CartContext.tsx
+M	src/components/cart/MealCustomizer.tsx
+
+commit ed6750247ab8c6e2b2669419d59d76a0622085cd
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-22
+
+    feat: BY M-B/M-C images (17), rename M-B-03 to Curry Chicken Cutlet
+
+A	public/beiyuan-M-B-01.webp
+A	public/beiyuan-M-B-02.webp
+A	public/beiyuan-M-B-03.webp
+A	public/beiyuan-M-B-04.webp
+A	public/beiyuan-M-B-05.webp
+A	public/beiyuan-M-B-06.webp
+A	public/beiyuan-M-C-01.webp
+A	public/beiyuan-M-C-02.webp
+A	public/beiyuan-M-C-03.webp
+A	public/beiyuan-M-C-04.webp
+A	public/beiyuan-M-C-05.webp
+A	public/beiyuan-M-C-06.webp
+A	public/beiyuan-M-C-07.webp
+A	public/beiyuan-M-C-08.webp
+A	public/beiyuan-M-C-09.webp
+A	public/beiyuan-M-C-10.webp
+A	public/beiyuan-M-C-11.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 83b315180f003d9a924da5091bc836da16394948
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-22
+
+    feat: BY M-A meal set images (12 items)
+
+M	public/beiyuan-M-A-01.webp
+A	public/beiyuan-M-A-02.webp
+A	public/beiyuan-M-A-03.webp
+A	public/beiyuan-M-A-04.webp
+M	public/beiyuan-M-A-05.webp
+M	public/beiyuan-M-A-06.webp
+A	public/beiyuan-M-A-07.webp
+A	public/beiyuan-M-A-08.webp
+M	public/beiyuan-M-A-09.webp
+A	public/beiyuan-M-A-10.webp
+M	public/beiyuan-M-A-11.webp
+A	public/beiyuan-M-A-12.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 0fc35002d235c6f88ad343e6c959586ca530a864
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-22
+
+    feat: BY H-C series images + English labels + H-A pure-tea fix
+
+A	public/beiyuan-H-C-01.webp
+A	public/beiyuan-H-C-02.webp
+A	public/beiyuan-H-C-03.webp
+M	src/app/menu/beiyuan/menuData.ts
+M	src/components/cart/DrinkCustomizer.tsx
+
+commit d5aebac327f898a40cc430460921b0a76ddf3a97
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY cart / my-list + detail image zoom + reference disclaimer
+
+M	src/app/menu/beiyuan/page.tsx
+A	src/components/ImageZoomOverlay.tsx
+A	src/components/cart/CartBar.tsx
+A	src/components/cart/CartContext.tsx
+A	src/components/cart/DrinkCustomizer.tsx
+A	src/components/cart/MealCustomizer.tsx
+
+commit 7551e1ea23d86f1d3d7ea4bfd2180ad43a99f750
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY H-A/H-B hot drink images (21 items)
+
+A	public/beiyuan-H-A-01.webp
+A	public/beiyuan-H-A-02.webp
+A	public/beiyuan-H-A-03.webp
+A	public/beiyuan-H-A-04.webp
+A	public/beiyuan-H-A-05.webp
+A	public/beiyuan-H-A-06.webp
+A	public/beiyuan-H-A-07.webp
+A	public/beiyuan-H-A-08.webp
+A	public/beiyuan-H-A-09.webp
+A	public/beiyuan-H-B-01.webp
+A	public/beiyuan-H-B-02.webp
+A	public/beiyuan-H-B-03.webp
+A	public/beiyuan-H-B-04.webp
+A	public/beiyuan-H-B-05.webp
+A	public/beiyuan-H-B-06.webp
+A	public/beiyuan-H-B-07.webp
+A	public/beiyuan-H-B-08.webp
+A	public/beiyuan-H-B-10.webp
+A	public/beiyuan-H-B-11.webp
+A	public/beiyuan-H-B-12.webp
+A	public/beiyuan-H-B-13.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 6660706a262b80be86bf20eb194277cfd41c89af
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY C-C/C-D series images + redesigned subcategory cards
+
+A	public/beiyuan-C-C-01.webp
+A	public/beiyuan-C-C-03.webp
+A	public/beiyuan-C-C-04.webp
+A	public/beiyuan-C-C-05.webp
+A	public/beiyuan-C-D-01.webp
+A	public/beiyuan-C-D-02.webp
+A	public/beiyuan-C-D-03.webp
+A	public/beiyuan-C-D-04.webp
+M	src/app/menu/beiyuan/menuData.ts
+M	src/app/menu/beiyuan/page.tsx
+
+commit e6f365506af2a3865c426437a155661f28c0169b
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY C-B product images (12 milk teas)
+
+A	public/beiyuan-C-B-01.webp
+A	public/beiyuan-C-B-02.webp
+A	public/beiyuan-C-B-03.webp
+A	public/beiyuan-C-B-04.webp
+A	public/beiyuan-C-B-05.webp
+A	public/beiyuan-C-B-06.webp
+A	public/beiyuan-C-B-07.webp
+A	public/beiyuan-C-B-16a.webp
+A	public/beiyuan-C-B-16b.webp
+A	public/beiyuan-C-B-16c.webp
+A	public/beiyuan-C-B-16d.webp
+A	public/beiyuan-C-B-16e.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 860971c42ee111a707a2a0911914454b9e0df471
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY C-A-14e jin jun mei image ΓÇö C-A complete
+
+A	public/beiyuan-C-A-14e.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 5752b3fb1814e5d7180fb2f401740c04423a5d02
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY C-A product images (13 drinks)
+
+A	public/beiyuan-C-A-02.webp
+A	public/beiyuan-C-A-03.webp
+A	public/beiyuan-C-A-04.webp
+A	public/beiyuan-C-A-05.webp
+A	public/beiyuan-C-A-06.webp
+A	public/beiyuan-C-A-07.webp
+A	public/beiyuan-C-A-08.webp
+A	public/beiyuan-C-A-09.webp
+A	public/beiyuan-C-A-10.webp
+A	public/beiyuan-C-A-14a.webp
+A	public/beiyuan-C-A-14b.webp
+A	public/beiyuan-C-A-14c.webp
+A	public/beiyuan-C-A-14d.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 6faef3c65933969591d0bf939dded05cc85fd8f0
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY product image test ΓÇö C-A-01, square list / landscape detail
+
+A	public/beiyuan-C-A-01.webp
+M	src/app/menu/beiyuan/menuData.ts
+M	src/app/menu/beiyuan/page.tsx
+
+commit c7bc194874f3d753e21a22fc67043d47dfccfef8
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: BY page rework ΓÇö english-primary, +tax, add-ons
+
+M	src/app/menu/beiyuan/page.tsx
+
+commit 82c31da1b4d2d0bfe6afbba7a26e80c20ea8aeaf
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-21
+
+    feat: rebuild BY menu data from store sheets
+
+M	src/app/menu/beiyuan/menuData.ts
+
+commit ccc01aa18da4ffd8e0b51d7817afa1665097078a
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: english-primary shell labels (header + bottomnav)
+
+M	src/components/shell/BottomNav.tsx
+M	src/components/shell/Header.tsx
+
+commit 4bd95ea468f146271d29496530fee5b36249651a
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: bottomnav (stage 1 shell complete)
+
+M	src/components/shell/AppShell.tsx
+A	src/components/shell/BottomNav.tsx
+
+commit 3a863e7d51d0ca92a13a4adb53f30cb243c45950
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: appshell + unified header on TOMO
+
+M	src/app/menu/tomo/page.tsx
+M	src/components/shell/Header.tsx
+
+commit daf4a236b22b761d256dfd866a942af618b3b8bf
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: appshell + unified header on YGF
+
+M	src/app/menu/ygf/page.tsx
+M	src/components/shell/Header.tsx
+
+commit 16be5756b68805afaffc8784cd5f4301edefcb1d
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    fix: rename beiyuan page to page.tsx
+
+R100	src/app/menu/beiyuan/beiyuan_page_NEW.tsx	src/app/menu/beiyuan/page.tsx
+
+commit a481ddf5b39e28485a4c3a049e0f9da273a0d245
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: appshell + unified header on BY
+
+R096	src/app/menu/beiyuan/page.tsx	src/app/menu/beiyuan/beiyuan_page_NEW.tsx
+A	src/components/shell/AppShell.tsx
+A	src/components/shell/Header.tsx
+
+commit b25d6e6006458b075936af034f48c14c715c3937
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: theme token v1
+
+M	src/lib/theme/themes.ts
+
+commit d1ddf35d4b6c1d73391eae2877184f809edee42a
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-05-20
+
+    feat: theme token layer
+
+M	src/app/layout.tsx
+A	src/lib/theme/ThemeProvider.tsx
+A	src/lib/theme/themes.ts
+A	src/lib/theme/types.ts
+
+commit 5b20a0dc04dc153b5657de75b0baf6a9513a04cb
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-03-10
+
+    fix: redLight type error in broth page
+
+M	src/app/menu/ygf/broth/[id]/page.tsx
+
+commit aa84c68486aca5b77864877b52e5842e4251df10
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-03-10
+
+    YGF v4: phoenix splash, 3-step guide, white/gold menu
+
+M	src/app/menu/ygf/page.tsx
+
+commit 166fee01a610c722124e33643c763d757d8c2033
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-03-10
+
+    YGF v2: carousel broth, sub-pages, 2-col grid, long-press zoom
+
+A	public/ygf-phoenix.webp
+M	src/app/menu/ygf/broth/[id]/combo/[comboId]/page.tsx
+M	src/app/menu/ygf/broth/[id]/page.tsx
+M	src/app/menu/ygf/page.tsx
+
+commit bebcd338a2177ee0f5d107e65f942978f1288205
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-03-09
+
+    YGF v2: carousel broth, sub-pages, 2-col grid, long-press zoom
+
+M	src/app/menu/ygf/page.tsx
+
+commit 4f865481f3ee285f4e91ac57c29da0cc5d55b34c
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-03-09
+
+    YGF v2: carousel broth, sub-pages, 2-col grid, long-press zoom
+
+A	src/app/menu/ygf/broth/[id]/combo/[comboId]/page.tsx
+A	src/app/menu/ygf/broth/[id]/page.tsx
+A	src/app/menu/ygf/menuData.ts
+M	src/app/menu/ygf/page.tsx
+
+commit 64810332796c6aef2e8f58635ced87a7bf6bc390
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-03-09
+
+    YGF menu: broth selection, combos, condiments, allergens, growth module
+
+A	public/ygf-balls-cheese-filled-fish-ball.webp
+A	public/ygf-balls-fish-roe-ball.webp
+A	public/ygf-balls-fish-roe-lucky-bag.webp
+A	public/ygf-balls-pork-meatballs.webp
+A	public/ygf-balls-squid-balls.webp
+A	public/ygf-broth-drymix.webp
+A	public/ygf-broth-spicy.webp
+A	public/ygf-broth-tomato.webp
+A	public/ygf-broth-tomyum.webp
+A	public/ygf-meat-beef-aorta.webp
+A	public/ygf-meat-beef-brisket.webp
+A	public/ygf-meat-beef-flat-iron.webp
+A	public/ygf-meat-beef-omasum.webp
+A	public/ygf-meat-braised-beef-tendon.webp
+A	public/ygf-meat-braised-honeycomb-tripe.webp
+A	public/ygf-meat-braised-pork-intestine.webp
+A	public/ygf-meat-frog-legs.webp
+A	public/ygf-meat-lamb-slices.webp
+A	public/ygf-meat-mini-sausages.webp
+A	public/ygf-meat-pork-sausage.webp
+A	public/ygf-meat-pork-shoulder.webp
+A	public/ygf-meat-premium-beef-omasum.webp
+A	public/ygf-meat-quail-eggs.webp
+A	public/ygf-meat-spam.webp
+A	public/ygf-mushroom-beech.webp
+A	public/ygf-mushroom-enoki.webp
+A	public/ygf-mushroom-king-oyster.webp
+A	public/ygf-sauce-fermented-tofu-v2.webp
+A	public/ygf-sauce-fermented-tofu.webp
+A	public/ygf-sauce-scallion.webp
+A	public/ygf-sauce-sesame-peanut-v2.webp
+A	public/ygf-sauce-spicy-mix-v2.webp
+A	public/ygf-sauce-spicy-mix.webp
+A	public/ygf-sauce-vinegar-v2.webp
+A	public/ygf-sauce-vinegar.webp
+A	public/ygf-seafood-baby-scallops.webp
+A	public/ygf-seafood-basa-fillet.webp
+A	public/ygf-seafood-beef-ball-burst.webp
+A	public/ygf-seafood-cheese-fish-tofu.webp
+A	public/ygf-seafood-chikuwa.webp
+A	public/ygf-seafood-lobster-ball.webp
+A	public/ygf-seafood-mussels.webp
+A	public/ygf-seafood-peeled-shrimp.webp
+A	public/ygf-seafood-shrimp-paste.webp
+A	public/ygf-seafood-shrimp-shell.webp
+A	public/ygf-seafood-squid-tentacles.webp
+A	public/ygf-staple-fried-dough-sticks.webp
+A	public/ygf-staple-glass-noodles.webp
+A	public/ygf-staple-hand-shaved-noodles.webp
+A	public/ygf-staple-instant-noodles.webp
+A	public/ygf-staple-plain-noodles.webp
+A	public/ygf-staple-ramen.webp
+A	public/ygf-staple-rice-cakes.webp
+A	public/ygf-staple-rice-vermicelli.webp
+A	public/ygf-staple-wide-glass-noodles.webp
+A	public/ygf-tofu-bean-curd-sticks.webp
+A	public/ygf-tofu-chiba-tofu.webp
+A	public/ygf-tofu-frozen-tofu.webp
+A	public/ygf-tofu-tofu-puffs.webp
+A	public/ygf-tofu-tofu-skin.webp
+A	public/ygf-veg-baby-corn.webp
+A	public/ygf-veg-bamboo-shoots.webp
+A	public/ygf-veg-crown-daisy.webp
+A	public/ygf-veg-jelly-vegetable.webp
+A	public/ygf-veg-kelp-knots.webp
+A	public/ygf-veg-konjac-knots.webp
+A	public/ygf-veg-lettuce.webp
+A	public/ygf-veg-lotus-root.webp
+A	public/ygf-veg-nagaimo.webp
+A	public/ygf-veg-napa-cabbage.webp
+A	public/ygf-veg-potato-slices.webp
+A	public/ygf-veg-romaine-lettuce.webp
+A	public/ygf-veg-spinach.webp
+A	public/ygf-veg-taro.webp
+A	public/ygf-veg-zucchini.webp
+M	src/app/menu/ygf/page.tsx
+M	src/app/menu/ygf/review/page.tsx
+M	src/app/menu/ygf/share/page.tsx
+M	src/app/menu/ygf/vip/page.tsx
+
+commit ed1eee4be796c1db29201b63e9c6f46696a3fea9
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-02-26
+
+    fix: remove duplicate img properties
+
+M	src/app/menu/beiyuan/menuData.ts
+
+commit a0cb39b5e3d43895d511d2a549da7680c2b9b619
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-02-26
+
+    fix: M-C-09 price syntax error
+
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 855e65d49b32390b7f7738da8267796e4eb78ea7
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-02-26
+
+    feat: add 19 food photos to menu
+
+A	public/beiyuan-M-A-05.webp
+A	public/beiyuan-M-A-06.webp
+A	public/beiyuan-M-A-09.webp
+A	public/beiyuan-M-A-11.webp
+A	public/beiyuan-M-A-beef-ribs.webp
+A	public/beiyuan-M-A-curry-chicken.webp
+A	public/beiyuan-M-C-beef-dumpling.webp
+A	public/beiyuan-M-C-instant-noodle-egg.webp
+A	public/beiyuan-M-C-instant-noodle-ham.webp
+A	public/beiyuan-M-C-jajang.webp
+A	public/beiyuan-M-C-stir-fried-noodle.webp
+A	public/beiyuan-M-C-wonton-noodle.webp
+A	public/beiyuan-S-A-scallion-egg-pancake.webp
+A	public/beiyuan-S-A-scallion-pancake.webp
+A	public/beiyuan-S-A-spicy-wonton.webp
+A	public/beiyuan-S-A-squid-balls.webp
+A	public/beiyuan-S-A-sweet-potato.webp
+A	public/beiyuan-S-A-tea-egg.webp
+M	src/app/menu/beiyuan/menuData.ts
+
+commit 279ae315dd627a2425bc803ca25df35814e05487
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-02-26
+
+    fix: wider image block 130px + adjust text padding
+
+M	src/app/menu/beiyuan/page.tsx
+
+commit d8ed56adde3cc516f668214d959aad7aac9ea009
+Author: jy0088 <kevinzhang@luxtyle.biz>
+Date:   2026-02-26
+
+    feat: add real photo for pork stew meal set
+
+A	public/beiyuan-M-A-01.webp
+M	src/app/menu/beiyuan/menuData.ts
+M	src/app/menu/beiyuan/page.tsx
