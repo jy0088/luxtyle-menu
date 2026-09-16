@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { use } from "react";
-import { BROTHS, ALL_ITEMS } from "../../menuData";
+import { BROTHS, ALL_ITEMS, PRICING } from "../../menuData";
 
 const C = {
   bg: "#FDFAF5", bgCard: "#FFFFFF", bgSoft: "#FFF4E6",
@@ -9,6 +9,11 @@ const C = {
   red: "#B91C1C", ink: "#1C1410", inkMid: "#6B5B4E", inkLight: "#A89880",
   border: "#E8D9C4", borderStrong: "#C8A878",
 };
+
+/** 搭配内食材的参考总重(不含主食) */
+function comboWeight(items: { weight: string }[]) {
+  return items.reduce((sum, i) => sum + (parseInt(i.weight, 10) || 0), 0);
+}
 
 export default function BrothPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -43,12 +48,50 @@ export default function BrothPage({ params }: { params: Promise<{ id: string }> 
 
       {/* Info card */}
       <div style={{ margin: "16px 16px 0", background: C.bgCard, borderRadius: 20, padding: "22px 20px", border: `2px solid ${C.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, background: C.gold, color: "#fff", borderRadius: 8, padding: "4px 12px", fontWeight: 800 }}>{broth.badge}</span>
-                    <span style={{ fontSize: 14, color: C.inkMid }}>{broth.spicyLevels.length === 0 ? "🍃" : "🌶".repeat(broth.spicyLevels[0].chilies)} {broth.spicy}</span>
+          <span style={{ fontSize: 12, fontWeight: 800, borderRadius: 8, padding: "4px 12px",
+            color: broth.surcharge ? "#fff" : C.inkMid,
+            background: broth.surcharge ? C.red : "transparent",
+            border: broth.surcharge ? "none" : `1px solid ${C.border}` }}>
+            {broth.surcharge ? `+$${broth.surcharge.toFixed(2)} / bowl` : "Included 免费"}
+          </span>
         </div>
-        <h1 style={{ fontSize: 28, fontWeight: 900, margin: "0 0 6px", color: C.ink }}>{broth.zh}</h1>
-        <p style={{ fontSize: 15, color: C.inkMid, lineHeight: 1.8, margin: "0 0 18px" }}>{broth.tagline}</p>
+
+        <h1 style={{ fontSize: 28, fontWeight: 900, margin: "0 0 4px", color: C.ink }}>{broth.zh}</h1>
+        <div style={{ fontSize: 13, color: C.inkLight, marginBottom: 12 }}>{broth.en}</div>
+        <p style={{ fontSize: 15, color: C.inkMid, lineHeight: 1.7, margin: "0 0 5px" }}>{broth.taglineEn}</p>
+        <p style={{ fontSize: 13.5, color: C.inkLight, lineHeight: 1.7, margin: "0 0 18px" }}>{broth.tagline}</p>
+
+        {/* 称重定价 —— 顾客在这一层就该知道怎么算钱 */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+          background: C.bgSoft, border: `1px solid ${C.border}`, borderRadius: 12, padding: "11px 14px", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: C.ink }}>{PRICING.buildYourOwnEn}</div>
+            <div style={{ fontSize: 11, color: C.inkLight, marginTop: 1 }}>{PRICING.buildYourOwnZh}</div>
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: C.red, whiteSpace: "nowrap" }}>{PRICING.perLbLabel}</div>
+        </div>
+
+        {/* 辣度 —— 每档单独一行 */}
+        {broth.spicyLevels.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.inkLight, letterSpacing: 1, marginBottom: 7 }}>
+              SPICE LEVEL · 辣度可选
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {broth.spicyLevels.map(lv => (
+                <div key={lv.en} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 13, color: C.inkMid, minWidth: 96 }}>{lv.en} {lv.zh}</span>
+                  <span style={{ fontSize: 13, letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {broth.spicyLevels.length === 0 && (
+          <div style={{ fontSize: 13, color: C.inkMid, marginBottom: 16 }}>🍃 {broth.spicy}</div>
+        )}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {broth.features.map(f => (
             <span key={f} style={{ fontSize: 12, background: C.goldPale, color: C.gold, borderRadius: 20, padding: "6px 14px", border: `1px solid ${C.goldLight}`, fontWeight: 600 }}>{f}</span>
@@ -63,6 +106,9 @@ export default function BrothPage({ params }: { params: Promise<{ id: string }> 
           <div>
             <div style={{ fontSize: 20, fontWeight: 900, color: C.ink }}>推荐搭配</div>
             <div style={{ fontSize: 11, color: C.inkLight, letterSpacing: 2 }}>RECOMMENDED COMBOS</div>
+            <div style={{ fontSize: 11, color: C.inkLight, marginTop: 3, letterSpacing: 0 }}>
+              Ideas only — build your bowl any way you like · 仅供参考，可自由增减
+            </div>
           </div>
         </div>
 
@@ -94,6 +140,7 @@ export default function BrothPage({ params }: { params: Promise<{ id: string }> 
                 <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 12, color: C.inkMid }}>主食：</span>
                   <span style={{ fontSize: 12, background: "#FEE2E2", color: C.red, borderRadius: 6, padding: "3px 10px", fontWeight: 700 }}>{combo.staple}</span>
+                  <span style={{ fontSize: 11, color: C.inkLight }}>≈{comboWeight(combo.items)}g</span>
                   <span style={{ marginLeft: "auto", fontSize: 12, color: C.gold, fontWeight: 700 }}>{combo.highlight} ›</span>
                 </div>
               </div>
