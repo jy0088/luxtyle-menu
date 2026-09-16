@@ -30,13 +30,13 @@ const PROMO = {
   active: true,
   img: '/promo/banmian-4x5.webp',
   alt: 'Spicy Beef Wide Noodle Soup 香辣牛肉板面',
-  autoCloseMs: 3000,
+  // 不自动关闭;顾客读完自己关
 };
 
 // 门店 —— 首页用 ?store=clairemont / ?store=miramesa 带进来,记在 localStorage
-const STORES: Record<StoreId, string> = {
-  clairemont: 'Clairemont Mesa',
-  miramesa: 'Mira Mesa',
+const STORES: Record<StoreId, { name: string; addr: string }> = {
+  clairemont: { name: 'Clairemont Mesa', addr: '7315 Clairemont Mesa Blvd, San Diego, CA' },
+  miramesa: { name: 'Mira Mesa', addr: '9003 Mira Mesa Blvd, San Diego, CA' },
 };
 function isStore(v: unknown): v is StoreId {
   return v === 'clairemont' || v === 'miramesa';
@@ -561,21 +561,32 @@ function ToppingSection() {
 }
 
 function PromoPopup({ onClose }: { onClose: () => void }) {
+  // 不自动关闭 —— 顾客读完自己关(✕ / 点遮罩 / Esc)
   useEffect(() => {
-    const t = setTimeout(onClose, PROMO.autoCloseMs);
-    return () => clearTimeout(t);
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
   }, [onClose]);
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.overlay, backdropFilter: 'blur(6px)', padding: 20 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.overlay, backdropFilter: 'blur(6px)', padding: '16px 12px' }}
       onClick={onClose}
     >
-      <div style={{ position: 'relative', width: '100%', maxWidth: 330, borderRadius: 22, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: 520, maxHeight: '100%', overflowY: 'auto', borderRadius: 20, background: '#fff', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={PROMO.img} alt={PROMO.alt} style={{ display: 'block', width: '100%' }} />
-        <button onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 10, right: 10, width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.42)', border: 'none', color: '#fff', fontSize: 17, lineHeight: 1, cursor: 'pointer' }}>×</button>
-        <div style={{ background: '#fff', padding: '9px 12px 11px', textAlign: 'center', fontSize: 10.5, fontWeight: 700, color: C.sub, lineHeight: 1.5 }}>
-          图片仅供参考、以实物为准<br />Pictures are for reference only
+        <button onClick={onClose} aria-label="Close 关闭" style={{ position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', fontSize: 19, lineHeight: 1, cursor: 'pointer' }}>×</button>
+        <div style={{ padding: '13px 16px 15px', textAlign: 'center' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: C.brand }}>Order at the counter</div>
+          <div style={{ fontSize: 11.5, color: C.sub, marginTop: 2 }}>到柜台点单即可</div>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.faint, marginTop: 9, lineHeight: 1.5 }}>
+            图片仅供参考、以实物为准<br />Pictures are for reference only
+          </div>
+          <button onClick={onClose} style={{ width: '100%', marginTop: 11, background: C.brand, color: C.gold, border: 'none', borderRadius: 14, padding: '12px 0', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+            Got it 知道了
+          </button>
         </div>
       </div>
     </div>
@@ -715,7 +726,7 @@ export default function BeiYuanPage() {
               borderRadius: 999, padding: '5px 10px', fontSize: 10.5, fontWeight: 800,
               whiteSpace: 'nowrap',
             }}>
-              📍 {STORES[store]}
+              📍 {STORES[store].name}
             </span>
             <button onClick={() => setShowPopup(true)} style={{
               background: C.gold, color: C.brand, border: 'none',
@@ -815,7 +826,7 @@ export default function BeiYuanPage() {
 
       <div style={{ textAlign: 'center', padding: '24px 16px 40px' }}>
         <div style={{ fontSize: 11, color: C.faint }}>Prices do not include tax · 价格不含税</div>
-        <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>7315 Clairemont Mesa Blvd, San Diego, CA</div>
+        <div style={{ fontSize: 11, color: C.faint, marginTop: 6 }}>{STORES[store].name} · {STORES[store].addr}</div>
         <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
     </AppShell>

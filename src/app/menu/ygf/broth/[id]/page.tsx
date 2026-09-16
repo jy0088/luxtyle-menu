@@ -45,7 +45,7 @@ export default function BrothPage({ params }: { params: Promise<{ id: string }> 
       <div style={{ margin: "16px 16px 0", background: C.bgCard, borderRadius: 20, padding: "22px 20px", border: `2px solid ${C.border}`, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
           <span style={{ fontSize: 12, background: C.gold, color: "#fff", borderRadius: 8, padding: "4px 12px", fontWeight: 800 }}>{broth.badge}</span>
-          <span style={{ fontSize: 14, color: C.inkMid }}>{"🌶".repeat(broth.spicyLevel) || "🍃"} {broth.spicy}</span>
+                    <span style={{ fontSize: 14, color: C.inkMid }}>{broth.spicyLevels.length === 0 ? "🍃" : "🌶".repeat(broth.spicyLevels[0].chilies)} {broth.spicy}</span>
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 900, margin: "0 0 6px", color: C.ink }}>{broth.zh}</h1>
         <p style={{ fontSize: 15, color: C.inkMid, lineHeight: 1.8, margin: "0 0 18px" }}>{broth.tagline}</p>

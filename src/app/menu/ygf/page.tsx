@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, type MenuItem, type Allergen } from "./menuData";
+import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, type MenuItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
 import PsstWidget from "@/components/ygf/PsstWidget";
 
@@ -134,8 +134,9 @@ function Splash({ onEnter }: { onEnter: () => void }) {
         <div style={{ marginTop: 28, padding: "12px 24px", background: "rgba(200,145,42,0.15)",
           borderRadius: 12, border: "1px solid rgba(200,145,42,0.3)" }}>
           <div style={{ fontSize: 13, color: C.goldLight, lineHeight: 1.8 }}>
-            🎉 开业酬宾 · Grand Opening<br />
-            全日赠送开业饮品 · 每桌第二碗半价
+            🥤 Lunch Special · 午餐特惠<br />
+            11:30 AM – 3:00 PM · Free drink with purchase<br />
+            购麻辣烫送饮料 · Dine-in only 仅限堂食
           </div>
         </div>
       </div>
@@ -241,18 +242,13 @@ function MainMenu() {
   // 小福有话说 —— 进菜单后延时弹出,当天只弹一次
   const [psst, setPsst] = useState(false);
   useEffect(() => {
-    // 网址加 ?psst=1 可强制弹出,方便店内测试(不写入记录)
-    let force = false;
-    try { force = new URLSearchParams(window.location.search).get("psst") === "1"; } catch {}
     const today = new Date().toDateString();
-    if (!force) {
-      try {
-        if (localStorage.getItem("ygf_psst") === today) return;
-      } catch { return; }
-    }
+    try {
+      if (localStorage.getItem("ygf_psst") === today) return;
+    } catch { return; }
     const t = setTimeout(() => {
       setPsst(true);
-      if (!force) { try { localStorage.setItem("ygf_psst", today); } catch {} }
+      try { localStorage.setItem("ygf_psst", today); } catch {}
     }, 1200);
     return () => clearTimeout(t);
   }, []);
@@ -307,14 +303,13 @@ function MainMenu() {
         {/* Special offer banner — tappable */}
         <div style={{ background: C.gold, padding: "12px 20px",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <span style={{ fontSize: 16 }}>🎉</span>
+          <span style={{ fontSize: 16 }}>🥤</span>
           <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>开业酬宾 · Grand Opening Specials</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Lunch Special · 午餐特惠</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)" }}>
-              全日赠饮品 &nbsp;·&nbsp; Mon–Fri 第二碗五折 · 2nd Bowl 50% Off
+              11:30 AM – 3:00 PM &nbsp;·&nbsp; Free drink with purchase 购麻辣烫送饮料 · Dine-in only 仅限堂食
             </div>
           </div>
-          <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 18, marginLeft: "auto" }}>›</span>
         </div>
 
       {/* ═══════════════════════════════════════════════
@@ -322,6 +317,17 @@ function MainMenu() {
       ═══════════════════════════════════════════════ */}
       {activeSection === "broth" && (
         <div style={{ padding: "20px 16px 48px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* 称重定价 —— 先让顾客知道怎么算钱 */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: C.bgCard, border: `2px solid ${C.borderStrong}`, borderRadius: 14, padding: "12px 16px" }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>{PRICING.buildYourOwnEn}</div>
+              <div style={{ fontSize: 11, color: C.inkLight, marginTop: 2 }}>{PRICING.buildYourOwnZh} · 汤底另见下方</div>
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: C.red, whiteSpace: "nowrap" }}>{PRICING.perLbLabel}</div>
+          </div>
+
           {BROTHS.map(broth => (
             <Link key={broth.id} href={`/menu/ygf/broth/${broth.id}`}
               style={{ textDecoration: "none", display: "flex", background: C.bgCard,
@@ -345,11 +351,30 @@ function MainMenu() {
                 <div>
                   <div style={{ fontSize: 18, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{broth.zh}</div>
                   <div style={{ fontSize: 11, color: C.inkLight, marginTop: 3 }}>{broth.en}</div>
-                  <div style={{ fontSize: 13, color: C.inkMid, marginTop: 8, lineHeight: 1.6 }}>{broth.tagline}</div>
+                  <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 7, lineHeight: 1.5 }}>{broth.taglineEn}</div>
+                  <div style={{ fontSize: 12, color: C.inkLight, marginTop: 3, lineHeight: 1.5 }}>{broth.tagline}</div>
+
+                  {/* 辣度 —— 每档单独一行,辣椒数按档位 */}
+                  <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 3 }}>
+                    {broth.spicyLevels.length === 0
+                      ? <span style={{ fontSize: 11.5, color: C.inkMid }}>🍃 {broth.spicy}</span>
+                      : broth.spicyLevels.map(lv => (
+                          <span key={lv.en} style={{ fontSize: 11.5, color: C.inkMid, display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ minWidth: 72 }}>{lv.en} {lv.zh}</span>
+                            <span style={{ letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
+                          </span>
+                        ))}
+                  </div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-                  <span style={{ fontSize: 12, color: C.inkMid }}>{"🌶".repeat(broth.spicyLevel) || "🍃"} {broth.spicy}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.red }}>查看搭配 ›</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, gap: 8 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 800, whiteSpace: "nowrap",
+                    color: broth.surcharge ? "#fff" : C.inkMid,
+                    background: broth.surcharge ? C.red : "transparent",
+                    border: broth.surcharge ? "none" : `1px solid ${C.border}`,
+                    borderRadius: 7, padding: "3px 9px" }}>
+                    {broth.surcharge ? `+$${broth.surcharge.toFixed(2)} / bowl` : "Included 免费"}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.red, whiteSpace: "nowrap" }}>查看搭配 ›</span>
                 </div>
               </div>
             </Link>

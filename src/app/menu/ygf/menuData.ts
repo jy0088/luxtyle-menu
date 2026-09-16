@@ -24,14 +24,31 @@ export interface Combo {
   staple: string;
 }
 
+// 称重定价 —— 与店内海报一致
+export const PRICING = {
+  perLb: 13.99,
+  perLbLabel: '$13.99 / LB',
+  buildYourOwnEn: 'Build your own bowl',
+  buildYourOwnZh: '自选称重',
+};
+
+/** 一个辣度档位。chilies = 显示几个辣椒图标 */
+export interface SpiceLevel {
+  zh: string;
+  en: string;
+  chilies: number;
+}
+
 export interface Broth {
   id: string;
   zh: string;
   en: string;
   tagline: string;
+  taglineEn: string;          // 英文描述(店内海报文案)
   features: string[];
-  spicy: string;
-  spicyLevel: 0 | 1 | 2 | 3; // 0=none,1=mild,2=med,3=hot
+  spicy: string;              // 简短辣度标签,列表页用
+  spicyLevels: SpiceLevel[];  // 可选辣度档位;空数组 = 不辣
+  surcharge?: number;         // 每碗加价;省略 = Included 免费
   color: string;
   img?: string;
   badge: string;
@@ -139,10 +156,16 @@ export const BROTHS: Broth[] = [
     id: "spicy",
     zh: "经典草本骨汤",
     en: "Classic Herbal Beef Bone Broth",
-    tagline: "杨国福秘制骨汤，熬制超过8小时，层次丰富，经典原创",
-    features: ["秘制骨汤底料", "可选辣度", "8小时慢熬", "经典原创配方"],
-    spicy: "微辣 / 中辣 / 大辣",
-    spicyLevel: 2,
+    tagline: "牛骨慢熬，花椒草本，麻辣醇厚",
+    taglineEn: "Slow-simmered beef bone with Sichuan peppercorn & herbs",
+    features: ["秘制骨汤底料", "牛骨慢熬", "花椒草本", "经典原创配方"],
+    spicy: "麻辣 Málà",
+    spicyLevels: [
+      { zh: "微辣", en: "Mild", chilies: 3 },
+      { zh: "中辣", en: "Medium", chilies: 4 },
+      { zh: "大辣", en: "Flaming", chilies: 5 },
+    ],
+    surcharge: 2.99,
     color: "#8B1A1A",
     img: "/ygf-broth-spicy.webp",
     badge: "经典原创",
@@ -179,10 +202,11 @@ export const BROTHS: Broth[] = [
     id: "tomato",
     zh: "酸甜番茄汤",
     en: "Sweet & Sour Tomato Broth",
-    tagline: "精选新鲜番茄慢熬，酸甜开胃，老少皆宜，招牌推荐",
-    features: ["新鲜番茄", "不辣", "酸甜开胃", "全年龄适合"],
-    spicy: "不辣",
-    spicyLevel: 0,
+    tagline: "番茄酸甜，鸡汤打底，老少皆宜",
+    taglineEn: "Bright, tangy tomato in a rich chicken broth",
+    features: ["新鲜番茄", "鸡汤打底", "酸甜开胃", "全年龄适合"],
+    spicy: "不辣 Non-spicy",
+    spicyLevels: [],
     color: "#9B2226",
     img: "/ygf-broth-tomato.webp",
     badge: "招牌推荐",
@@ -214,10 +238,11 @@ export const BROTHS: Broth[] = [
     id: "tomyum",
     zh: "酸辣冬阴功汤",
     en: "Tom Yum Broth",
-    tagline: "正宗泰式香料配方，柠檬草与椰奶完美融合，酸辣鲜香",
-    features: ["泰式香料", "酸辣", "柠檬草风味", "新品上市"],
-    spicy: "酸辣",
-    spicyLevel: 1,
+    tagline: "泰式经典配方 —— 香茅、青柠、鱼露",
+    taglineEn: "Traditional Thai recipe — lemongrass, lime & fish sauce",
+    features: ["泰式香料", "香茅", "青柠", "鱼露"],
+    spicy: "辣味 Spicy",
+    spicyLevels: [{ zh: "辣味", en: "Spicy", chilies: 1 }],
     color: "#7B4F00",
     img: "/ygf-broth-tomyum.webp",
     badge: "新品上市",
@@ -249,10 +274,11 @@ export const BROTHS: Broth[] = [
     id: "drymix",
     zh: "石磨醇香麻辣拌",
     en: "Spicy Dry Mix",
-    tagline: "无汤干拌，石磨麻辣酱汁裹满每一口，浓郁过瘾",
-    features: ["无汤干拌", "石磨酱汁", "微辣", "酱香浓郁"],
-    spicy: "微辣（无汤）",
-    spicyLevel: 1,
+    tagline: "石磨辣酱拌制，无汤",
+    taglineEn: "Tossed in stone-ground chili sauce — no broth",
+    features: ["无汤干拌", "石磨酱汁", "酱香浓郁"],
+    spicy: "辣味 Spicy · 无汤 No soup",
+    spicyLevels: [{ zh: "辣味", en: "Spicy", chilies: 1 }],
     color: "#7D3C00",
     img: "/ygf-broth-drymix.webp",
     badge: "酱汁浓郁",
@@ -284,10 +310,11 @@ export const BROTHS: Broth[] = [
     id: "clear",
     zh: "滋补清汤",
     en: "Nourishing Clear Broth",
-    tagline: "牛骨小火慢熬，汤色清澈金黄，清甜鲜美，养生之选",
-    features: ["牛骨慢熬", "不辣", "清甜鲜美", "养生之选"],
-    spicy: "不辣",
-    spicyLevel: 0,
+    tagline: "牛骨小火慢熬，汤色清澈金黄，清甜鲜美",
+    taglineEn: "The same beef bone, simmered clear — light, golden and naturally sweet",
+    features: ["牛骨慢熬", "清甜鲜美", "养生之选"],
+    spicy: "不辣 Non-spicy",
+    spicyLevels: [],
     color: "#6B5300",
     img: undefined,
     badge: "养生之选",
