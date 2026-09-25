@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, type MenuItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
@@ -21,7 +21,7 @@ const C = {
   redLight: "#FEE2E2",
   ink:      "#1C1410",       // near-black warm
   inkMid:   "#6B5B4E",
-  inkLight: "#A89880",
+  inkLight: "#8A7B66",
   border:   "#E8D9C4",
   borderStrong: "#C8A878",
 };
@@ -239,7 +239,6 @@ function MainMenu() {
   const [itemCat, setItemCat] = useState("meat");
   const [sauceCat, setSauceCat] = useState(0);
   const [enlargedItem, setEnlargedItem] = useState<MenuItem | null>(null);
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 小福有话说 —— 进菜单后延时弹出,当天只弹一次
   const [psst, setPsst] = useState(false);
@@ -254,11 +253,6 @@ function MainMenu() {
     }, 1200);
     return () => clearTimeout(t);
   }, []);
-
-  function pressStart(item: MenuItem) {
-    pressTimer.current = setTimeout(() => setEnlargedItem(item), 500);
-  }
-  function pressEnd() { if (pressTimer.current) clearTimeout(pressTimer.current); }
 
   return (
     <>
@@ -413,8 +407,7 @@ function MainMenu() {
           <div style={{ padding: "4px 16px", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
             {MENU_CATEGORIES.find(c => c.id === itemCat)?.items.map(item => (
               <div key={item.id}
-                onMouseDown={() => pressStart(item)} onMouseUp={pressEnd}
-                onTouchStart={() => pressStart(item)} onTouchEnd={pressEnd}
+                onClick={() => setEnlargedItem(item)}
                 style={{ background: C.bgCard, borderRadius: 16, overflow: "hidden",
                   border: `2px solid ${C.border}`, cursor: "pointer",
                   boxShadow: "0 2px 8px rgba(0,0,0,0.05)", userSelect: "none", position: "relative" }}>
@@ -447,7 +440,7 @@ function MainMenu() {
             ))}
           </div>
           <div style={{ textAlign: "center", fontSize: 12, color: C.inkLight, padding: "14px 0" }}>
-            长按图片查看详情 · Long press for details
+            点击查看过敏源与详情 · Tap any item for allergens & details
           </div>
         </div>
       )}

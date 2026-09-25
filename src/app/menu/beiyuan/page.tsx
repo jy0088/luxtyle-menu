@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
-  allCategories, toppings, freeDrinkOptions, mealAddOns,
+  allCategories, toppings, freeDrinkOptions,
   MenuCategory, MenuItem, MenuSubCategory, StoreId,
 } from './menuData';
 import AppShell from '@/components/shell/AppShell';
@@ -57,9 +57,32 @@ function categoryForStore(cat: MenuCategory | null | undefined, store: StoreId) 
 // 北苑 WhatsApp 频道 —— 小麒麟挂件跳转目标
 const BY_CHANNEL = 'https://whatsapp.com/channel/0029VbDcqctLtOjDUnCzoe2c';
 
+// 全局样式 —— 分类转场 + 按下反馈。内联样式写不了 :active,必须走 CSS。
+const BY_CSS = `
+@keyframes by-in-l { from { opacity:0; transform:translateX(20px) } to { opacity:1; transform:none } }
+@keyframes by-in-r { from { opacity:0; transform:translateX(-20px) } to { opacity:1; transform:none } }
+@keyframes by-sheet-up { from { transform:translateY(24px); opacity:0 } to { transform:none; opacity:1 } }
+.by-swap-l { animation: by-in-l .24s cubic-bezier(.22,.9,.3,1) both; }
+.by-swap-r { animation: by-in-r .24s cubic-bezier(.22,.9,.3,1) both; }
+.by-sheet  { animation: by-sheet-up .26s cubic-bezier(.22,1,.36,1) both; }
+/* 按下反馈 —— 手指按下去屏幕要有回应 */
+.by-root button, .by-root [data-press] {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .09s ease-out, filter .09s ease-out;
+}
+.by-root button:active, .by-root [data-press]:active {
+  transform: scale(.972); filter: brightness(.94);
+}
+@media (prefers-reduced-motion: reduce) {
+  .by-swap-l, .by-swap-r, .by-sheet { animation: none; }
+  .by-root button, .by-root [data-press] { transition: none; }
+  .by-root button:active, .by-root [data-press]:active { transform: none; filter: none; }
+}
+`;
+
 const C = {
   bg: '#F5F2EC', card: '#FFFFFF', cardImg: '#EBEBEB', muted: '#F0EDE8',
-  border: '#E8E4DE', text: '#1a1a1a', sub: '#888', faint: '#bbb',
+  border: '#E8E4DE', text: '#1a1a1a', sub: '#6B6055', faint: '#7F7466',
   accent: '#B45309', accentBg: '#FEF3C7', orange: '#EA580C',
   green: '#16A34A', greenBg: '#F0FDF4', blue: '#2563EB',
   overlay: 'rgba(0,0,0,0.45)',
@@ -73,6 +96,8 @@ type TabSection = {
   color: string; colorBg: string; colorBgActive: string; colorText: string;
   tabs: TabGroup[];
 };
+
+const ALL_TAB_IDS: string[] = [];   // 下方 TAB_SECTIONS 建好后填充,用于判断切换方向
 
 const TAB_SECTIONS: TabSection[] = [
   {
@@ -122,16 +147,20 @@ const TAB_SECTIONS: TabSection[] = [
   },
 ];
 
+ALL_TAB_IDS.push(...TAB_SECTIONS.flatMap(s => s.tabs.map(t => t.id)));
+
 // ── Price (with +Tax) ──────────────────────────────────
-function Price({ value, size = 18, color = C.accent, prefix = '' }: {
-  value: number; size?: number; color?: string; prefix?: string;
+function Price({ value, size = 18, color = C.accent, prefix = '', tax = true }: {
+  value: number; size?: number; color?: string; prefix?: string; tax?: boolean;
 }) {
   return (
-    <span style={{ fontWeight: 800, color, fontSize: size, whiteSpace: 'nowrap' }}>
+    <span style={{ fontWeight: 900, color, fontSize: size, whiteSpace: 'nowrap', letterSpacing: -0.3 }}>
       {prefix}${value.toFixed(2)}
-      <span style={{ fontSize: Math.max(9, Math.round(size * 0.42)), fontWeight: 600, color: C.faint, marginLeft: 3 }}>
-        +Tax
-      </span>
+      {tax && (
+        <span style={{ fontSize: Math.max(9, Math.round(size * 0.40)), fontWeight: 600, color: C.faint, marginLeft: 3 }}>
+          +Tax
+        </span>
+      )}
     </span>
   );
 }
@@ -141,6 +170,11 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<'show' | 'drip' | 'done'>('show');
 
   useEffect(() => {
+    // 本次会话已看过就直接跳过 —— 不让回访顾客每次都等 2.5 秒
+    try {
+      if (sessionStorage.getItem('by_splashed') === '1') { setPhase('done'); onDone(); return; }
+      sessionStorage.setItem('by_splashed', '1');
+    } catch {}
     const t1 = setTimeout(() => setPhase('drip'), 1800);
     const t2 = setTimeout(() => { setPhase('done'); onDone(); }, 2500);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -214,7 +248,7 @@ const sheetStyle: React.CSSProperties = {
   borderRadius: '24px 24px 0 0',
   width: '100%',
   maxWidth: 480,
-  height: '92dvh',
+  maxHeight: '92dvh',
   display: 'flex',
   flexDirection: 'column' as const,
   overflow: 'hidden',
@@ -226,19 +260,30 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
   const emoji = isMeal ? '🍱' : '🍵';
   const imgBg = isMeal ? '#FFF7ED' : C.cardImg;
   const sheetRef = useRef<HTMLDivElement>(null);
-  const dragStart = useRef<number | null>(null);
-  const [dragY, setDragY] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<{ y: number; t: number } | null>(null);
+  const [dragY, setDragY] = useState(0);   // 手指原始位移;渲染时打 0.55 阻尼
 
-  const handleTouchStart = (e: React.TouchEvent) => { dragStart.current = e.touches[0].clientY; };
+  // 只有内容已滚到顶部时才允许下拉关闭,否则滚动会被误判成关闭
+  const atTop = () => (scrollRef.current?.scrollTop ?? 0) <= 0;
+  const handleTouchStart = (e: React.TouchEvent) => {
+    dragStart.current = atTop() ? { y: e.touches[0].clientY, t: Date.now() } : null;
+  };
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (dragStart.current === null) return;
-    const dy = e.touches[0].clientY - dragStart.current;
-    if (dy > 0) setDragY(dy);
+    if (!dragStart.current) return;
+    if (!atTop()) { dragStart.current = null; setDragY(0); return; }
+    const dy = e.touches[0].clientY - dragStart.current.y;
+    setDragY(dy > 0 ? dy : 0);
   };
   const handleTouchEnd = () => {
-    if (dragY > 80) setOpen(false);
-    setDragY(0);
+    const st = dragStart.current;
     dragStart.current = null;
+    if (st) {
+      const v = dragY / Math.max(Date.now() - st.t, 1);   // px/ms
+      // 拖够远,或者快速下甩 —— 两者都要明确意图,避免误关
+      if (dragY > 130 || (dragY > 60 && v > 0.6)) setOpen(false);
+    }
+    setDragY(0);
   };
 
   return (
@@ -259,9 +304,9 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
         </div>
         {/* Right info block */}
         <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{item.nameEn}</div>
-          <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
-          {item.note && <div style={{ fontSize: 10, color: C.faint, marginTop: 2 }}>{item.note}</div>}
+          <div style={{ fontSize: 17.5, fontWeight: 800, color: C.text, lineHeight: 1.22, letterSpacing: -0.2 }}>{item.nameEn}</div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.sub, marginTop: 3 }}>{item.nameCn}</div>
+          {item.note && <div style={{ fontSize: 11, color: C.faint, marginTop: 3 }}>{item.note}</div>}
           {item.teaBases && <TeaBaseBadge bases={item.teaBases} oolongUpcharge={oolongUpcharge} />}
           {item.caffeineF && <span style={{ fontSize: 10, color: '#1D4ED8', marginTop: 3, display: 'block' }}>☆ Caffeine Free</span>}
           {isMeal && (
@@ -269,9 +314,9 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
               + Free Drink Included
             </div>
           )}
-          <div style={{ marginTop: 8 }}>
-            <Price value={item.price} size={18} />
-            {item.priceL && <span style={{ fontSize: 12, fontWeight: 400, color: C.faint, marginLeft: 6 }}>/ L ${item.priceL.toFixed(2)}</span>}
+          <div style={{ marginTop: 9 }}>
+            <Price value={item.price} size={21} color={C.brand} tax={false} />
+            {item.priceL && <span style={{ fontSize: 12.5, fontWeight: 600, color: C.sub, marginLeft: 7 }}>/ L ${item.priceL.toFixed(2)}</span>}
           </div>
         </div>
       </div>
@@ -280,7 +325,8 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
         <div style={overlayStyle} onClick={() => setOpen(false)}>
           <div
             ref={sheetRef}
-            style={{ ...sheetStyle, transform: `translateY(${dragY}px)`, transition: dragY === 0 ? 'transform 0.3s' : 'none' }}
+            className={dragY === 0 ? 'by-sheet' : undefined}
+            style={{ ...sheetStyle, transform: `translateY(${(dragY * 0.55).toFixed(1)}px)`, transition: dragY === 0 ? 'transform .28s cubic-bezier(.22,1,.36,1)' : 'none' }}
             onClick={e => e.stopPropagation()}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -311,9 +357,9 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
               </div>
             )}
             {/* Scrollable content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
-              <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{item.nameEn}</div>
-              <div style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>{item.nameCn}</div>
+            <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
+              <div style={{ fontSize: 26, fontWeight: 900, color: C.text, lineHeight: 1.18, letterSpacing: -0.4 }}>{item.nameEn}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600, color: C.sub, marginTop: 5 }}>{item.nameCn}</div>
               {item.note && <div style={{ fontSize: 12, color: C.faint, marginTop: 6 }}>{item.note}</div>}
               {item.teaBases && (
                 <div style={{ marginTop: 14 }}>
@@ -321,9 +367,9 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
                   <TeaBaseBadge bases={item.teaBases} oolongUpcharge={oolongUpcharge} />
                 </div>
               )}
-              <div style={{ marginTop: 16 }}>
-                <Price value={item.price} size={32} />
-                {item.priceL && <span style={{ fontSize: 16, fontWeight: 400, color: C.faint, marginLeft: 10 }}>/ Large ${item.priceL.toFixed(2)}</span>}
+              <div style={{ marginTop: 18 }}>
+                <Price value={item.price} size={34} color={C.brand} />
+                {item.priceL && <span style={{ fontSize: 16, fontWeight: 600, color: C.sub, marginLeft: 10 }}>/ Large ${item.priceL.toFixed(2)}</span>}
               </div>
               {/* Customization selectors → add to list */}
               {(() => {
@@ -333,7 +379,9 @@ function ItemCard({ item, isMeal, oolongUpcharge, custom, catId }: { item: MenuI
                   return <MealSetCustomizer item={item} onAdded={() => setOpen(false)} />;
                 }
                 if (isSnack || isPlainMeal) {
-                  return <PlainItemAdder item={item} onAdded={() => setOpen(false)} />;
+                  // 加点与饮品加料同构:在单品详情里勾选,不再挂在分类底部
+                  const withAddOns = catId === 'M-B' || catId === 'M-C' || catId === 'S-A';
+                  return <PlainItemAdder item={item} showAddOns={withAddOns} onAdded={() => setOpen(false)} />;
                 }
                 // 饮品:有 customization 配置即出选择器
                 if (custom) {
@@ -367,6 +415,30 @@ function SubCard({ sub, custom, catId }: { sub: MenuSubCategory; custom?: Custom
   const [selIdx, setSelIdx] = useState<number | null>(null);
   const oolongUpcharge = catId === 'C-A' || catId === 'C-B';
   const close = () => { setOpen(false); setSelIdx(null); };
+
+  // 下拉关闭 —— 与单品弹层同一套手势(内容滚到顶才生效,拖够远或快速下甩才关)
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<{ y: number; t: number } | null>(null);
+  const [dragY, setDragY] = useState(0);
+  const atTop = () => (scrollRef.current?.scrollTop ?? 0) <= 0;
+  const onTStart = (e: React.TouchEvent) => {
+    dragStart.current = atTop() ? { y: e.touches[0].clientY, t: Date.now() } : null;
+  };
+  const onTMove = (e: React.TouchEvent) => {
+    if (!dragStart.current) return;
+    if (!atTop()) { dragStart.current = null; setDragY(0); return; }
+    const dy = e.touches[0].clientY - dragStart.current.y;
+    setDragY(dy > 0 ? dy : 0);
+  };
+  const onTEnd = () => {
+    const st = dragStart.current;
+    dragStart.current = null;
+    if (st) {
+      const v = dragY / Math.max(Date.now() - st.t, 1);
+      if (dragY > 130 || (dragY > 60 && v > 0.6)) close();
+    }
+    setDragY(0);
+  };
   return (
     <>
       {/* Horizontal series card — square thumbnail */}
@@ -382,20 +454,28 @@ function SubCard({ sub, custom, catId }: { sub: MenuSubCategory; custom?: Custom
           {sub.note && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 8, fontWeight: 700, background: '#D97706', color: '#fff', padding: '1px 5px', borderRadius: 999 }}>{sub.note}</span>}
         </div>
         <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, lineHeight: 1.3 }}>{sub.nameEn}</div>
-          <div style={{ fontSize: 13, color: C.sub, marginTop: 3 }}>{sub.nameCn}</div>
-          <div style={{ fontSize: 10, color: C.faint, marginTop: 4 }}>{sub.items.length} flavors · tap to choose</div>
-          <div style={{ marginTop: 8 }}><Price value={sub.price} size={18} /></div>
+          <div style={{ fontSize: 17.5, fontWeight: 800, color: C.text, lineHeight: 1.22, letterSpacing: -0.2 }}>{sub.nameEn}</div>
+          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.sub, marginTop: 3 }}>{sub.nameCn}</div>
+          <div style={{ fontSize: 11, color: C.faint, marginTop: 4 }}>{sub.items.length} flavors · tap to choose</div>
+          <div style={{ marginTop: 9 }}><Price value={sub.price} size={21} color={C.brand} tax={false} /></div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', paddingRight: 14, color: C.faint, fontSize: 18 }}>›</div>
       </div>
 
       {open && (
         <div style={overlayStyle} onClick={close}>
-          <div style={sheetStyle} onClick={e => e.stopPropagation()}>
+          <div
+            className={dragY === 0 ? 'by-sheet' : undefined}
+            style={{ ...sheetStyle, transform: `translateY(${(dragY * 0.55).toFixed(1)}px)`, transition: dragY === 0 ? 'transform .28s cubic-bezier(.22,1,.36,1)' : 'none' }}
+            onClick={e => e.stopPropagation()}
+            onTouchStart={onTStart}
+            onTouchMove={onTMove}
+            onTouchEnd={onTEnd}
+          >
             {/* Drag handle */}
             <div style={{ padding: '12px 0 0', flexShrink: 0 }}>
-              <div style={{ width: 40, height: 4, background: '#ddd', borderRadius: 999, margin: '0 auto' }} />
+              <div style={{ width: 44, height: 5, background: '#DCD6CC', borderRadius: 999, margin: '0 auto' }} />
+              <div style={{ textAlign: 'center', fontSize: 10, color: C.faint, marginTop: 5 }}>Swipe down to close</div>
             </div>
             {/* Series hero image — full landscape 4:3 */}
             <div style={{ width: '100%', aspectRatio: '4 / 3', background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, flexShrink: 0, position: 'relative', marginTop: 12, overflow: 'hidden' }}>
@@ -414,10 +494,10 @@ function SubCard({ sub, custom, catId }: { sub: MenuSubCategory; custom?: Custom
               </div>
             )}
             {/* Scrollable content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
-              <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1.2 }}>{sub.nameEn}</div>
-              <div style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>{sub.nameCn}</div>
-              <div style={{ margin: '14px 0 20px' }}><Price value={sub.price} size={32} /></div>
+            <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 22px 32px' }}>
+              <div style={{ fontSize: 26, fontWeight: 900, color: C.text, lineHeight: 1.18, letterSpacing: -0.4 }}>{sub.nameEn}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600, color: C.sub, marginTop: 5 }}>{sub.nameCn}</div>
+              <div style={{ margin: '16px 0 20px' }}><Price value={sub.price} size={34} color={C.brand} /></div>
               {selIdx === null ? (
                 <>
                   <div style={{ fontSize: 11, fontWeight: 800, color: C.faint, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 12 }}>
@@ -478,32 +558,9 @@ function SubCard({ sub, custom, catId }: { sub: MenuSubCategory; custom?: Custom
   );
 }
 
-// ── Meal Add-ons (M-A / M-B / M-C) ─────────────────────
-function MealAddOnsBlock() {
-  return (
-    <div style={{ marginTop: 14, background: '#FFF7ED', borderRadius: 16, padding: '14px 16px', border: '1px solid #FED7AA' }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: '#EA580C', textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 10 }}>
-        Add-ons · 加购
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {mealAddOns.map((a, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <div>
-              <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{a.nameEn}</span>
-              <span style={{ fontSize: 11, color: C.sub, marginLeft: 6 }}>{a.nameCn}</span>
-            </div>
-            <Price value={a.price} size={14} prefix="+" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function CategorySection({ cat }: { cat: MenuCategory }) {
   const isMeal = cat.id === 'M-A';
   const oolongUpcharge = cat.id === 'C-A' || cat.id === 'C-B';
-  const showAddOns = cat.id === 'M-A' || cat.id === 'M-B' || cat.id === 'M-C' || cat.id === 'S-A';
   return (
     <div style={{ padding: '4px 16px 16px' }}>
       <CustomChips cat={cat} />
@@ -514,7 +571,6 @@ function CategorySection({ cat }: { cat: MenuCategory }) {
         ))}
         {cat.type === 'subcategories' && cat.subcategories?.map(sub => <SubCard key={sub.id} sub={sub} custom={cat.customization} catId={cat.id} />)}
       </div>
-      {showAddOns && <MealAddOnsBlock />}
     </div>
   );
 }
@@ -658,6 +714,7 @@ function MonthlyPopup({ onClose }: { onClose: () => void }) {
 
 export default function BeiYuanPage() {
   const [activeTab, setActiveTab] = useState('C-A');
+  const [swapDir, setSwapDir] = useState(1);   // 1 = 向左推进,-1 = 向右回退
   const [showPopup, setShowPopup] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
   const [showQilin, setShowQilin] = useState(false);
@@ -708,6 +765,13 @@ export default function BeiYuanPage() {
     if (autoFlow.current) { autoFlow.current = false; armQilin(2500); }
   };
 
+  // 切分类:记录方向,内容按方向做一次横向淡入
+  const goTab = (id: string) => {
+    if (id === activeTab) return;
+    setSwapDir(ALL_TAB_IDS.indexOf(id) >= ALL_TAB_IDS.indexOf(activeTab) ? 1 : -1);
+    setActiveTab(id);
+  };
+
   useEffect(() => {
     const el = tabsRef.current?.querySelector(`[data-tab="${activeTab}"]`) as HTMLElement;
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -734,14 +798,16 @@ export default function BeiYuanPage() {
     if (Math.abs(dx) < HORIZONTAL_MIN) return;
     if (Math.abs(dx) < Math.abs(dy) * 1.6) return;
     if (dx < 0 && activeSectionIndex < TAB_SECTIONS.length - 1) {
-      setActiveTab(TAB_SECTIONS[activeSectionIndex + 1].tabs[0].id);
+      goTab(TAB_SECTIONS[activeSectionIndex + 1].tabs[0].id);
     } else if (dx > 0 && activeSectionIndex > 0) {
-      setActiveTab(TAB_SECTIONS[activeSectionIndex - 1].tabs[0].id);
+      goTab(TAB_SECTIONS[activeSectionIndex - 1].tabs[0].id);
     }
   };
 
   return (
     <CartProvider>
+      <style>{BY_CSS}</style>
+      <div className="by-root">
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
       {showPromo && <PromoPopup onClose={() => closeAutoPopup(() => setShowPromo(false))} />}
       {showPopup && <MonthlyPopup onClose={() => closeAutoPopup(() => setShowPopup(false))} />}
@@ -779,7 +845,7 @@ export default function BeiYuanPage() {
             return (
               <button
                 key={section.label}
-                onClick={() => setActiveTab(section.tabs[0].id)}
+                onClick={() => goTab(section.tabs[0].id)}
                 style={{
                   flexShrink: 0, border: 'none', cursor: 'pointer', borderRadius: 999,
                   padding: '8px 18px', fontWeight: 700, fontSize: 13,
@@ -807,7 +873,7 @@ export default function BeiYuanPage() {
                 <button
                   key={tab.id}
                   data-tab={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => goTab(tab.id)}
                   style={{
                     flexShrink: 0,
                     border: isActive ? `2px solid ${activeSection.color}` : '2px solid rgba(255,255,255,0.15)',
@@ -851,9 +917,11 @@ export default function BeiYuanPage() {
       )}
 
       <div onTouchStart={handleSwipeStart} onTouchEnd={handleSwipeEnd}>
-        {activeCategory && <CategorySection cat={activeCategory} />}
-        {activeTab === 'T' && <ToppingSection />}
-        {activeTab === 'FREE-DRINK' && <FreeDrinkSection />}
+        <div key={activeTab} className={swapDir >= 0 ? 'by-swap-l' : 'by-swap-r'}>
+          {activeCategory && <CategorySection cat={activeCategory} />}
+          {activeTab === 'T' && <ToppingSection />}
+          {activeTab === 'FREE-DRINK' && <FreeDrinkSection />}
+        </div>
       </div>
 
       <div style={{ textAlign: 'center', padding: '24px 16px 40px' }}>
@@ -862,6 +930,7 @@ export default function BeiYuanPage() {
         <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>© 2026 Luxtyle Creations Inc.</div>
       </div>
     </AppShell>
+      </div>
     </CartProvider>
   );
 }

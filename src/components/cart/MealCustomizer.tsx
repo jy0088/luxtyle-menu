@@ -7,8 +7,9 @@ import {
 import { MenuItem, freeDrinkOptions, mealAddOns } from '@/app/menu/beiyuan/menuData';
 
 const C = {
-  brand: '#0D4A2E', text: '#1a1a1a', sub: '#888', faint: '#bbb',
+  brand: '#0D4A2E', text: '#1a1a1a', sub: '#6B6055', faint: '#7F7466',
   muted: '#F0EDE8', border: '#E8E4DE', orange: '#EA580C',
+  // 与菜单页一致的暖调浅字,保证对比度
 };
 
 function QtyBox({ qty, setQty }: { qty: number; setQty: (f: (q: number) => number) => void }) {
@@ -18,13 +19,13 @@ function QtyBox({ qty, setQty }: { qty: number; setQty: (f: (q: number) => numbe
       border: `1px solid ${C.border}`, borderRadius: 12, padding: '6px 10px',
     }}>
       <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{
-        width: 30, height: 30, borderRadius: 8, border: 'none', background: C.muted,
-        fontSize: 18, cursor: 'pointer', color: C.text,
+        width: 40, height: 40, borderRadius: 10, border: 'none', background: C.muted,
+        fontSize: 20, cursor: 'pointer', color: C.text,
       }}>−</button>
-      <span style={{ fontSize: 16, fontWeight: 800, minWidth: 20, textAlign: 'center' }}>{qty}</span>
+      <span style={{ fontSize: 17, fontWeight: 800, minWidth: 24, textAlign: 'center' }}>{qty}</span>
       <button onClick={() => setQty(q => q + 1)} style={{
-        width: 30, height: 30, borderRadius: 8, border: 'none', background: C.muted,
-        fontSize: 18, cursor: 'pointer', color: C.text,
+        width: 40, height: 40, borderRadius: 10, border: 'none', background: C.muted,
+        fontSize: 20, cursor: 'pointer', color: C.text,
       }}>+</button>
     </div>
   );
@@ -148,8 +149,8 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
       <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 14 }}>
         <QtyBox qty={qty} setQty={setQty} />
         <button onClick={handleAdd} style={{
-          flex: 1, height: 50, borderRadius: 14, border: 'none', background: C.brand,
-          color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+          flex: 1, height: 52, borderRadius: 14, border: 'none', background: C.brand,
+          color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer',
         }}>
           加入清单 · ${(unit * qty).toFixed(2)}
         </button>
@@ -159,13 +160,20 @@ export function MealSetCustomizer({ item, onAdded }: { item: MenuItem; onAdded: 
   );
 }
 
-/** 普通餐食 / 小食:仅数量 + 加入清单;有 variants 时多一个形态二选一 */
-export function PlainItemAdder({ item, onAdded }: { item: MenuItem; onAdded: () => void }) {
+/**
+ * 普通餐食 / 小食:数量 + 加入清单
+ * showAddOns=true 时,加点做成可勾选(与饮品加料同构),不再只是分类底部的一段说明文字
+ */
+export function PlainItemAdder({ item, showAddOns, onAdded }:
+  { item: MenuItem; showAddOns?: boolean; onAdded: () => void }) {
   const { addLine } = useCart();
   const [qty, setQty] = useState(1);
   const [variantIdx, setVariantIdx] = useState(0);
+  const [addOns, setAddOns] = useState<Record<number, boolean>>({});
 
   const hasVariants = !!item.variants && item.variants.length > 0;
+  const chosenAddOns = showAddOns ? mealAddOns.filter((_, i) => addOns[i]) : [];
+  const unit = item.price + chosenAddOns.reduce((s, a) => s + a.price, 0);
 
   const handleAdd = () => {
     addLine({
@@ -176,6 +184,7 @@ export function PlainItemAdder({ item, onAdded }: { item: MenuItem; onAdded: () 
       basePrice: item.price,
       qty,
       variant: hasVariants ? item.variants![variantIdx] : null,
+      addOns: chosenAddOns.map(a => ({ nameCn: a.nameCn, nameEn: a.nameEn, price: a.price })),
     });
     onAdded();
   };
@@ -206,15 +215,51 @@ export function PlainItemAdder({ item, onAdded }: { item: MenuItem; onAdded: () 
           </div>
         </div>
       )}
+      {/* 加点 —— 勾选式,和饮品加料一致 */}
+      {showAddOns && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 800, color: C.faint, letterSpacing: 0.6,
+            textTransform: 'uppercase', marginBottom: 8,
+          }}>加点 Add-ons · 可多选 Multiple</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {mealAddOns.map((a, i) => {
+              const on = !!addOns[i];
+              return (
+                <button key={i} onClick={() => setAddOns(pv => ({ ...pv, [i]: !pv[i] }))} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 12px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+                  border: on ? `1.5px solid ${C.brand}` : `1.5px solid ${C.border}`,
+                  background: on ? '#F0FDF4' : '#fff',
+                }}>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'block' }}>
+                      {on ? '✓ ' : ''}{a.nameCn}
+                    </span>
+                    <span style={{ fontSize: 10.5, color: C.sub, display: 'block', marginTop: 1 }}>
+                      {a.nameEn}
+                    </span>
+                  </span>
+                  <span style={{ fontSize: 11.5, color: C.sub, flexShrink: 0, marginLeft: 6 }}>
+                    +${a.price.toFixed(2)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <QtyBox qty={qty} setQty={setQty} />
         <button onClick={handleAdd} style={{
-          flex: 1, height: 50, borderRadius: 14, border: 'none', background: C.brand,
-          color: '#fff', fontSize: 15, fontWeight: 800, cursor: 'pointer',
+          flex: 1, height: 52, borderRadius: 14, border: 'none', background: C.brand,
+          color: '#fff', fontSize: 16, fontWeight: 800, cursor: 'pointer',
         }}>
-          加入清单 · ${(item.price * qty).toFixed(2)}
+          加入清单 · ${(unit * qty).toFixed(2)}
         </button>
       </div>
+      {refNote}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from './CartContext';
 
 const C = {
-  brand: '#0D4A2E', text: '#1a1a1a', sub: '#888', faint: '#bbb',
+  brand: '#0D4A2E', text: '#1a1a1a', sub: '#6B6055', faint: '#7F7466',
   muted: '#F0EDE8', border: '#E8E4DE', gold: '#C9A84C',
 };
 
@@ -42,14 +42,14 @@ function lineSpec(l: CartLine): string[] {
 
 function QtyStepper({ qty, onChange }: { qty: number; onChange: (q: number) => void }) {
   const btn: React.CSSProperties = {
-    width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`,
-    background: '#fff', fontSize: 16, cursor: 'pointer', lineHeight: 1,
+    width: 40, height: 40, borderRadius: 10, border: `1px solid ${C.border}`,
+    background: '#fff', fontSize: 19, cursor: 'pointer', lineHeight: 1,
     display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text,
   };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <button style={btn} onClick={() => onChange(qty - 1)} aria-label="减少">−</button>
-      <span style={{ fontSize: 15, fontWeight: 700, minWidth: 18, textAlign: 'center' }}>{qty}</span>
+      <span style={{ fontSize: 16, fontWeight: 800, minWidth: 22, textAlign: 'center' }}>{qty}</span>
       <button style={btn} onClick={() => onChange(qty + 1)} aria-label="增加">+</button>
     </div>
   );
@@ -59,10 +59,11 @@ export default function CartBar() {
   const { lines, count, total, setQty, removeLine, clear } = useCart();
   const [open, setOpen] = useState(false);
   const [staffView, setStaffView] = useState(false);
+  const [askClear, setAskClear] = useState(false);
 
   if (count === 0) return null;
 
-  const closeAll = () => { setOpen(false); setStaffView(false); };
+  const closeAll = () => { setOpen(false); setStaffView(false); setAskClear(false); };
 
   return (
     <>
@@ -238,14 +239,29 @@ export default function CartBar() {
                       cursor: 'pointer',
                     }}
                   >给店员看 · Show to Staff</button>
-                  <button
-                    onClick={() => { if (confirm('清空清单?')) clear(); }}
-                    style={{
-                      width: '100%', marginTop: 8, height: 38, borderRadius: 12,
-                      border: 'none', background: 'transparent', color: C.faint,
-                      fontSize: 13, cursor: 'pointer',
-                    }}
-                  >清空清单</button>
+                  {!askClear ? (
+                    <button
+                      onClick={() => setAskClear(true)}
+                      style={{
+                        width: '100%', marginTop: 8, height: 42, borderRadius: 12,
+                        border: 'none', background: 'transparent', color: C.sub,
+                        fontSize: 13, cursor: 'pointer',
+                      }}
+                    >清空清单 Clear list</button>
+                  ) : (
+                    <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{ flex: 1, fontSize: 13, color: C.sub }}>确定清空? Clear all?</span>
+                      <button onClick={() => setAskClear(false)} style={{
+                        height: 42, padding: '0 16px', borderRadius: 12,
+                        border: `1px solid ${C.border}`, background: '#fff', color: C.text,
+                        fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      }}>取消</button>
+                      <button onClick={() => { clear(); setAskClear(false); }} style={{
+                        height: 42, padding: '0 16px', borderRadius: 12, border: 'none',
+                        background: '#B91C1C', color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                      }}>清空</button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <button
