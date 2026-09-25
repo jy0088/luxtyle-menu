@@ -10,6 +10,7 @@ import ImageZoomOverlay from '@/components/ImageZoomOverlay';
 import { CartProvider } from '@/components/cart/CartContext';
 import CartBar from '@/components/cart/CartBar';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import QilinWidget from '@/components/beiyuan/QilinWidget';
 import DrinkCustomizer from '@/components/cart/DrinkCustomizer';
 import { MealSetCustomizer, PlainItemAdder } from '@/components/cart/MealCustomizer';
 import type { Customization } from './menuData';
@@ -52,6 +53,9 @@ function categoryForStore(cat: MenuCategory | null | undefined, store: StoreId) 
   if (out.subcategories) out.subcategories = forStore(out.subcategories, store);
   return out;
 }
+
+// 北苑 WhatsApp 频道 —— 小麒麟挂件跳转目标
+const BY_CHANNEL = 'https://whatsapp.com/channel/0029VbDcqctLtOjDUnCzoe2c';
 
 const C = {
   bg: '#F5F2EC', card: '#FFFFFF', cardImg: '#EBEBEB', muted: '#F0EDE8',
@@ -656,8 +660,28 @@ export default function BeiYuanPage() {
   const [activeTab, setActiveTab] = useState('C-A');
   const [showPopup, setShowPopup] = useState(false);
   const [showPromo, setShowPromo] = useState(false);
+  const [showQilin, setShowQilin] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
+
+  // 小麒麟挂件 —— 不与海报弹窗叠着出,等前一个关掉再接力;当天只出一次。
+  // 网址加 ?qilin=1 可强制弹出,方便店内测试(不写入记录)。
+  const qilinArmed = useRef(false);   // 只排一次队
+  const autoFlow = useRef(false);     // 当前弹窗是不是进店自动弹的那一个
+  const armQilin = (delay: number) => {
+    if (qilinArmed.current) return;
+    qilinArmed.current = true;
+    let force = false;
+    try { force = new URLSearchParams(window.location.search).get('qilin') === '1'; } catch {}
+    const today = new Date().toDateString();
+    if (!force) {
+      try { if (localStorage.getItem('by_qilin') === today) return; } catch { return; }
+    }
+    setTimeout(() => {
+      setShowQilin(true);
+      if (!force) { try { localStorage.setItem('by_qilin', today); } catch {} }
+    }, delay);
+  };
 
   // 门店:优先读 ?store=,否则读上次记住的,默认 Clairemont
   const [store, setStore] = useState<StoreId>('clairemont');
@@ -673,8 +697,15 @@ export default function BeiYuanPage() {
   // 启动页结束后弹窗:活动期弹海报,否则弹 Monthly Specials
   const handleSplashDone = () => {
     setSplashDone(true);
-    if (PROMO.active) setTimeout(() => setShowPromo(true), 300);
-    else if (hasSpecials) setTimeout(() => setShowPopup(true), 300);
+    if (PROMO.active) { autoFlow.current = true; setTimeout(() => setShowPromo(true), 300); }
+    else if (hasSpecials) { autoFlow.current = true; setTimeout(() => setShowPopup(true), 300); }
+    else armQilin(1200);   // 没有任何弹窗时,进店 1.2 秒后直接出挂件
+  };
+
+  // 自动弹窗被关掉 → 隔一会儿接力出挂件;手动点开的 Specials 不触发
+  const closeAutoPopup = (hide: () => void) => {
+    hide();
+    if (autoFlow.current) { autoFlow.current = false; armQilin(2500); }
   };
 
   useEffect(() => {
@@ -712,8 +743,9 @@ export default function BeiYuanPage() {
   return (
     <CartProvider>
       {!splashDone && <SplashScreen onDone={handleSplashDone} />}
-      {showPromo && <PromoPopup onClose={() => setShowPromo(false)} />}
-      {showPopup && <MonthlyPopup onClose={() => setShowPopup(false)} />}
+      {showPromo && <PromoPopup onClose={() => closeAutoPopup(() => setShowPromo(false))} />}
+      {showPopup && <MonthlyPopup onClose={() => closeAutoPopup(() => setShowPopup(false))} />}
+      <QilinWidget open={showQilin} onClose={() => setShowQilin(false)} channelUrl={BY_CHANNEL} />
       <CartBar />
       <WhatsAppButton />
 
