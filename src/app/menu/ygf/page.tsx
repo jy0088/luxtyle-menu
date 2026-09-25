@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, type MenuItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
 import PsstWidget from "@/components/ygf/PsstWidget";
+import { DRINK_PICKS, SNACK_PICKS, resolvePick } from "./picksData";
 
 // 杨国福 WhatsApp 频道
 const YGF_CHANNEL = "https://whatsapp.com/channel/0029VbDtDTY9RZAO8pD1k33z";
@@ -233,7 +234,8 @@ function StepGuide({ stepIdx, onNext, onSkip }: { stepIdx: number; onNext: () =>
 // MAIN MENU
 // ══════════════════════════════════════════════════════════
 function MainMenu() {
-  const [activeSection, setActiveSection] = useState<"broth" | "items" | "sauce">("broth");
+  const [activeSection, setActiveSection] = useState<"broth" | "items" | "sauce" | "picks">("broth");
+  const [pickTab, setPickTab] = useState<"drinks" | "snacks">("drinks");
   const [itemCat, setItemCat] = useState("meat");
   const [sauceCat, setSauceCat] = useState(0);
   const [enlargedItem, setEnlargedItem] = useState<MenuItem | null>(null);
@@ -280,21 +282,26 @@ function MainMenu() {
       <div style={{ display: "flex", padding: "14px 16px", gap: 10, background: C.bg,
         borderBottom: `2px solid ${C.border}` }}>
         {([
-          { id: "broth", zh: "汤品介绍", en: "Broths",      emoji: "🍲" },
-          { id: "items", zh: "菜品介绍", en: "Ingredients", emoji: "🥬" },
-          { id: "sauce", zh: "调料介绍", en: "Condiments",  emoji: "🥣" },
-        ] as const).map(sec => (
+          { id: "broth", zh: "汤品", en: "Broths",      emoji: "🍲", hot: false },
+          { id: "items", zh: "菜品", en: "Ingredients", emoji: "🥬", hot: false },
+          { id: "sauce", zh: "调料", en: "Condiments",  emoji: "🥣", hot: false },
+          { id: "picks", zh: "店长推荐", en: "Picks",   emoji: "🧋", hot: true  },
+        ] as const).map(sec => {
+          const on = activeSection === sec.id;
+          return (
           <button key={sec.id} onClick={() => setActiveSection(sec.id)}
-            style={{ flex: 1, padding: "12px 4px", borderRadius: 14, border: `2px solid ${activeSection === sec.id ? C.gold : C.border}`,
-              background: activeSection === sec.id ? C.goldPale : C.bgCard,
-              cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-              boxShadow: activeSection === sec.id ? `0 2px 12px rgba(200,145,42,0.2)` : "none",
+            style={{ flex: sec.hot ? 1.25 : 1, padding: "11px 2px", borderRadius: 14,
+              border: `2px solid ${on ? C.gold : (sec.hot ? C.goldLight : C.border)}`,
+              background: on ? C.goldPale : (sec.hot ? "#FFFBF0" : C.bgCard),
+              cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+              boxShadow: on ? `0 2px 12px rgba(200,145,42,0.2)` : "none",
               transition: "all 0.2s" }}>
-            <span style={{ fontSize: 22 }}>{sec.emoji}</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: activeSection === sec.id ? C.gold : C.inkMid }}>{sec.zh}</span>
-            <span style={{ fontSize: 10, color: C.inkLight }}>{sec.en}</span>
+            <span style={{ fontSize: 20 }}>{sec.emoji}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap",
+              color: on ? C.gold : (sec.hot ? C.gold : C.inkMid) }}>{sec.zh}</span>
+            <span style={{ fontSize: 9.5, color: C.inkLight }}>{sec.en}</span>
           </button>
-        ))}
+        );})}
       </div>
         </>
       }
@@ -492,6 +499,94 @@ function MainMenu() {
             padding: "14px 16px", border: `1px solid ${C.goldLight}` }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.gold }}>🥣 调料台完全免费，不限量！</div>
             <div style={{ fontSize: 11, color: C.inkMid, marginTop: 4 }}>Condiment station is FREE and unlimited for all guests.</div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════
+          SECTION: 店长推荐 —— 北苑饮品 / 小吃加点
+      ═══════════════════════════════════════════════ */}
+      {activeSection === "picks" && (
+        <div style={{ padding: "18px 16px 48px" }}>
+
+          {/* 说明:这些来自隔壁北苑,同一柜台 */}
+          <div style={{ background: C.bgSoft, border: `2px solid ${C.goldLight}`, borderRadius: 16,
+            padding: "14px 16px", marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: C.ink }}>
+              Manager&apos;s Picks <span style={{ color: C.gold }}>店长推荐</span>
+            </div>
+            <div style={{ fontSize: 12, color: C.inkMid, marginTop: 5, lineHeight: 1.65 }}>
+              Already configured — just show the counter. From Bei Yuan next door, same register.
+            </div>
+            <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.6 }}>
+              都已经配好了，到柜台照着点就行。出自隔壁北苑南家，同一个收银台。
+            </div>
+          </div>
+
+          {/* 饮品 / 小吃 */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+            {([
+              { id: "drinks", zh: "饮品", en: "Drinks", emoji: "🧋", n: DRINK_PICKS.length },
+              { id: "snacks", zh: "小吃", en: "Snacks", emoji: "🍗", n: SNACK_PICKS.length },
+            ] as const).map(t => (
+              <button key={t.id} onClick={() => setPickTab(t.id)}
+                style={{ flex: 1, padding: "11px 4px", borderRadius: 12,
+                  border: `2px solid ${pickTab === t.id ? C.red : C.border}`,
+                  background: pickTab === t.id ? C.red : C.bgCard,
+                  color: pickTab === t.id ? "#fff" : C.inkMid,
+                  fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+                {t.emoji} {t.zh} <span style={{ fontSize: 11, opacity: 0.75 }}>{t.en} · {t.n}</span>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {(pickTab === "drinks" ? DRINK_PICKS : SNACK_PICKS).map(raw => {
+              const p = resolvePick(raw);
+              return (
+                <div key={p.key} style={{ display: "flex", background: C.bgCard, borderRadius: 16,
+                  overflow: "hidden", border: `2px solid ${C.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width: 104, minWidth: 104, background: "#F5EFE6", overflow: "hidden" }}>
+                    {p.img
+                      ? <img src={p.img} alt={p.nameEn} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                      : <div style={{ width: "100%", height: "100%", minHeight: 104, display: "flex",
+                          alignItems: "center", justifyContent: "center", fontSize: 32, color: C.border }}>
+                          {pickTab === "drinks" ? "🧋" : "🍽"}
+                        </div>}
+                  </div>
+                  <div style={{ flex: 1, padding: "13px 14px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: C.ink, lineHeight: 1.25 }}>{p.nameEn}</div>
+                    <div style={{ fontSize: 12, color: C.inkLight, marginTop: 2 }}>{p.nameCn}</div>
+                    {p.mods.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 7 }}>
+                        {p.mods.map(m => (
+                          <span key={m} style={{ fontSize: 10.5, fontWeight: 700, color: C.gold,
+                            background: C.goldPale, border: `1px solid ${C.goldLight}`,
+                            borderRadius: 6, padding: "2px 7px" }}>{m}</span>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ marginTop: 9, fontSize: 19, fontWeight: 900, color: C.red }}>
+                      ${p.total.toFixed(2)}
+                      <span style={{ fontSize: 10, fontWeight: 600, color: C.inkLight, marginLeft: 4 }}>+Tax</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: 18, background: C.goldPale, borderRadius: 14,
+            padding: "14px 16px", border: `1px solid ${C.goldLight}`, textAlign: "center" }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: C.gold }}>Order at the counter</div>
+            <div style={{ fontSize: 11.5, color: C.inkMid, marginTop: 3 }}>
+              到柜台加点即可 · 和麻辣烫一起上
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12, textAlign: "center", fontSize: 10.5, color: C.inkLight, lineHeight: 1.6 }}>
+            图片仅供参考、以实物为准<br />Pictures are for reference only
           </div>
         </div>
       )}
