@@ -388,9 +388,10 @@ export const freeDrinkOptions: { nameEn: string; nameCn: string; price: number }
 export const mealAddOns = [
   { nameEn: 'Fried Egg', nameCn: '煎蛋', price: 1.5 },
   { nameEn: 'Braised Egg', nameCn: '卤蛋', price: 1.5 },
-  { nameEn: 'Rice', nameCn: '米饭', price: 1.5 },
+  { nameEn: 'Steamed Rice', nameCn: '白米饭', price: 1.5 },
+  { nameEn: 'Fried Rice', nameCn: '蛋炒饭', price: 5.99 },
   { nameEn: 'Noodle Soup', nameCn: '汤面', price: 5.99 },
-  { nameEn: 'Three Side Dishes', nameCn: '三拼配菜碟', price: 4.99 },
+  { nameEn: 'Side Dishes', nameCn: '配菜', price: 4.99 },
 ];
 
 export const mealSet: MenuCategory = {
@@ -509,10 +510,10 @@ export const dessert: MenuCategory = {
 // CATEGORY 13: Topping 饮料配料
 // ─────────────────────────────────────────────
 export const toppings = [
-  { id: 'T-01', nameEn: 'Boba / Tapioca', nameCn: '波霸/珍珠', price: 1.00 },
-  { id: 'T-02', nameEn: 'Egg Pudding', nameCn: '鸡蛋布丁', price: 1.50 },
-  { id: 'T-03', nameEn: 'Red Beans', nameCn: '红豆', price: 1.00 },
-  { id: 'T-06', nameEn: 'Oat', nameCn: '燕麦', price: 1.00 },
+  { id: 'T-01', nameEn: 'Boba / Tapioca', nameCn: '波霸/珍珠', price: 0.75 },
+  { id: 'T-02', nameEn: 'Egg Pudding', nameCn: '鸡蛋布丁', price: 1.25 },
+  { id: 'T-03', nameEn: 'Red Beans', nameCn: '红豆', price: 0.75 },
+  { id: 'T-06', nameEn: 'Oat', nameCn: '燕麦', price: 1.25 },
   { id: 'T-07', nameEn: 'Purple Rice', nameCn: '紫米', price: 1.00 },
   { id: 'T-10', nameEn: 'Vanilla Ice Cream', nameCn: '香草冰淇淋', price: 1.50 },
   { id: 'T-11', nameEn: 'Matcha Ice Cream', nameCn: '抹茶冰淇淋', price: 2.00 },
@@ -521,7 +522,7 @@ export const toppings = [
   { id: 'T-15', nameEn: 'Aloe', nameCn: '芦荟', price: 0.75 },
   { id: 'T-16', nameEn: 'Aiyu Jelly', nameCn: '爱玉', price: 0.75 },
   { id: 'T-17', nameEn: 'Grass Jelly', nameCn: '仙草', price: 0.75 },
-  { id: 'T-19', nameEn: 'Lychee Jelly', nameCn: '荔枝蒟蒻', price: 1.00 },
+  { id: 'T-19', nameEn: 'Lychee Jelly', nameCn: '荔枝蒟蒻', price: 0.75 },
   { id: 'T-21', nameEn: 'Rice Balls', nameCn: '汤圆', price: 1.00 },
   { id: 'T-22', nameEn: 'Taro Balls', nameCn: '芋圆', price: 2.00 },
   { id: 'T-23', nameEn: 'Water Chestnut Jade Pearls', nameCn: '玉珠·荸荠', price: 1.35 },

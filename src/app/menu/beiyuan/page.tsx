@@ -503,7 +503,7 @@ function MealAddOnsBlock() {
 function CategorySection({ cat }: { cat: MenuCategory }) {
   const isMeal = cat.id === 'M-A';
   const oolongUpcharge = cat.id === 'C-A' || cat.id === 'C-B';
-  const showAddOns = cat.id === 'M-A' || cat.id === 'M-B' || cat.id === 'M-C';
+  const showAddOns = cat.id === 'M-A' || cat.id === 'M-B' || cat.id === 'M-C' || cat.id === 'S-A';
   return (
     <div style={{ padding: '4px 16px 16px' }}>
       <CustomChips cat={cat} />
