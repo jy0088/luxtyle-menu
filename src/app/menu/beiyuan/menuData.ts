@@ -524,6 +524,8 @@ export const toppings = [
   { id: 'T-19', nameEn: 'Lychee Jelly', nameCn: '荔枝蒟蒻', price: 1.00 },
   { id: 'T-21', nameEn: 'Rice Balls', nameCn: '汤圆', price: 1.00 },
   { id: 'T-22', nameEn: 'Taro Balls', nameCn: '芋圆', price: 2.00 },
+  { id: 'T-23', nameEn: 'Water Chestnut Jade Pearls', nameCn: '玉珠·荸荠', price: 1.35 },
+  { id: 'T-24', nameEn: 'Highland Barley Jade Pearls', nameCn: '玉珠·青稞', price: 1.35 },
 ];
 
 // ─────────────────────────────────────────────
