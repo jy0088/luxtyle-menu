@@ -63,6 +63,22 @@ export function resolvePick(p: Pick): ResolvedPick {
   };
 }
 
+// ─── 特色菜品 ─────────────────────────────────────────────
+// 内容待定:数组为空时,「特色菜品」标签整个不出现(不留空按钮)
+export interface Featured {
+  key: string;
+  nameEn: string;
+  nameCn: string;
+  img?: string;
+  /** 一句话说清它特别在哪 —— 英文为主、中文为辅 */
+  blurbEn?: string;
+  blurbCn?: string;
+  /** 角标,如 SIGNATURE / NEW / CHEF'S PICK */
+  tag?: string;
+  price?: number;
+}
+export const FEATURED: Featured[] = [];
+
 // ─── 8 款饮品 ─────────────────────────────────────────────
 export const DRINK_PICKS: Pick[] = [
   { key: 'd1', ref: 'C-A-05', mods: ['Green Tea 绿茶', '50% Sugar 半糖'], toppingIds: ['T-23'] },

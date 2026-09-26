@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BROTHS, MENU_CATEGORIES, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, type MenuItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
 import PsstWidget from "@/components/ygf/PsstWidget";
-import { DRINK_PICKS, SNACK_PICKS, resolvePick } from "./picksData";
+import { DRINK_PICKS, SNACK_PICKS, FEATURED, resolvePick } from "./picksData";
 
 // 杨国福 WhatsApp 频道
 const YGF_CHANNEL = "https://whatsapp.com/channel/0029VbDtDTY9RZAO8pD1k33z";
@@ -52,6 +52,51 @@ const YGF_CSS = `
   text-align:left; opacity:0; transition:opacity .25s ease .08s;
 }
 .ygf-bar[data-on="1"] .ygf-bar-wide{ opacity:1 }
+
+/* ── 店长推荐 lookbook ── */
+.pk-rail{
+  display:flex; gap:14px; overflow-x:auto; padding:16px 0 4px 16px;
+  scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.pk-rail::-webkit-scrollbar{ display:none }
+.pk-rail-end{ flex:0 0 2px }          /* 让最后一张也能滑到位 */
+.pk-card{
+  flex:0 0 76vw; max-width:288px; scroll-snap-align:center;
+  background:#fff; border:2px solid #E8D9C4; border-radius:20px;
+  overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,.07);
+}
+.pk-tile{
+  background:#fff; border:2px solid #E8D9C4; border-radius:18px;
+  overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.05);
+  display:flex; flex-direction:column;
+}
+.pk-shot{
+  position:relative; aspect-ratio:1; background:#F5EFE6; overflow:hidden;
+  display:grid; place-items:center;
+}
+.pk-shot img{ width:100%; height:100%; object-fit:cover; display:block }
+.pk-shot-fb{ font-size:40px; opacity:.32 }
+.pk-no{
+  position:absolute; top:10px; left:10px;
+  background:rgba(28,20,16,.62); color:#F5D98A;
+  font-size:11px; font-weight:900; letter-spacing:1.5;
+  padding:4px 9px; border-radius:7px;
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+.pk-body{ padding:14px 15px 16px }
+.pk-name{ font-size:17px; font-weight:900; color:#1C1410; line-height:1.2; letter-spacing:-.2px }
+.pk-name-cn{ font-size:12.5px; font-weight:600; color:#8A7B66; margin-top:3px }
+.pk-mods{ display:flex; flex-wrap:wrap; gap:5px; margin-top:9px }
+.pk-mod{
+  font-size:10.5px; font-weight:700; color:#C8912A;
+  background:#FFF1CC; border:1px solid #F5D98A;
+  border-radius:7px; padding:3px 8px; line-height:1.35;
+}
+.pk-price{
+  margin-top:10px; font-size:23px; font-weight:900; color:#B91C1C; letter-spacing:-.5px;
+}
+.pk-price span{ font-size:10px; font-weight:600; color:#8A7B66; margin-left:4px }
 
 /* 详情随选中切换 */
 @keyframes ygf-panel-in{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
@@ -280,7 +325,9 @@ function StepGuide({ stepIdx, onNext, onSkip }: { stepIdx: number; onNext: () =>
 // MAIN MENU
 // ══════════════════════════════════════════════════════════
 function MainMenu() {
-  const [activeSection, setActiveSection] = useState<"broth" | "items" | "sauce" | "picks">("broth");
+  // 顺序即优先级:先让顾客看到能加的东西,再是特色,再是汤,最后才是食材与调料
+  const [activeSection, setActiveSection] = useState<"picks" | "featured" | "broth" | "pantry">("picks");
+  const [pantryTab, setPantryTab] = useState<"items" | "sauce">("items");
   const [pickTab, setPickTab] = useState<"drinks" | "snacks">("drinks");
   const [brothIdx, setBrothIdx] = useState(0);
   const [itemCat, setItemCat] = useState("meat");
@@ -325,10 +372,12 @@ function MainMenu() {
       <div style={{ display: "flex", padding: "14px 16px", gap: 10, background: C.bg,
         borderBottom: `2px solid ${C.border}` }}>
         {([
-          { id: "broth", zh: "汤品", en: "Broths",      emoji: "🍲", hot: false },
-          { id: "items", zh: "菜品", en: "Ingredients", emoji: "🥬", hot: false },
-          { id: "sauce", zh: "调料", en: "Condiments",  emoji: "🥣", hot: false },
-          { id: "picks", zh: "店长推荐", en: "Picks",   emoji: "🧋", hot: true  },
+          { id: "picks",    zh: "店长推荐", en: "Picks",     emoji: "🧋", hot: true  },
+          ...(FEATURED.length > 0
+            ? [{ id: "featured", zh: "特色菜品", en: "Signature", emoji: "⭐", hot: false }] as const
+            : []),
+          { id: "broth",    zh: "汤品",    en: "Broths",     emoji: "🍲", hot: false },
+          { id: "pantry",   zh: "食材调料", en: "Pantry",    emoji: "🥬", hot: false },
         ] as const).map(sec => {
           const on = activeSection === sec.id;
           return (
@@ -452,7 +501,26 @@ function MainMenu() {
       {/* ═══════════════════════════════════════════════
           SECTION: 菜品介绍
       ═══════════════════════════════════════════════ */}
-      {activeSection === "items" && (
+      {/* 食材与调料 —— 同一档,内部切换 */}
+      {activeSection === "pantry" && (
+        <div style={{ display: "flex", gap: 8, padding: "16px 16px 0" }}>
+          {([
+            { id: "items", zh: "食材", en: "Ingredients", emoji: "🥬" },
+            { id: "sauce", zh: "调料", en: "Condiments",  emoji: "🥣" },
+          ] as const).map(t => (
+            <button key={t.id} onClick={() => setPantryTab(t.id)}
+              style={{ flex: 1, padding: "11px 4px", borderRadius: 12,
+                border: `2px solid ${pantryTab === t.id ? C.red : C.border}`,
+                background: pantryTab === t.id ? C.red : C.bgCard,
+                color: pantryTab === t.id ? "#fff" : C.inkMid,
+                fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+              {t.emoji} {t.zh} <span style={{ fontSize: 11, opacity: 0.75 }}>{t.en}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeSection === "pantry" && pantryTab === "items" && (
         <div style={{ paddingBottom: 48 }}>
           {/* Category pills */}
           <div style={{ display: "flex", overflowX: "auto", gap: 8, padding: "14px 16px", scrollbarWidth: "none" }}>
@@ -514,7 +582,7 @@ function MainMenu() {
       {/* ═══════════════════════════════════════════════
           SECTION: 调料介绍
       ═══════════════════════════════════════════════ */}
-      {activeSection === "sauce" && (
+      {activeSection === "pantry" && pantryTab === "sauce" && (
         <div style={{ paddingBottom: 48 }}>
           <div style={{ display: "flex", overflowX: "auto", gap: 8, padding: "14px 16px", scrollbarWidth: "none" }}>
             {SAUCE_CATEGORIES.map((cat, i) => (
@@ -566,80 +634,115 @@ function MainMenu() {
           SECTION: 店长推荐 —— 北苑饮品 / 小吃加点
       ═══════════════════════════════════════════════ */}
       {activeSection === "picks" && (
-        <div style={{ padding: "18px 16px 48px" }}>
+        <div style={{ paddingBottom: 48 }}>
 
-          {/* 说明:这些来自隔壁北苑,同一柜台 */}
-          <div style={{ background: C.bgSoft, border: `2px solid ${C.goldLight}`, borderRadius: 16,
-            padding: "14px 16px", marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 900, color: C.ink }}>
-              Manager&apos;s Picks <span style={{ color: C.gold }}>店长推荐</span>
+          {/* 开场白 —— 先说清这是什么、怎么用 */}
+          <div style={{ padding: "20px 16px 4px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 3 }}>
+              MANAGER&apos;S PICKS
             </div>
-            <div style={{ fontSize: 12, color: C.inkMid, marginTop: 5, lineHeight: 1.65 }}>
-              Already configured — just show the counter. From Bei Yuan next door, same register.
+            <div style={{ fontSize: 25, fontWeight: 900, color: C.ink, marginTop: 5, lineHeight: 1.15, letterSpacing: -0.5 }}>
+              Picked, poured,<br />and already set.
             </div>
-            <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.6 }}>
-              都已经配好了，到柜台照着点就行。出自隔壁北苑南家，同一个收银台。
+            <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 10, lineHeight: 1.6 }}>
+              Sweetness, tea base and toppings are already chosen — just show the counter.
+            </div>
+            <div style={{ fontSize: 12, color: C.inkLight, marginTop: 4, lineHeight: 1.6 }}>
+              甜度、茶底、加料都替你配好了。出自隔壁北苑南家，同一个收银台。
             </div>
           </div>
 
           {/* 饮品 / 小吃 */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 8, padding: "16px 16px 0" }}>
             {([
               { id: "drinks", zh: "饮品", en: "Drinks", emoji: "🧋", n: DRINK_PICKS.length },
               { id: "snacks", zh: "小吃", en: "Snacks", emoji: "🍗", n: SNACK_PICKS.length },
             ] as const).map(t => (
               <button key={t.id} onClick={() => setPickTab(t.id)}
-                style={{ flex: 1, padding: "11px 4px", borderRadius: 12,
+                style={{ flex: 1, padding: "12px 4px", borderRadius: 13,
                   border: `2px solid ${pickTab === t.id ? C.red : C.border}`,
                   background: pickTab === t.id ? C.red : C.bgCard,
                   color: pickTab === t.id ? "#fff" : C.inkMid,
-                  fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
-                {t.emoji} {t.zh} <span style={{ fontSize: 11, opacity: 0.75 }}>{t.en} · {t.n}</span>
+                  fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+                {t.emoji} {t.zh}
+                <span style={{ fontSize: 11, opacity: 0.78, marginLeft: 4 }}>{t.en} · {t.n}</span>
               </button>
             ))}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {(pickTab === "drinks" ? DRINK_PICKS : SNACK_PICKS).map(raw => {
-              const p = resolvePick(raw);
-              return (
-                <div key={p.key} style={{ display: "flex", background: C.bgCard, borderRadius: 16,
-                  overflow: "hidden", border: `2px solid ${C.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-                  <div style={{ width: 104, minWidth: 104, background: "#F5EFE6", overflow: "hidden" }}>
-                    {p.img
-                      ? <img src={p.img} alt={p.nameEn} style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                      : <div style={{ width: "100%", height: "100%", minHeight: 104, display: "flex",
-                          alignItems: "center", justifyContent: "center", fontSize: 32, color: C.border }}>
-                          {pickTab === "drinks" ? "🧋" : "🍽"}
-                        </div>}
-                  </div>
-                  <div style={{ flex: 1, padding: "13px 14px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: C.ink, lineHeight: 1.25 }}>{p.nameEn}</div>
-                    <div style={{ fontSize: 12, color: C.inkLight, marginTop: 2 }}>{p.nameCn}</div>
-                    {p.mods.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 7 }}>
-                        {p.mods.map(m => (
-                          <span key={m} style={{ fontSize: 10.5, fontWeight: 700, color: C.gold,
-                            background: C.goldPale, border: `1px solid ${C.goldLight}`,
-                            borderRadius: 6, padding: "2px 7px" }}>{m}</span>
-                        ))}
+          {/* ── 饮品:横向 lookbook,大图 + 配方,露出下一张邀请滑动 ── */}
+          {pickTab === "drinks" && (
+            <div key="drinks" className="ygf-panel">
+              <div className="pk-rail">
+                {DRINK_PICKS.map((raw, i) => {
+                  const p = resolvePick(raw);
+                  return (
+                    <article key={p.key} className="pk-card">
+                      <div className="pk-shot">
+                        {p.img
+                          ? <img src={p.img} alt={p.nameEn}
+                              onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                          : <span className="pk-shot-fb">🧋</span>}
+                        <span className="pk-no">{String(i + 1).padStart(2, "0")}</span>
                       </div>
-                    )}
-                    <div style={{ marginTop: 9, fontSize: 19, fontWeight: 900, color: C.red }}>
-                      ${p.total.toFixed(2)}
-                      <span style={{ fontSize: 10, fontWeight: 600, color: C.inkLight, marginLeft: 4 }}>+Tax</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      <div className="pk-body">
+                        <div className="pk-name">{p.nameEn}</div>
+                        <div className="pk-name-cn">{p.nameCn}</div>
+                        <div className="pk-mods">
+                          {p.mods.map(m => <span key={m} className="pk-mod">{m}</span>)}
+                        </div>
+                        <div className="pk-price">
+                          ${p.total.toFixed(2)}<span>+Tax</span>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+                <div className="pk-rail-end" aria-hidden="true" />
+              </div>
+              <div style={{ textAlign: "center", fontSize: 11, color: C.inkLight, marginTop: 10 }}>
+                ← 左右滑动看全部 {DRINK_PICKS.length} 款 · swipe →
+              </div>
+            </div>
+          )}
 
-          <div style={{ marginTop: 18, background: C.goldPale, borderRadius: 14,
-            padding: "14px 16px", border: `1px solid ${C.goldLight}`, textAlign: "center" }}>
-            <div style={{ fontSize: 13.5, fontWeight: 800, color: C.gold }}>Order at the counter</div>
-            <div style={{ fontSize: 11.5, color: C.inkMid, marginTop: 3 }}>
+          {/* ── 小吃:两列网格,配麻辣烫刚好 ── */}
+          {pickTab === "snacks" && (
+            <div key="snacks" className="ygf-panel"
+              style={{ padding: "16px 16px 0", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
+              {SNACK_PICKS.map(raw => {
+                const p = resolvePick(raw);
+                return (
+                  <article key={p.key} className="pk-tile">
+                    <div className="pk-shot">
+                      {p.img
+                        ? <img src={p.img} alt={p.nameEn}
+                            onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                        : <span className="pk-shot-fb">🍽</span>}
+                    </div>
+                    <div className="pk-body" style={{ padding: "11px 12px 13px" }}>
+                      <div className="pk-name" style={{ fontSize: 14.5 }}>{p.nameEn}</div>
+                      <div className="pk-name-cn">{p.nameCn}</div>
+                      {p.mods.length > 0 && (
+                        <div className="pk-mods">
+                          {p.mods.map(m => <span key={m} className="pk-mod">{m}</span>)}
+                        </div>
+                      )}
+                      <div className="pk-price" style={{ fontSize: 19, marginTop: 7 }}>
+                        ${p.total.toFixed(2)}<span>+Tax</span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 到柜台加点 */}
+          <div style={{ margin: "20px 16px 0", background: C.goldPale, borderRadius: 16,
+            padding: "16px", border: `1.5px solid ${C.goldLight}`, textAlign: "center" }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: C.gold }}>Order at the counter</div>
+            <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 4, lineHeight: 1.6 }}>
               到柜台加点即可 · 和麻辣烫一起上
             </div>
           </div>
@@ -649,6 +752,41 @@ function MainMenu() {
           </div>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════
+          SECTION: 特色菜品 —— FEATURED 为空时整个标签不出现
+      ═══════════════════════════════════════════════ */}
+      {activeSection === "featured" && FEATURED.length > 0 && (
+        <div style={{ padding: "20px 16px 48px" }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 3 }}>SIGNATURE</div>
+          <div style={{ fontSize: 25, fontWeight: 900, color: C.ink, marginTop: 5, lineHeight: 1.15, letterSpacing: -0.5 }}>
+            特色菜品
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 16 }}>
+            {FEATURED.map(f => (
+              <article key={f.key} className="pk-tile">
+                <div className="pk-shot" style={{ aspectRatio: "16/10" }}>
+                  {f.img
+                    ? <img src={f.img} alt={f.nameEn}
+                        onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                    : <span className="pk-shot-fb">⭐</span>}
+                  {f.tag && <span className="pk-no" style={{ letterSpacing: 1 }}>{f.tag}</span>}
+                </div>
+                <div className="pk-body">
+                  <div className="pk-name" style={{ fontSize: 18 }}>{f.nameEn}</div>
+                  <div className="pk-name-cn" style={{ fontSize: 13 }}>{f.nameCn}</div>
+                  {f.blurbEn && <div style={{ fontSize: 13, color: C.inkMid, marginTop: 8, lineHeight: 1.55 }}>{f.blurbEn}</div>}
+                  {f.blurbCn && <div style={{ fontSize: 12, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{f.blurbCn}</div>}
+                  {f.price != null && (
+                    <div className="pk-price" style={{ marginTop: 9 }}>${f.price.toFixed(2)}<span>+Tax</span></div>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {/* Long-press modal */}
       {enlargedItem && (
