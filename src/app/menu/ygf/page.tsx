@@ -61,9 +61,10 @@ const YGF_CSS = `
   touch-action:pan-y; -webkit-tap-highlight-color:transparent;
 }
 .orb-card{
-  position:absolute; top:50%; left:50%;
-  /* --orb-card-h 由 EntryOrbit 按轨道区实测高度写入,保证最前那张不压到指示点 */
-  width:min(60vw,238px); height:var(--orb-card-h,clamp(258px,37vh,338px));
+  /* 尺寸与轨道中心由 EntryOrbit 按轨道区实测写入(--orb-card-w/-h, --orb-cy),
+     括号里是首帧兜底 */
+  position:absolute; top:var(--orb-cy,50%); left:50%;
+  width:var(--orb-card-w,min(60vw,238px)); height:var(--orb-card-h,clamp(258px,37vh,338px));
   border-radius:22px; overflow:hidden; cursor:pointer;
   border:2px solid; box-shadow:0 18px 44px rgba(0,0,0,.52);
   display:flex; flex-direction:column; justify-content:flex-end;
@@ -372,21 +373,34 @@ const YGF_CSS = `
    ══════════════════════════════════════════════════════════ */
 const ORB_N = ENTRY_CARDS.length;
 const ORB_STEP = 360 / ORB_N;
-const ORB_RX = 100;              // 轨道横半径
-const ORB_KY = 56;               // 纵向压扁量 —— 决定后面那张露出多少
 const ORB_SPEED = 360 / 20000;   // 一圈 20 秒
+
+/* ── 轨道几何:全部按轨道区(stage)实测尺寸算 ──────────────────
+   牌高 h、牌宽 w,前后压扁量 KY = ORB_KY_K·h,横半径 RX。
+   θ=0 最前(缩放 1,中心 cy+KY);θ=180° 最后(缩放 .6,中心 cy−KY)。
+   竖向占用:最后那张上缘 cy−KY−.3h … 最前那张下缘 cy+KY+.5h
+            = 2KY + .8h = ORB_SPAN_K·h,上下各留 ORB_EDGE。
+   后排露出 = 前排上缘 − 后排上缘 = 2KY − .2h = .14h(与牌高成比例)。
+   横向:两侧那张(缩放 .8)外缘贴屏边 → RX = vw/2 − .4w,
+         露出前排的部分 = RX − .1w。 */
+const ORB_KY_K = 0.17;
+const ORB_SPAN_K = 2 * ORB_KY_K + 0.8;   // 1.14
+const ORB_EDGE = 8;
+const ORB_ASPECT = 0.70;                  // 宽 / 高,接近 2:3 竖版图
+const ORB_SIDE_MIN = 44;                  // 前排左右至少各露出这么多给两侧的牌
+const ORB_CARD_MIN = 220;
+const ORB_CARD_MAX = 560;                 // 平板上别无限长大
+
+type OrbGeom = { rx: number; ky: number };
 
 /* 落地页 = 视口里 Header 下沿到 BottomNav 上沿之间的整块。
    两者高度都会变(过敏源行随屏宽折行、safe-area、iOS 工具栏收放),所以实测。
-   牌高跟着轨道区走:最前那张中心在 stage 中线下方 ORB_KY、缩放 1,
-   下缘 = H/2 + KY + h/2 ≤ H − 8  →  h ≤ H − 2·KY − 16。
    屏幕矮到连最小牌都放不下时(iPhone SE),落地页加高、页面略滚动,
    而不是让牌压住指示点。 */
-const ORB_CARD_MAX = 338;        // 牌高上限(A2 再放大)
-const ORB_CARD_MIN = 220;
-const ORB_CARD_PAD = 2 * ORB_KY + 16;
-
-function useFillViewport(ref: React.RefObject<HTMLDivElement | null>) {
+function useOrbitFit(
+  ref: React.RefObject<HTMLDivElement | null>,
+  onFit: (g: OrbGeom) => void,
+) {
   useLayoutEffect(() => {
     const el = ref.current;
     const stage = el?.querySelector<HTMLElement>(".orb-stage");
@@ -398,10 +412,28 @@ function useFillViewport(ref: React.RefObject<HTMLDivElement | null>) {
       const navH = nav ? nav.getBoundingClientRect().height : 0;
       const chrome = el.clientHeight - stage.clientHeight;      // 标题 + 指示点 + 午餐横幅
       const avail = Math.floor(window.innerHeight - top - navH);
-      const wrapH = Math.max(avail, chrome + ORB_CARD_MIN + ORB_CARD_PAD);
-      const cardH = Math.min(ORB_CARD_MAX, wrapH - chrome - ORB_CARD_PAD);
+      const wrapH = Math.max(avail, Math.ceil(chrome + 2 * ORB_EDGE + ORB_SPAN_K * ORB_CARD_MIN));
+      const H = wrapH - chrome;
+      const vw = stage.clientWidth;
+
+      // 高度能给多少
+      let h = Math.min(ORB_CARD_MAX, (H - 2 * ORB_EDGE) / ORB_SPAN_K);
+      // 宽度上限:左右各留 ORB_SIDE_MIN 给两侧的牌;按比例反推高度
+      const wMax = vw - 2 * ORB_SIDE_MIN;
+      let w = h * ORB_ASPECT;
+      if (w > wMax) { w = wMax; h = Math.min(h, w / 0.62); }   // 窄屏允许略瘦长一点
+      h = Math.max(ORB_CARD_MIN, Math.floor(h));
+      w = Math.floor(w);
+
+      const ky = ORB_KY_K * h;
+      const rx = Math.max(ORB_SIDE_MIN + 0.1 * w, vw / 2 - 0.4 * w);
+      const cy = H / 2 - 0.1 * h;          // 让「最后上缘 … 最前下缘」这段在 stage 里居中
+
       el.style.setProperty("--orb-h", `${wrapH}px`);
-      el.style.setProperty("--orb-card-h", `${cardH}px`);
+      el.style.setProperty("--orb-card-h", `${h}px`);
+      el.style.setProperty("--orb-card-w", `${w}px`);
+      el.style.setProperty("--orb-cy", `${cy.toFixed(1)}px`);
+      onFit({ rx, ky });
     };
     fit();
     const ro = new ResizeObserver(fit);
@@ -415,12 +447,12 @@ function useFillViewport(ref: React.RefObject<HTMLDivElement | null>) {
       window.removeEventListener("resize", fit);
       window.visualViewport?.removeEventListener("resize", fit);
     };
-  }, [ref]);
+  }, [ref, onFit]);
 }
 
 function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
   const wrap = useRef<HTMLDivElement>(null);
-  useFillViewport(wrap);
+  const geom = useRef<OrbGeom>({ rx: 100, ky: 56 });   // 首帧兜底,测量后覆盖
   const cards = useRef<(HTMLDivElement | null)[]>([]);
   const angle = useRef(0);
   const goal = useRef<number | null>(null);
@@ -437,8 +469,8 @@ function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
       const el = cards.current[i];
       if (!el) continue;
       const th = ((angle.current + i * ORB_STEP) * Math.PI) / 180;
-      const x = ORB_RX * Math.sin(th);
-      const y = ORB_KY * Math.cos(th);
+      const x = geom.current.rx * Math.sin(th);
+      const y = geom.current.ky * Math.cos(th);
       const d = (Math.cos(th) + 1) / 2;            // 0 = 最后, 1 = 最前
       const s = 0.60 + 0.40 * d;
       el.style.transform =
@@ -450,6 +482,9 @@ function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
     const f = ((Math.round(-angle.current / ORB_STEP) % ORB_N) + ORB_N) % ORB_N;
     if (f !== frontRef.current) { frontRef.current = f; setFront(f); }
   }, []);
+
+  const onFit = useCallback((g: OrbGeom) => { geom.current = g; layout(); }, [layout]);
+  useOrbitFit(wrap, onFit);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
