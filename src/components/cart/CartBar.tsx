@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useCart, CartLine, lineUnitPrice, lineSubtotal,
   TeaBaseLabel, SweetLevel, IceLevel,
@@ -34,9 +34,9 @@ function lineSpec(l: CartLine): string[] {
   if (l.milkBase) parts.push(withEn(l.milkBase.label, l.milkBase.labelEn) + (l.milkBase.price ? ` +$${l.milkBase.price.toFixed(2)}` : ''));
   if (l.sweet) parts.push(withEn(l.sweet, SWEET_EN[l.sweet]));
   if (l.ice && l.ice !== '固定') parts.push(withEn(l.ice, ICE_EN[l.ice as IceLevel]));
-  if (l.toppings && l.toppings.length) parts.push(...l.toppings.map(t => `+${t.nameCn} ${t.nameEn}`));
+  if (l.toppings && l.toppings.length) parts.push(...l.toppings.map(t => `+${t.nameCn} ${t.nameEn}${(t.qty ?? 1) > 1 ? ` ×${t.qty}` : ''}`));
   if (l.freeDrink) parts.push(`赠饮 Free: ${l.freeDrink.nameCn} ${l.freeDrink.nameEn} (${l.freeDrink.sweet})${l.freeDrink.price ? ` +$${l.freeDrink.price.toFixed(2)}` : ''}`);
-  if (l.addOns && l.addOns.length) parts.push(...l.addOns.map(a => `+${a.nameCn} ${a.nameEn}`));
+  if (l.addOns && l.addOns.length) parts.push(...l.addOns.map(a => `+${a.nameCn} ${a.nameEn}${(a.qty ?? 1) > 1 ? ` ×${a.qty}` : ''}`));
   return parts;
 }
 
@@ -55,11 +55,30 @@ function QtyStepper({ qty, onChange }: { qty: number; onChange: (q: number) => v
   );
 }
 
+const BAR_CSS = `
+@keyframes cart-bump {
+  0%   { transform:scale(1) }
+  38%  { transform:scale(1.11) }
+  100% { transform:scale(1) }
+}
+.cart-fab-bump{ animation:cart-bump .42s cubic-bezier(.3,1.4,.5,1) both }
+@media (prefers-reduced-motion: reduce){ .cart-fab-bump{ animation:none } }
+`;
+
 export default function CartBar() {
-  const { lines, count, total, setQty, removeLine, clear } = useCart();
+  const { lines, count, total, bump, setQty, removeLine, clear } = useCart();
   const [open, setOpen] = useState(false);
   const [staffView, setStaffView] = useState(false);
   const [askClear, setAskClear] = useState(false);
+
+  // 加入清单后让按钮弹一下 —— 和 toast 一起构成"确实加进去了"的确认
+  const [bumping, setBumping] = useState(false);
+  useEffect(() => {
+    if (bump === 0) return;
+    setBumping(true);
+    const t = setTimeout(() => setBumping(false), 440);
+    return () => clearTimeout(t);
+  }, [bump]);
 
   if (count === 0) return null;
 
@@ -67,10 +86,12 @@ export default function CartBar() {
 
   return (
     <>
+      <style>{BAR_CSS}</style>
       {/* 悬浮购物车按钮 */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
+          className={bumping ? 'cart-fab-bump' : undefined}
           style={{
             position: 'fixed', right: 16,
             bottom: 'calc(76px + env(safe-area-inset-bottom))',

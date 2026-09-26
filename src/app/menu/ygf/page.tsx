@@ -26,6 +26,52 @@ const C = {
   borderStrong: "#C8A878",
 };
 
+const YGF_CSS = `
+/* 横向手风琴 —— 选中的汤底撑开,其余收成彩条 */
+.ygf-acc{ display:flex; gap:6px; height:124px }
+.ygf-bar{
+  position:relative; overflow:hidden; cursor:pointer; padding:0;
+  border:2px solid rgba(0,0,0,.06); border-radius:14px;
+  transition: flex-grow .3s cubic-bezier(.22,1,.36,1),
+              flex-basis .3s cubic-bezier(.22,1,.36,1),
+              box-shadow .25s ease, border-color .25s ease;
+}
+.ygf-bar[data-on="0"]{ flex:0 0 46px; box-shadow:none }
+.ygf-bar[data-on="1"]{ flex:1 1 auto; box-shadow:0 4px 16px rgba(0,0,0,.18); border-color:rgba(0,0,0,.14) }
+.ygf-bar-vert{
+  position:absolute; inset:0; display:grid; place-items:center;
+  writing-mode:vertical-rl; text-orientation:mixed;
+  font-size:13px; font-weight:800; color:#fff; letter-spacing:2px;
+  text-shadow:0 1px 4px rgba(0,0,0,.45);
+  transition:opacity .2s ease;
+}
+.ygf-bar[data-on="1"] .ygf-bar-vert{ opacity:0; pointer-events:none }
+.ygf-bar-wide{
+  position:absolute; left:0; right:0; bottom:0; padding:10px 12px;
+  background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
+  text-align:left; opacity:0; transition:opacity .25s ease .08s;
+}
+.ygf-bar[data-on="1"] .ygf-bar-wide{ opacity:1 }
+
+/* 详情随选中切换 */
+@keyframes ygf-panel-in{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
+.ygf-panel{ animation:ygf-panel-in .26s cubic-bezier(.22,1,.36,1) both }
+
+/* 按下反馈 */
+.ygf-root button, .ygf-root a[data-press], .ygf-root [data-press]{
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .06s ease-out, filter .06s ease-out;
+}
+.ygf-root button:active, .ygf-root a[data-press]:active, .ygf-root [data-press]:active{
+  transform:scale(.955); filter:brightness(.90);
+}
+@media (prefers-reduced-motion: reduce){
+  .ygf-bar, .ygf-bar-vert, .ygf-bar-wide, .ygf-panel{ transition:none; animation:none }
+  .ygf-root button, .ygf-root [data-press]{ transition:none }
+  .ygf-root button:active, .ygf-root [data-press]:active{ transform:none; filter:none }
+}
+`;
+
 type Phase = "splash" | "step1" | "step2" | "step3" | "menu";
 
 // ── Onboarding steps ──────────────────────────────────────
@@ -236,6 +282,7 @@ function StepGuide({ stepIdx, onNext, onSkip }: { stepIdx: number; onNext: () =>
 function MainMenu() {
   const [activeSection, setActiveSection] = useState<"broth" | "items" | "sauce" | "picks">("broth");
   const [pickTab, setPickTab] = useState<"drinks" | "snacks">("drinks");
+  const [brothIdx, setBrothIdx] = useState(0);
   const [itemCat, setItemCat] = useState("meat");
   const [sauceCat, setSauceCat] = useState(0);
   const [enlargedItem, setEnlargedItem] = useState<MenuItem | null>(null);
@@ -256,6 +303,8 @@ function MainMenu() {
 
   return (
     <>
+    <style>{YGF_CSS}</style>
+    <div className="ygf-root">
     <AppShell
       nav={
         <>
@@ -329,57 +378,74 @@ function MainMenu() {
             <div style={{ fontSize: 20, fontWeight: 900, color: C.red, whiteSpace: "nowrap" }}>{PRICING.perLbLabel}</div>
           </div>
 
-          {BROTHS.map(broth => (
-            <Link key={broth.id} href={`/menu/ygf/broth/${broth.id}`}
-              style={{ textDecoration: "none", display: "flex", background: C.bgCard,
-                borderRadius: 18, overflow: "hidden", border: `2px solid ${C.border}`,
-                boxShadow: "0 2px 10px rgba(0,0,0,0.05)", minHeight: 120 }}>
-
-              {/* Left: image */}
-              <div style={{ width: 120, flexShrink: 0, background: broth.color, overflow: "hidden", position: "relative" }}>
-                {broth.img
-                  ? <img src={broth.img} alt={broth.zh} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40 }}>🍲</div>
-                }
-                {/* Badge over image */}
-                <div style={{ position: "absolute", bottom: 6, left: 6,
-                  background: C.gold, color: "#fff", fontSize: 9, fontWeight: 800,
-                  padding: "2px 7px", borderRadius: 5 }}>{broth.badge}</div>
-              </div>
-
-              {/* Right: info */}
-              <div style={{ flex: 1, padding: "16px 14px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{broth.zh}</div>
-                  <div style={{ fontSize: 11, color: C.inkLight, marginTop: 3 }}>{broth.en}</div>
-                  <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 7, lineHeight: 1.5 }}>{broth.taglineEn}</div>
-                  <div style={{ fontSize: 12, color: C.inkLight, marginTop: 3, lineHeight: 1.5 }}>{broth.tagline}</div>
-
-                  {/* 辣度 —— 每档单独一行,辣椒数按档位 */}
-                  <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 3 }}>
-                    {broth.spicyLevels.length === 0
-                      ? <span style={{ fontSize: 11.5, color: C.inkMid }}>🍃 {broth.spicy}</span>
-                      : broth.spicyLevels.map(lv => (
-                          <span key={lv.en} style={{ fontSize: 11.5, color: C.inkMid, display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ minWidth: 72 }}>{lv.en} {lv.zh}</span>
-                            <span style={{ letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
-                          </span>
-                        ))}
-                  </div>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, gap: 8 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 800, whiteSpace: "nowrap",
-                    color: broth.surcharge ? "#fff" : C.inkMid,
-                    background: broth.surcharge ? C.red : "transparent",
-                    border: broth.surcharge ? "none" : `1px solid ${C.border}`,
-                    borderRadius: 7, padding: "3px 9px" }}>
-                    {broth.surcharge ? `+$${broth.surcharge.toFixed(2)} / bowl` : "Included 免费"}
+          {/* 手风琴选择条 —— 五款一屏看完,点哪款哪款撑开 */}
+          <div className="ygf-acc">
+            {BROTHS.map((b, i) => {
+              const on = i === brothIdx;
+              return (
+                <button key={b.id} className="ygf-bar" data-on={on ? "1" : "0"}
+                  onClick={() => setBrothIdx(i)} aria-label={b.zh}
+                  style={{ background: b.color }}>
+                  {b.img && (
+                    <img src={b.img} alt="" aria-hidden="true"
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%",
+                        objectFit: "cover", opacity: on ? 1 : 0.34, transition: "opacity .28s ease" }}
+                      onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                  )}
+                  <span className="ygf-bar-vert">{b.zh}</span>
+                  <span className="ygf-bar-wide">
+                    <span style={{ display: "block", fontSize: 16, fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>{b.zh}</span>
+                    <span style={{ display: "block", fontSize: 10.5, color: "rgba(255,255,255,0.86)", marginTop: 2 }}>{b.en}</span>
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.red, whiteSpace: "nowrap" }}>查看搭配 ›</span>
+                  <span style={{ position: "absolute", top: 6, left: 6, background: C.gold, color: "#fff",
+                    fontSize: 8.5, fontWeight: 800, padding: "2px 6px", borderRadius: 5,
+                    opacity: on ? 1 : 0, transition: "opacity .2s ease", whiteSpace: "nowrap" }}>{b.badge}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 选中汤底的详情 —— 全宽,读得清 */}
+          {(() => {
+            const b = BROTHS[brothIdx];
+            return (
+              <div key={b.id} className="ygf-panel"
+                style={{ background: C.bgCard, borderRadius: 18, border: `2px solid ${C.border}`,
+                  padding: "16px 16px 14px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
+                <div style={{ fontSize: 20, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{b.zh}</div>
+                <div style={{ fontSize: 12, color: C.inkLight, marginTop: 3 }}>{b.en}</div>
+                <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 9, lineHeight: 1.55 }}>{b.taglineEn}</div>
+                <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{b.tagline}</div>
+
+                {/* 辣度 —— 每档单独一行 */}
+                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
+                  {b.spicyLevels.length === 0
+                    ? <span style={{ fontSize: 12.5, color: C.inkMid }}>🍃 {b.spicy}</span>
+                    : b.spicyLevels.map(lv => (
+                        <span key={lv.en} style={{ fontSize: 12.5, color: C.inkMid, display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ minWidth: 88 }}>{lv.en} {lv.zh}</span>
+                          <span style={{ letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
+                        </span>
+                      ))}
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, gap: 10 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap",
+                    color: b.surcharge ? "#fff" : C.inkMid,
+                    background: b.surcharge ? C.red : "transparent",
+                    border: b.surcharge ? "none" : `1px solid ${C.border}`,
+                    borderRadius: 8, padding: "5px 11px" }}>
+                    {b.surcharge ? `+$${b.surcharge.toFixed(2)} / bowl` : "Included 免费"}
+                  </span>
+                  <Link href={`/menu/ygf/broth/${b.id}`} data-press
+                    style={{ textDecoration: "none", background: C.red, color: "#fff",
+                      fontSize: 13, fontWeight: 800, borderRadius: 10, padding: "9px 16px", whiteSpace: "nowrap" }}>
+                    查看搭配 Combos ›
+                  </Link>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+          })()}
         </div>
       )}
 
@@ -621,6 +687,7 @@ function MainMenu() {
       )}
       </div>
     </AppShell>
+    </div>
 
     <PsstWidget open={psst} onClose={() => setPsst(false)} channelUrl={YGF_CHANNEL} />
     </>

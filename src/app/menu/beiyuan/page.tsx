@@ -65,13 +65,35 @@ const BY_CSS = `
 .by-swap-l { animation: by-in-l .24s cubic-bezier(.22,.9,.3,1) both; }
 .by-swap-r { animation: by-in-r .24s cubic-bezier(.22,.9,.3,1) both; }
 .by-sheet  { animation: by-sheet-up .26s cubic-bezier(.22,1,.36,1) both; }
+/* CHIP —— 选中的标签真实变宽,相邻标签跟着让位 */
+.by-chip{
+  flex-shrink:0; border:none; cursor:pointer; border-radius:999px;
+  font-weight:700; white-space:nowrap;
+  transition: padding .26s cubic-bezier(.22,1,.36,1),
+              font-size .26s cubic-bezier(.22,1,.36,1),
+              background-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.by-chip[data-on="0"]{ padding:8px 16px; font-size:13px }
+.by-chip[data-on="1"]{ padding:9px 21px; font-size:14.5px }
+.by-subchip{
+  flex-shrink:0; cursor:pointer; border-radius:14px; text-align:left;
+  transition: padding .26s cubic-bezier(.22,1,.36,1),
+              min-width .26s cubic-bezier(.22,1,.36,1),
+              background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.by-subchip[data-on="0"]{ padding:12px 16px; min-width:112px }
+.by-subchip[data-on="1"]{ padding:13px 20px; min-width:134px }
+@media (prefers-reduced-motion: reduce){
+  .by-chip, .by-subchip{ transition:background-color .2s ease, color .2s ease }
+}
+
 /* 按下反馈 —— 手指按下去屏幕要有回应 */
 .by-root button, .by-root [data-press] {
   -webkit-tap-highlight-color: transparent;
-  transition: transform .09s ease-out, filter .09s ease-out;
+  transition: transform .06s ease-out, filter .06s ease-out;
 }
 .by-root button:active, .by-root [data-press]:active {
-  transform: scale(.972); filter: brightness(.94);
+  transform: scale(.955); filter: brightness(.90);
 }
 @media (prefers-reduced-motion: reduce) {
   .by-swap-l, .by-swap-r, .by-sheet { animation: none; }
@@ -846,13 +868,12 @@ export default function BeiYuanPage() {
               <button
                 key={section.label}
                 onClick={() => goTab(section.tabs[0].id)}
+                className="by-chip"
+                data-on={isActive ? '1' : '0'}
                 style={{
-                  flexShrink: 0, border: 'none', cursor: 'pointer', borderRadius: 999,
-                  padding: '8px 18px', fontWeight: 700, fontSize: 13,
                   background: isActive ? section.colorBgActive : 'rgba(255,255,255,0.12)',
                   color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
-                  boxShadow: isActive ? `0 2px 8px ${section.color}66` : 'none',
-                  transition: 'all 0.15s',
+                  boxShadow: isActive ? `0 3px 12px ${section.color}66` : 'none',
                 }}
               >
                 {section.labelEn}
@@ -874,15 +895,12 @@ export default function BeiYuanPage() {
                   key={tab.id}
                   data-tab={tab.id}
                   onClick={() => goTab(tab.id)}
+                  className="by-subchip"
+                  data-on={isActive ? '1' : '0'}
                   style={{
-                    flexShrink: 0,
                     border: isActive ? `2px solid ${activeSection.color}` : '2px solid rgba(255,255,255,0.15)',
-                    cursor: 'pointer', borderRadius: 14,
-                    padding: '12px 18px', textAlign: 'left' as const,
-                    minWidth: 120,
                     background: isActive ? activeSection.colorBg : 'rgba(255,255,255,0.08)',
-                    transition: 'all 0.15s',
-                    boxShadow: isActive ? `0 2px 8px ${activeSection.color}44` : 'none',
+                    boxShadow: isActive ? `0 3px 12px ${activeSection.color}44` : 'none',
                   }}
                 >
                   <div style={{ fontSize: 14, fontWeight: 800, color: isActive ? activeSection.color : 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{tab.nameEn}</div>

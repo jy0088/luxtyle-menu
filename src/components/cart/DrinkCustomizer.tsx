@@ -9,7 +9,7 @@ import {
 import { MenuItem, Customization, toppings, TeaBase, milkBaseOptions } from '@/app/menu/beiyuan/menuData';
 
 const C = {
-  brand: '#0D4A2E', text: '#1a1a1a', sub: '#888', faint: '#bbb',
+  brand: '#0D4A2E', text: '#1a1a1a', sub: '#6B6055', faint: '#7F7466',
   muted: '#F0EDE8', border: '#E8E4DE', gold: '#C9A84C',
 };
 
@@ -90,25 +90,32 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
   const [teaBase, setTeaBase] = useState<TeaBase | null>(null); // 不预选,强制客人点
   const [sweet, setSweet] = useState<SweetLevel>(DEFAULT_SWEET);
   const [ice, setIce] = useState<IceLevel>(DEFAULT_ICE);
-  const [picked, setPicked] = useState<Record<string, boolean>>({});
+  const [picked, setPicked] = useState<Record<string, number>>({});   // id → 份数
+  const [trayOpen, setTrayOpen] = useState(false);
   const [milkIdx, setMilkIdx] = useState(0); // 默认纯茶(index 0,$0)
   const [qty, setQty] = useState(1);
 
-  const toggleTopping = (id: string) =>
-    setPicked(p => ({ ...p, [id]: !p[id] }));
+  const bumpTopping = (id: string, d: number) =>
+    setPicked(p => {
+      const q = Math.max(0, Math.min(9, (p[id] ?? 0) + d));
+      const next = { ...p };
+      if (q === 0) delete next[id]; else next[id] = q;
+      return next;
+    });
 
   const sizeUpcharge = hasSize && size === 'L' ? SIZE_L_UPCHARGE : 0;
   const teaBaseUpcharge = hasTeaBase && oolongUpcharge && teaBase === 'O' ? OOLONG_UPCHARGE : 0;
   const milkBaseUpcharge = hasMilkBase ? milkBaseOptions[milkIdx].price : 0;
   const pickedToppings: CartTopping[] = useMemo(
-    () => toppings.filter(t => picked[t.id]).map(t => ({
-      id: t.id, nameCn: t.nameCn, nameEn: t.nameEn, price: t.price,
+    () => toppings.filter(t => (picked[t.id] ?? 0) > 0).map(t => ({
+      id: t.id, nameCn: t.nameCn, nameEn: t.nameEn, price: t.price, qty: picked[t.id],
     })),
     [picked],
   );
+  const toppingCount = pickedToppings.reduce((s, t) => s + (t.qty ?? 1), 0);
+  const toppingSum = pickedToppings.reduce((s, t) => s + t.price * (t.qty ?? 1), 0);
 
-  const unit = item.price + sizeUpcharge + teaBaseUpcharge + milkBaseUpcharge
-    + pickedToppings.reduce((s, t) => s + t.price, 0);
+  const unit = item.price + sizeUpcharge + teaBaseUpcharge + milkBaseUpcharge + toppingSum;
 
   const needsTeaBase = hasTeaBase && teaBase === null; // 必选茶底但还没选
 
@@ -217,42 +224,53 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
           }}>此饮品冰量固定 · Fixed</span>
         </div>
       )}
-      {/* 加料 */}
+      {/* 加料 —— 托盘式:默认收起只占一行,展开后可逐项加减份数 */}
       {hasTopping && (
-        <div style={{ marginTop: 16 }}>
-          <div style={{
-            fontSize: 11, fontWeight: 800, color: C.faint, letterSpacing: 0.6,
-            textTransform: 'uppercase', marginBottom: 8,
-          }}>加料 Toppings · 可多选 Multiple</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {toppings.map(t => {
-              const on = !!picked[t.id];
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => toggleTopping(t.id)}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '9px 12px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
-                    border: on ? `1.5px solid ${C.brand}` : `1.5px solid ${C.border}`,
-                    background: on ? '#F0FDF4' : '#fff',
-                  }}
-                >
-                  <span style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: C.text, display: 'block' }}>
-                      {on ? '✓ ' : ''}{t.nameCn}
+        <div className="lx-tray" data-open={trayOpen ? '1' : '0'} style={{ marginTop: 18 }}>
+          <button className="lx-tray-head" onClick={() => setTrayOpen(o => !o)}>
+            <span style={{ minWidth: 0 }}>
+              <span className="lx-tray-title">加料 TOPPINGS</span>
+              <span className="lx-tray-sum" style={{ display: 'block' }}>
+                {toppingCount === 0
+                  ? `${toppings.length} 种可选 · tap to choose`
+                  : <>已选 {toppingCount} 份 · <b>+${toppingSum.toFixed(2)}</b></>}
+              </span>
+            </span>
+            <span className="lx-chev">▼</span>
+          </button>
+          <div className="lx-tray-body"><div><div className="lx-tray-inner">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {toppings.map(t => {
+                const q = picked[t.id] ?? 0;
+                return (
+                  <div key={t.id} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6,
+                    padding: '8px 9px 8px 11px', borderRadius: 12,
+                    border: q > 0 ? `1.5px solid ${C.brand}` : `1.5px solid ${C.border}`,
+                    background: q > 0 ? '#F0FDF4' : '#fff',
+                  }}>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: C.text, display: 'block', lineHeight: 1.25 }}>
+                        {t.nameCn}
+                      </span>
+                      <span style={{ fontSize: 10, color: C.sub, display: 'block', marginTop: 1 }}>
+                        +${t.price.toFixed(2)}
+                      </span>
                     </span>
-                    <span style={{ fontSize: 10, color: C.sub, display: 'block', marginTop: 1 }}>
-                      {t.nameEn}
-                    </span>
-                  </span>
-                  <span style={{ fontSize: 11, color: C.sub, flexShrink: 0, marginLeft: 6 }}>
-                    +${t.price.toFixed(2)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                    {q === 0 ? (
+                      <button className="lx-add" onClick={() => bumpTopping(t.id, 1)} aria-label={`加 ${t.nameCn}`}>+</button>
+                    ) : (
+                      <span className="lx-step">
+                        <button onClick={() => bumpTopping(t.id, -1)} aria-label="减少">−</button>
+                        <span>{q}</span>
+                        <button onClick={() => bumpTopping(t.id, 1)} aria-label="增加">+</button>
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div></div></div>
         </div>
       )}
 
@@ -267,18 +285,18 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
           <button
             onClick={() => setQty(q => Math.max(1, q - 1))}
             style={{
-              width: 30, height: 30, borderRadius: 8, border: 'none',
-              background: C.muted, fontSize: 18, cursor: 'pointer', color: C.text,
+              width: 40, height: 40, borderRadius: 10, border: 'none',
+              background: C.muted, fontSize: 20, cursor: 'pointer', color: C.text,
             }}
           >−</button>
-          <span style={{ fontSize: 16, fontWeight: 800, minWidth: 20, textAlign: 'center' }}>
+          <span style={{ fontSize: 17, fontWeight: 800, minWidth: 24, textAlign: 'center' }}>
             {qty}
           </span>
           <button
             onClick={() => setQty(q => q + 1)}
             style={{
-              width: 30, height: 30, borderRadius: 8, border: 'none',
-              background: C.muted, fontSize: 18, cursor: 'pointer', color: C.text,
+              width: 40, height: 40, borderRadius: 10, border: 'none',
+              background: C.muted, fontSize: 20, cursor: 'pointer', color: C.text,
             }}
           >+</button>
         </div>
@@ -286,8 +304,8 @@ export default function DrinkCustomizer({ item, custom, oolongUpcharge, onAdded 
           onClick={handleAdd}
           disabled={needsTeaBase}
           style={{
-            flex: 1, height: 50, borderRadius: 14, border: 'none',
-            background: needsTeaBase ? C.faint : C.brand, color: '#fff', fontSize: 15, fontWeight: 800,
+            flex: 1, height: 52, borderRadius: 14, border: 'none',
+            background: needsTeaBase ? C.faint : C.brand, color: '#fff', fontSize: 16, fontWeight: 800,
             cursor: needsTeaBase ? 'not-allowed' : 'pointer',
           }}
         >
