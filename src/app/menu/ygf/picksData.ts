@@ -370,3 +370,91 @@ export const SECRET_MIX = {
   bodyEn: 'One mix we only share with Ma-Fans. Changes every week.',
   bodyCn: '每周一个,只在频道里发。',
 };
+
+/* ═══════════════════════════════════════════════════════════
+   5. 二级横幅 —— 点开在同页展开,不跳页
+   一级名字锁定;二级三级命名见 NAMING.md
+   ═══════════════════════════════════════════════════════════ */
+
+export interface Banner {
+  key: string;
+  emoji: string;
+  titleEn: string;
+  titleCn: string;
+  /** 收起时那一行:告诉他里面有什么,一句话 */
+  hookCn: string;
+  grad: string;
+  edge: string;
+}
+
+// Ma-Fans —— 顺序按确认:店长推荐 → 当季活动 → 会员福利
+export const MAFANS_BANNERS: Banner[] = [
+  { key: 'picks',    emoji: '🧋', titleEn: "Manager's Picks", titleCn: '店长推荐',
+    hookCn: '饮品 8 款 · 小吃 6 款,甜度加料都配好了',
+    grad: 'linear-gradient(120deg,#C8912A,#8A5E12)', edge: '#F5D98A' },
+  { key: 'campaign', emoji: '🧧', titleEn: 'This Season',     titleCn: '当季活动',
+    hookCn: '开学季 · $1.99 盐酥鸡',
+    grad: 'linear-gradient(120deg,#C4181A,#6E0B0D)', edge: '#F2C14E' },
+  { key: 'perks',    emoji: '⭐', titleEn: 'Member Perks',    titleCn: '会员福利',
+    hookCn: '免费加入,三样只在频道给',
+    grad: 'linear-gradient(120deg,#1FA855,#0E6B34)', edge: '#8FE3B4' },
+  { key: 'new',      emoji: '🆕', titleEn: 'New & Limited',   titleCn: '新品 · 限时',
+    hookCn: '这一档现在是空的,有新品才出现',
+    grad: 'linear-gradient(120deg,#0F766E,#064E45)', edge: '#8FE3CE' },
+];
+
+// Ingredients —— 三档;色值跟 TIER_META 对齐
+export const ITEM_BANNERS: Record<SpotlightTier, { hookCn: string; grad: string; edge: string }> = {
+  new:      { hookCn: '刚上台的几样', grad: 'linear-gradient(120deg,#B91C1C,#6E0B0D)', edge: '#F2A9A9' },
+  favorite: { hookCn: '回头客拿得最多的', grad: 'linear-gradient(120deg,#C8912A,#8A5E12)', edge: '#F5D98A' },
+  try:      { hookCn: '第一次来可以大胆试', grad: 'linear-gradient(120deg,#0F766E,#064E45)', edge: '#8FE3CE' },
+};
+
+// Sauce Bar
+export const SAUCE_BANNERS: Banner[] = [
+  { key: 'recipes', emoji: '🥣', titleEn: 'Mix Recipes',      titleCn: '照着调',
+    hookCn: '三个配方,照着放就行',
+    grad: 'linear-gradient(120deg,#B07A2B,#6B4412)', edge: '#E7C87A' },
+  { key: 'know',    emoji: '🫙', titleEn: 'Know Your Sauces', titleCn: '认识调料',
+    hookCn: '芝麻酱、韭菜花、陈醋分别管什么',
+    grad: 'linear-gradient(120deg,#6B5B4E,#3A2C18)', edge: '#D8C6A8' },
+  { key: 'all',     emoji: '📋', titleEn: 'All Sauces',       titleCn: '全部调料',
+    hookCn: '调料台上全部有什么',
+    grad: 'linear-gradient(120deg,#5E4B2E,#2A1F10)', edge: '#C8A878' },
+  { key: 'secret',  emoji: '🤫', titleEn: 'Secret Mixes',     titleCn: '隐藏配方',
+    hookCn: '每周一个,只在频道里发',
+    grad: 'linear-gradient(120deg,#241A14,#0B0705)', edge: '#C8912A' },
+];
+
+/** 各页顶部那两行:进来先说清这页干什么用 */
+export const SECTION_INTRO: Record<EntryId, { en: string; cn: string }> = {
+  mafans: { en: 'Add-ons picked by the manager, plus what members get.',
+            cn: '店长替你配好的加点,和会员能拿到的福利。' },
+  broth:  { en: 'Five broths. Tap one to see what goes into it.',
+            cn: '五款汤底,点开看这一锅是怎么来的。' },
+  items:  { en: 'Over 100 items at the bar — these are worth a closer look.',
+            cn: '台上一百多种,这几样值得看一眼。' },
+  sauce:  { en: 'The sauce bar is free and unlimited. Start with one of these.',
+            cn: '调料台免费、不限量。不知道怎么调,照着下面来。' },
+};
+
+/* ═══════════════════════════════════════════════════════════
+   6. 汤底可公开信息 —— 按 menuData 里的 broth id 填
+   现在留空:面板只显示 menuData 已有的内容,不出现空壳标题。
+   店里确认每款能透露什么之后,逐款补进来即可,页面自动多出对应段落。
+   ═══════════════════════════════════════════════════════════ */
+
+export interface BrothNote {
+  /** 特点 —— 一句话立住这款汤 */
+  charEn?: string;  charCn?: string;
+  /** 原料 —— 只写店里确认可公开的,绝不猜 */
+  madeEn?: string;  madeCn?: string;
+  /** 风味 */
+  tasteEn?: string; tasteCn?: string;
+  /** 适合谁 / 配什么食材 */
+  forEn?: string;   forCn?: string;
+}
+
+export const BROTH_NOTES: Record<string, BrothNote> = {
+  // 例: 'mala': { charCn: '…', madeCn: '…', tasteCn: '…', forCn: '…' },
+};

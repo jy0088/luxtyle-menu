@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { BROTHS, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, getItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
@@ -7,7 +7,9 @@ import PsstWidget from "@/components/ygf/PsstWidget";
 import {
   DRINK_PICKS, SNACK_PICKS, NEW_ARRIVALS, CAMPAIGN, MEMBER_PERKS,
   SPOTLIGHTS, TIER_META, SAUCE_RECIPES, SAUCE_NOTES, SECRET_MIX,
-  ENTRY_CARDS, resolvePick, type SpotlightTier, type EntryId,
+  ENTRY_CARDS, MAFANS_BANNERS, ITEM_BANNERS, SAUCE_BANNERS,
+  SECTION_INTRO, BROTH_NOTES,
+  resolvePick, type SpotlightTier, type EntryId, type Pick,
 } from "./picksData";
 
 // 杨国福 WhatsApp 频道
@@ -15,15 +17,15 @@ const YGF_CHANNEL = "https://whatsapp.com/channel/0029VbDtDTY9RZAO8pD1k33z";
 
 // ── Color tokens ──────────────────────────────────────────
 const C = {
-  bg:       "#FDFAF5",       // warm white
+  bg:       "#FDFAF5",
   bgCard:   "#FFFFFF",
   bgSoft:   "#FFF4E6",
-  gold:     "#C8912A",       // sand gold
+  gold:     "#C8912A",
   goldLight:"#F5D98A",
   goldPale: "#FFF1CC",
-  red:      "#B91C1C",       // deep crimson
+  red:      "#B91C1C",
   redLight: "#FEE2E2",
-  ink:      "#1C1410",       // near-black warm
+  ink:      "#1C1410",
   inkMid:   "#6B5B4E",
   inkLight: "#8A7B66",
   border:   "#E8D9C4",
@@ -31,139 +33,163 @@ const C = {
 };
 
 const YGF_CSS = `
-/* 横向手风琴 —— 选中的汤底撑开,其余收成彩条 */
-.ygf-acc{ display:flex; gap:7px; height:248px }
-.ygf-bar{
-  position:relative; overflow:hidden; cursor:pointer; padding:0;
-  border:2px solid rgba(0,0,0,.06); border-radius:14px;
-  transition: flex-grow .3s cubic-bezier(.22,1,.36,1),
-              flex-basis .3s cubic-bezier(.22,1,.36,1),
-              box-shadow .25s ease, border-color .25s ease;
-}
-.ygf-bar[data-on="0"]{ flex:0 0 50px; box-shadow:none }
-.ygf-bar[data-on="1"]{ flex:1 1 auto; box-shadow:0 4px 16px rgba(0,0,0,.18); border-color:rgba(0,0,0,.14) }
-.ygf-bar-vert{
-  position:absolute; inset:0; display:grid; place-items:center;
-  writing-mode:vertical-rl; text-orientation:mixed;
-  font-size:15px; font-weight:800; color:#fff; letter-spacing:3px;
-  text-shadow:0 1px 4px rgba(0,0,0,.45);
-  transition:opacity .2s ease;
-}
-.ygf-bar[data-on="1"] .ygf-bar-vert{ opacity:0; pointer-events:none }
-.ygf-bar-wide{
-  position:absolute; left:0; right:0; bottom:0; padding:13px 14px;
-  background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
-  text-align:left; opacity:0; transition:opacity .25s ease .08s;
-}
-.ygf-bar[data-on="1"] .ygf-bar-wide{ opacity:1 }
-
-/* ══ 一级入口:横向滚动的大牌 ══ */
-.deck-wrap{
-  padding:16px 0 20px;
+/* ══════════════════════════════════════════════════════════
+   一级入口 —— 轨道(卫星环绕)
+   四张牌 90° 均分在一条椭圆轨道上,始终正面朝向顾客。
+   前面的大、亮、压在上面;后面的小、暗、从上缘露出来。
+   ══════════════════════════════════════════════════════════ */
+.orb-wrap{
+  min-height:calc(100dvh - 190px);
+  display:flex; flex-direction:column; overflow:hidden;
   background:
-    radial-gradient(130% 60% at 50% 0%, rgba(200,145,42,.14), transparent 62%),
+    radial-gradient(120% 55% at 50% 4%, rgba(200,145,42,.17), transparent 62%),
     linear-gradient(170deg,#1B0F08,#0B0604);
-  overflow:hidden;
 }
-.deck-eyebrow{
-  font-size:10px; font-weight:800; letter-spacing:3px;
-  color:rgba(245,217,138,.6); text-align:center; margin-bottom:14px;
+.orb-eyebrow{
+  padding:15px 0 0; text-align:center;
+  font-size:10px; font-weight:800; letter-spacing:3.5px; color:rgba(245,217,138,.55);
 }
-.deck-view{ overflow:hidden; touch-action:pan-y; -webkit-tap-highlight-color:transparent }
-.deck-track{ display:flex; gap:14px; padding:0 16px; will-change:transform }
-.deck-rail-static{
-  display:flex; gap:14px; padding:0 16px; overflow-x:auto;
-  scroll-snap-type:x mandatory; scrollbar-width:none;
+.orb-title{
+  text-align:center; margin-top:9px;
+  font-size:20px; font-weight:900; color:#fff; letter-spacing:.5px;
 }
-.deck-rail-static::-webkit-scrollbar{ display:none }
-.deck-rail-static .deck-card{ scroll-snap-align:center }
-
-/* 竖版大牌 —— 约占屏高 3/5,纯色,大标题大标签 */
-.deck-card{
-  position:relative; flex:0 0 auto;
-  width:min(74vw, 300px);
-  height:clamp(360px, 58vh, 500px);
-  border-radius:24px; overflow:hidden; cursor:pointer;
-  border:2px solid; box-shadow:0 16px 40px rgba(0,0,0,.45);
+.orb-stage{
+  position:relative; flex:1 1 auto;
+  min-height:clamp(348px,49vh,466px);
+  touch-action:pan-y; -webkit-tap-highlight-color:transparent;
+}
+.orb-card{
+  position:absolute; top:50%; left:50%;
+  width:min(60vw,238px); height:clamp(258px,37vh,338px);
+  border-radius:22px; overflow:hidden; cursor:pointer;
+  border:2px solid; box-shadow:0 18px 44px rgba(0,0,0,.52);
   display:flex; flex-direction:column; justify-content:flex-end;
+  will-change:transform,opacity;
 }
-/* 巨大的半透明角标做底纹,避免纯色发空 */
-.deck-wm{
-  position:absolute; top:-14px; right:-18px;
-  font-size:170px; line-height:1; opacity:.10;
+/* 巨大的半透明角标做底纹,纯色牌面不发空 */
+.orb-wm{
+  position:absolute; top:-12px; right:-16px;
+  font-size:150px; line-height:1; opacity:.10;
   transform:rotate(-12deg); pointer-events:none; user-select:none;
 }
-.deck-mark{
-  position:absolute; z-index:2; font-size:17px; line-height:1;
+.orb-mark{
+  position:absolute; z-index:2; font-size:15px; line-height:1;
   text-shadow:0 1px 6px rgba(0,0,0,.6);
 }
-.deck-mark-tl{ top:14px; left:15px }
-.deck-mark-br{ bottom:14px; right:15px; transform:rotate(180deg) }
-
-.deck-face{ position:relative; z-index:3; padding:0 20px 24px }
-.deck-name{
-  font-size:34px; font-weight:900; color:#fff;
-  line-height:1.05; letter-spacing:-1px;
-}
-.deck-name-cn{
-  font-size:14px; font-weight:800; color:rgba(255,255,255,.82);
-  margin-top:7px; letter-spacing:.5px;
-}
-.deck-rule{
-  width:40px; height:3px; border-radius:2px; margin:15px 0 13px;
-  background:rgba(255,255,255,.55);
-}
-.deck-hook{ font-size:15.5px; font-weight:800; color:#fff; line-height:1.45 }
-.deck-hook-en{
-  font-size:11.5px; color:rgba(255,255,255,.62);
-  margin-top:5px; line-height:1.4;
-}
-.deck-go{
-  display:inline-block; margin-top:17px;
+.orb-mark-tl{ top:12px; left:13px }
+.orb-mark-br{ bottom:12px; right:13px; transform:rotate(180deg) }
+.orb-face{ position:relative; z-index:3; padding:0 17px 19px }
+.orb-name{ font-size:27px; font-weight:900; color:#fff; line-height:1.04; letter-spacing:-.8px }
+.orb-name-cn{ font-size:12.5px; font-weight:800; color:rgba(255,255,255,.84); margin-top:6px; letter-spacing:.4px }
+.orb-rule{ width:34px; height:3px; border-radius:2px; margin:12px 0 10px; background:rgba(255,255,255,.55) }
+.orb-hook{ font-size:13.5px; font-weight:800; color:#fff; line-height:1.4 }
+.orb-hook-en{ font-size:10.5px; color:rgba(255,255,255,.6); margin-top:4px; line-height:1.38 }
+.orb-go{
+  display:inline-block; margin-top:13px;
   background:rgba(255,255,255,.95); color:#14100C;
-  border-radius:10px; padding:9px 16px;
-  font-size:13px; font-weight:900; letter-spacing:.3px;
+  border-radius:9px; padding:8px 14px;
+  font-size:12px; font-weight:900; letter-spacing:.3px;
 }
-.deck-hint{
-  margin-top:16px; text-align:center;
-  font-size:11px; color:rgba(255,255,255,.4); letter-spacing:.5px;
+/* 轨道指示 + 提示 */
+.orb-foot{ padding:2px 0 14px; display:flex; flex-direction:column; align-items:center; gap:11px }
+.orb-dots{ display:flex; align-items:center; gap:9px }
+.orb-dot{
+  width:8px; height:8px; padding:0; border-radius:50%; cursor:pointer;
+  border:none; background:rgba(245,217,138,.28); transition:all .25s ease;
 }
+.orb-dot[data-on="1"]{ width:22px; border-radius:4px; background:#F5D98A }
+.orb-hint{ font-size:10.5px; color:rgba(255,255,255,.38); letter-spacing:.4px }
+.orb-step{
+  width:40px; height:40px; border-radius:50%; cursor:pointer;
+  border:1.5px solid rgba(245,217,138,.4); background:rgba(255,255,255,.07);
+  color:#F5D98A; font-size:19px; line-height:1;
+}
+/* 午餐横幅 —— 钉在落地页最下面 */
+.orb-lunch{
+  margin-top:auto; background:#C8912A;
+  padding:11px 18px calc(11px + env(safe-area-inset-bottom));
+  display:flex; align-items:center; justify-content:center; gap:10px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   二级横幅 —— 点开在同页展开,其他退让缩小
+   ══════════════════════════════════════════════════════════ */
+.acc2{ display:flex; flex-direction:column; gap:12px }
+.acc2-item{
+  border-radius:18px; overflow:hidden; border:2px solid;
+  box-shadow:0 4px 16px rgba(0,0,0,.09);
+  scroll-margin-top:132px;
+  transition:transform .26s cubic-bezier(.22,1,.36,1), opacity .26s ease, box-shadow .26s ease;
+}
+.acc2-item[data-on="0"]{ transform:scale(.978); opacity:.9 }
+.acc2-item[data-on="1"]{ box-shadow:0 12px 32px rgba(0,0,0,.17) }
+.acc2-bar{
+  width:100%; display:flex; align-items:center; gap:13px;
+  padding:15px 16px; border:none; cursor:pointer; text-align:left;
+  font:inherit; color:#fff; position:relative; overflow:hidden;
+}
+.acc2-item[data-on="0"] .acc2-bar{ padding:13px 16px }
+.acc2-chip{
+  flex-shrink:0; width:42px; height:42px; border-radius:13px;
+  display:grid; place-items:center; font-size:21px;
+  background:rgba(255,255,255,.17); border:1px solid rgba(255,255,255,.22);
+}
+.acc2-t{ min-width:0; flex:1 }
+.acc2-t b{ display:block; font-size:17px; font-weight:900; letter-spacing:-.2px; line-height:1.15 }
+.acc2-t s{ display:block; text-decoration:none; font-size:12px; font-weight:700; color:rgba(255,255,255,.82); margin-top:2px }
+.acc2-t i{
+  display:block; font-style:normal; font-size:11px;
+  color:rgba(255,255,255,.72); margin-top:5px; line-height:1.4;
+}
+.acc2-item[data-on="1"] .acc2-t i{ display:none }
+.acc2-chev{
+  flex-shrink:0; font-size:12px; color:rgba(255,255,255,.8);
+  transition:transform .26s cubic-bezier(.22,1,.36,1);
+}
+.acc2-item[data-on="1"] .acc2-chev{ transform:rotate(180deg) }
+.acc2-panel{
+  background:#FFFDF8; display:grid; grid-template-rows:0fr;
+  transition:grid-template-rows .3s cubic-bezier(.22,1,.36,1);
+}
+.acc2-item[data-on="1"] .acc2-panel{ grid-template-rows:1fr }
+.acc2-panel > div{ overflow:hidden }
+.acc2-inner{ padding:15px 15px 18px }
+
+/* 三级切换(饮品 / 小吃) */
+.acc3{ display:flex; gap:8px; margin-bottom:14px }
+.acc3 button{
+  flex:1; padding:11px 0; border-radius:12px; cursor:pointer;
+  border:2px solid #E8D9C4; background:#fff;
+  font-size:13.5px; font-weight:800; color:#8A7B66; font-family:inherit;
+}
+.acc3 button[data-on="1"]{ border-color:#C8912A; background:#FFF1CC; color:#C8912A }
 
 /* ── Ma-Fans:当季活动 ── */
 .mf-season{ display:flex; align-items:center; gap:11px }
 .mf-season-line{ flex:1; height:1px; background:linear-gradient(90deg,transparent,#C8912A,transparent) }
-.mf-season-en{
-  font-size:12px; font-weight:900; color:#C8912A; letter-spacing:3.5px; white-space:nowrap;
-}
-.mf-season-cn{
-  text-align:center; font-size:23px; font-weight:900; color:#1C1410;
-  margin-top:7px; letter-spacing:1px;
-}
+.mf-season-en{ font-size:11.5px; font-weight:900; color:#C8912A; letter-spacing:3.5px; white-space:nowrap }
+.mf-season-cn{ text-align:center; font-size:21px; font-weight:900; color:#1C1410; margin-top:7px; letter-spacing:1px }
 .mf-offer{
-  display:flex; gap:0; margin-top:15px; border-radius:20px; overflow:hidden;
+  display:flex; gap:0; margin-top:14px; border-radius:18px; overflow:hidden;
   background:linear-gradient(135deg,#7B1113,#4A0A0B);
   border:2px solid #C8912A; box-shadow:0 8px 26px rgba(74,10,11,.28);
 }
-.mf-offer-shot{
-  flex:0 0 40%; position:relative; display:grid; place-items:center;
-  background:#5E0D0E; overflow:hidden;
-}
+.mf-offer-shot{ flex:0 0 40%; position:relative; display:grid; place-items:center; background:#5E0D0E; overflow:hidden }
 .mf-offer-shot img{ width:100%; height:100%; object-fit:cover; display:block }
-.mf-offer-info{ flex:1; padding:15px 15px 16px; display:flex; flex-direction:column; min-width:0 }
+.mf-offer-info{ flex:1; padding:14px 14px 15px; display:flex; flex-direction:column; min-width:0 }
 .mf-excl{
   display:inline-block; align-self:flex-start;
   font-size:9.5px; font-weight:900; letter-spacing:.8px;
   color:#4A0A0B; background:linear-gradient(160deg,#FFE9AE,#F2C14E);
   border-radius:6px; padding:3px 8px; white-space:nowrap;
 }
-.mf-offer-name{ display:block; font-size:19px; font-weight:900; color:#fff; margin-top:9px; line-height:1.15 }
-.mf-offer-cn{ display:block; font-size:13px; color:rgba(255,255,255,.7); margin-top:2px }
-.mf-offer-price{ display:flex; align-items:baseline; gap:8px; margin-top:auto; padding-top:12px }
-.mf-offer-price s{ font-size:13px; color:rgba(255,255,255,.45); font-weight:700 }
-.mf-offer-price b{ font-size:34px; font-weight:900; color:#F2C14E; letter-spacing:-1px; line-height:1 }
+.mf-offer-name{ display:block; font-size:18px; font-weight:900; color:#fff; margin-top:8px; line-height:1.15 }
+.mf-offer-cn{ display:block; font-size:12.5px; color:rgba(255,255,255,.7); margin-top:2px }
+.mf-offer-price{ display:flex; align-items:baseline; gap:8px; margin-top:auto; padding-top:11px }
+.mf-offer-price s{ font-size:12.5px; color:rgba(255,255,255,.45); font-weight:700 }
+.mf-offer-price b{ font-size:31px; font-weight:900; color:#F2C14E; letter-spacing:-1px; line-height:1 }
 .mf-rules{
-  display:flex; flex-direction:column; gap:7px;
-  margin-top:12px; padding:13px 15px;
+  display:flex; flex-direction:column; gap:7px; margin-top:12px; padding:13px 15px;
   background:#FFF1CC; border:1.5px solid #F5D98A; border-radius:14px;
 }
 .mf-rule{ display:flex; align-items:flex-start; gap:9px }
@@ -173,9 +199,9 @@ const YGF_CSS = `
 
 /* ── Ma-Fans:入会 ── */
 .mf-join{
-  border-radius:20px; overflow:hidden;
+  border-radius:18px; overflow:hidden;
   background:linear-gradient(160deg,#7B1113,#4A0A0B);
-  border:2px solid #C8912A; padding:18px 17px 16px;
+  border:2px solid #C8912A; padding:17px 16px 15px;
   box-shadow:0 8px 26px rgba(74,10,11,.3);
 }
 .mf-join-top{ display:flex; align-items:center; gap:12px }
@@ -184,66 +210,57 @@ const YGF_CSS = `
   display:grid; place-items:center; font-size:23px;
   background:linear-gradient(160deg,#FFF1CC,#F5D98A);
 }
-.mf-join-t{ display:block; font-size:20px; font-weight:900; color:#F5D98A; letter-spacing:-.3px }
+.mf-join-t{ display:block; font-size:19px; font-weight:900; color:#F5D98A; letter-spacing:-.3px }
 .mf-join-cn{ display:block; font-size:11.5px; font-weight:600; color:rgba(255,255,255,.72); margin-top:2px }
-.mf-perks{ display:flex; flex-direction:column; gap:9px; margin-top:15px }
+.mf-perks{ display:flex; flex-direction:column; gap:9px; margin-top:14px }
 .mf-perk{ display:flex; align-items:flex-start; gap:10px }
 .mf-perk-emoji{ flex-shrink:0; font-size:15px; width:19px; text-align:center; margin-top:1px }
 .mf-perk b{ display:block; font-size:13px; font-weight:800; color:#fff }
 .mf-perk i{ display:block; font-style:normal; font-size:11px; color:rgba(255,255,255,.66); margin-top:1px }
 .mf-cta{
-  display:block; width:100%; margin-top:17px;
-  background:#1FA855; color:#fff; border:none;
+  display:block; width:100%; margin-top:16px;
+  background:#1FA855; color:#fff; border:none; font-family:inherit;
   border-radius:15px; padding:14px 0 12px;
   font-size:16px; font-weight:900; cursor:pointer;
   box-shadow:0 4px 0 #17803F;
 }
 .mf-cta span{ display:block; font-size:11px; font-weight:600; opacity:.9; margin-top:2px }
 
-/* ── 分组小标题(食材精选 / 饮品 / 小吃 共用) ── */
+/* ── 分组小标题 ── */
 .sp-head{ display:flex; align-items:center; gap:9px }
 .sp-head-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0 }
 .sp-head-en{ font-size:12px; font-weight:900; letter-spacing:2px; white-space:nowrap }
 .sp-head-cn{ font-size:11.5px; color:#8A7B66; font-weight:700; white-space:nowrap }
 
-/* 食材详情 */
+/* 详情弹层 */
 .sp-sheet{
   width:100%; max-width:400px; background:#FFFDF8;
-  border-radius:22px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.4);
-  margin:auto;
+  border-radius:22px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.4); margin:auto;
 }
 
 /* ── Sauce Bar:配方卡 ── */
-.sb-card{
-  border:2px solid #E8D9C4; border-radius:18px; overflow:hidden;
-  background:#fff; transition:border-color .22s ease;
-}
+.sb-card{ border:2px solid #E8D9C4; border-radius:16px; overflow:hidden; background:#fff; transition:border-color .22s ease }
 .sb-head{
   width:100%; display:flex; align-items:flex-start; gap:12px;
-  padding:14px 15px; background:none; border:none; cursor:pointer; text-align:left;
+  padding:13px 14px; background:none; border:none; cursor:pointer; text-align:left;
   font:inherit; color:inherit;
 }
 .sb-emoji{
-  flex-shrink:0; width:42px; height:42px; border-radius:13px;
-  display:grid; place-items:center; font-size:21px; border:1.5px solid;
+  flex-shrink:0; width:40px; height:40px; border-radius:12px;
+  display:grid; place-items:center; font-size:20px; border:1.5px solid;
 }
-.sb-name{ display:block; font-size:16px; font-weight:900; letter-spacing:-.2px }
+.sb-name{ display:block; font-size:15.5px; font-weight:900; letter-spacing:-.2px }
 .sb-name-cn{ display:block; font-size:12.5px; font-weight:700; color:#1C1410; margin-top:2px }
 .sb-note{ display:block; font-size:11.5px; color:#8A7B66; margin-top:4px; line-height:1.5 }
-.sb-body{
-  display:grid; grid-template-rows:0fr;
-  transition:grid-template-rows .28s cubic-bezier(.22,1,.36,1);
-}
+.sb-chev{ flex-shrink:0; font-size:11px; transition:transform .26s cubic-bezier(.22,1,.36,1) }
+.sb-card[data-open="1"] .sb-chev{ transform:rotate(180deg) }
+.sb-body{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .28s cubic-bezier(.22,1,.36,1) }
 .sb-card[data-open="1"] .sb-body{ grid-template-rows:1fr }
-.sb-card[data-open="1"] .lx-chev{ transform:rotate(180deg) }
 .sb-body > div{ overflow:hidden }
-.sb-inner{ padding:2px 15px 16px }
+.sb-inner{ padding:2px 14px 15px }
 .sb-steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px }
 .sb-steps li{ display:flex; align-items:center; gap:11px }
-.sb-n{
-  flex-shrink:0; width:22px; height:22px; border-radius:50%;
-  display:grid; place-items:center; color:#fff; font-size:11px; font-weight:900;
-}
+.sb-n{ flex-shrink:0; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; color:#fff; font-size:11px; font-weight:900 }
 .sb-s{ flex:1; min-width:0 }
 .sb-s b{ display:block; font-size:13.5px; font-weight:800; color:#1C1410 }
 .sb-s i{ display:block; font-style:normal; font-size:10.5px; color:#8A7B66; margin-top:1px }
@@ -253,14 +270,10 @@ const YGF_CSS = `
 }
 
 /* Secret Mixes */
-.sb-secret{
-  margin-top:24px; padding:20px 18px 18px; border-radius:20px; text-align:center;
-  background:linear-gradient(160deg,#241A14,#0E0A08);
-  border:2px solid #C8912A; box-shadow:0 8px 26px rgba(14,10,8,.3);
-}
-.sb-secret-emoji{ font-size:32px; margin-bottom:6px }
+.sb-secret{ text-align:center; padding:4px 0 2px }
+.sb-secret-emoji{ font-size:30px; margin-bottom:6px }
 
-/* 海报全屏 */
+/* 海报 / 详情全屏 */
 .mf-lightbox{
   position:fixed; inset:0; z-index:999; display:flex;
   align-items:center; justify-content:center; padding:20px;
@@ -268,69 +281,60 @@ const YGF_CSS = `
   -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
   overflow-y:auto;
 }
-.mf-lightbox img{ width:100%; max-width:440px; height:auto; border-radius:14px; display:block }
-.mf-lightbox-x{
-  position:fixed; top:calc(14px + env(safe-area-inset-top)); right:14px;
-  width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
-  background:rgba(255,255,255,.18); color:#fff; font-size:22px; line-height:1;
-}
 
 /* ── 店长推荐 lookbook ── */
 .pk-rail{
-  display:flex; gap:14px; overflow-x:auto; padding:16px 0 4px 16px;
-  scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
+  display:flex; gap:12px; overflow-x:auto; padding:2px 15px 6px;
+  margin:0 -15px; scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .pk-rail::-webkit-scrollbar{ display:none }
-.pk-rail-end{ flex:0 0 2px }          /* 让最后一张也能滑到位 */
+.pk-rail-end{ flex:0 0 3px }
 .pk-card{
-  flex:0 0 76vw; max-width:288px; scroll-snap-align:center;
-  background:#fff; border:2px solid #E8D9C4; border-radius:20px;
-  overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,.07);
+  flex:0 0 62vw; max-width:216px; scroll-snap-align:center;
+  background:#fff; border:2px solid #E8D9C4; border-radius:18px;
+  overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,.07); cursor:pointer;
 }
 .pk-tile{
-  background:#fff; border:2px solid #E8D9C4; border-radius:18px;
+  background:#fff; border:2px solid #E8D9C4; border-radius:16px;
   overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.05);
-  display:flex; flex-direction:column;
+  display:flex; flex-direction:column; cursor:pointer;
 }
-.pk-shot{
-  position:relative; aspect-ratio:1; background:#F5EFE6; overflow:hidden;
-  display:grid; place-items:center;
-}
+.pk-shot{ position:relative; aspect-ratio:1; background:#F5EFE6; overflow:hidden; display:grid; place-items:center }
 .pk-shot img{ width:100%; height:100%; object-fit:cover; display:block }
-.pk-shot-fb{ font-size:40px; opacity:.32 }
+.pk-shot-fb{ font-size:38px; opacity:.32 }
 .pk-no{
-  position:absolute; top:10px; left:10px;
+  position:absolute; top:9px; left:9px;
   background:rgba(28,20,16,.62); color:#F5D98A;
-  font-size:11px; font-weight:900; letter-spacing:1.5;
-  padding:4px 9px; border-radius:7px;
+  font-size:10.5px; font-weight:900; letter-spacing:1.2px;
+  padding:4px 8px; border-radius:7px;
   -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
 }
-.pk-body{ padding:14px 15px 16px }
-.pk-name{ font-size:17px; font-weight:900; color:#1C1410; line-height:1.2; letter-spacing:-.2px }
-.pk-name-cn{ font-size:12.5px; font-weight:600; color:#8A7B66; margin-top:3px }
-.pk-mods{ display:flex; flex-wrap:wrap; gap:5px; margin-top:9px }
+.pk-body{ padding:12px 13px 14px }
+.pk-name{ font-size:15px; font-weight:900; color:#1C1410; line-height:1.2; letter-spacing:-.2px }
+.pk-name-cn{ font-size:12px; font-weight:600; color:#8A7B66; margin-top:3px }
+.pk-mods{ display:flex; flex-wrap:wrap; gap:5px; margin-top:8px }
 .pk-mod{
   font-size:10.5px; font-weight:700; color:#C8912A;
   background:#FFF1CC; border:1px solid #F5D98A;
   border-radius:7px; padding:3px 8px; line-height:1.35;
 }
-.pk-note{ font-size:12px; color:#6B5B4E; margin-top:8px; line-height:1.5 }
+.pk-note{ font-size:12px; color:#6B5B4E; margin-top:7px; line-height:1.5 }
 .pk-note-cn{ font-size:11.5px; color:#8A7B66; margin-top:2px; line-height:1.5 }
-.pk-pair{
-  margin-top:9px; padding:8px 10px; border-radius:10px;
-  background:#FFF6E4; border:1px solid #F0E0BC;
+.pk-clamp{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden;
 }
+.pk-pair{ margin-top:9px; padding:9px 11px; border-radius:10px; background:#FFF6E4; border:1px solid #F0E0BC }
 .pk-pair b{ display:block; font-size:9.5px; font-weight:900; color:#C8912A; letter-spacing:1.2px }
 .pk-pair i{ display:block; font-style:normal; font-size:11.5px; color:#6B5B4E; margin-top:3px; line-height:1.5 }
-.pk-price{
-  margin-top:10px; font-size:23px; font-weight:900; color:#B91C1C; letter-spacing:-.5px;
-}
+.pk-price{ margin-top:9px; font-size:20px; font-weight:900; color:#B91C1C; letter-spacing:-.5px }
 .pk-price span{ font-size:10px; font-weight:600; color:#8A7B66; margin-left:4px }
+.pk-more{ font-size:11px; font-weight:800; color:#C8912A; margin-top:7px }
 
-/* 详情随选中切换 */
-@keyframes ygf-panel-in{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
-.ygf-panel{ animation:ygf-panel-in .26s cubic-bezier(.22,1,.36,1) both }
+/* 面板内容淡入 */
+@keyframes ygf-panel-in{ from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:none } }
+.ygf-panel{ animation:ygf-panel-in .24s cubic-bezier(.22,1,.36,1) both }
 
 /* 按下反馈 */
 .ygf-root button, .ygf-root a[data-press], .ygf-root [data-press]{
@@ -340,8 +344,13 @@ const YGF_CSS = `
 .ygf-root button:active, .ygf-root a[data-press]:active, .ygf-root [data-press]:active{
   transform:scale(.955); filter:brightness(.90);
 }
+.ygf-root .acc2-bar:active, .ygf-root .orb-card:active, .ygf-root .orb-dot:active{
+  transform:none; filter:none;
+}
 @media (prefers-reduced-motion: reduce){
-  .ygf-bar, .ygf-bar-vert, .ygf-bar-wide, .ygf-panel{ transition:none; animation:none }
+  .acc2-item, .acc2-panel, .acc2-chev, .sb-body, .sb-chev, .ygf-panel, .orb-dot{
+    transition:none; animation:none;
+  }
   .ygf-root button, .ygf-root [data-press]{ transition:none }
   .ygf-root button:active, .ygf-root [data-press]:active{ transform:none; filter:none }
 }
@@ -349,146 +358,281 @@ const YGF_CSS = `
 
 
 /* ══════════════════════════════════════════════════════════
-   一级入口 —— 横向不停滚动的大卡
-   竖版大牌占屏约 3/5,纯色不配图,大标题大标签。
-   轨道整体位移,牌复制一份做无缝循环;按住停、拖动拨、点击进。
-   transform 直接写 DOM,零 React 重渲染。
+   一级入口 —— 轨道
+   四张牌均分在一条椭圆轨道上:x = Rx·sinθ,y = Ky·cosθ。
+   θ=0 在最前(靠下、最大、最亮),θ=180° 在最后(靠上、最小、最暗),
+   所以后面那张会从前面那张的上缘露出来 —— 四张同时看得见。
+   按住停、拖动拨、松开继续转;点圆点直接转到那张。
+   transform 直接写 DOM,零 React 重渲染(只有换头牌时更新一次指示器)。
    ══════════════════════════════════════════════════════════ */
-function EntryRing({ onPick }: { onPick: (id: EntryId) => void }) {
-  const track = useRef<HTMLDivElement>(null);
-  const offset = useRef(0);          // 轨道位移(px)
-  const span = useRef(1);            // 一组牌的总宽,用于取模循环
+const ORB_N = ENTRY_CARDS.length;
+const ORB_STEP = 360 / ORB_N;
+const ORB_RX = 100;              // 轨道横半径
+const ORB_KY = 56;               // 纵向压扁量 —— 决定后面那张露出多少
+const ORB_SPEED = 360 / 20000;   // 一圈 20 秒
+
+function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
+  const cards = useRef<(HTMLDivElement | null)[]>([]);
+  const angle = useRef(0);
+  const goal = useRef<number | null>(null);
+  const resumeAt = useRef(0);
   const paused = useRef(false);
-  const drag = useRef<{ x: number; o: number; moved: number } | null>(null);
+  const drag = useRef<{ x: number; a: number; moved: number } | null>(null);
+  const frontRef = useRef(0);
+  const [front, setFront] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const reducedRef = useRef(false);
 
-  const SPEED = 38 / 1000;           // px/ms —— 慢到能读完一张牌
-
-  const apply = () => {
-    const el = track.current;
-    if (!el) return;
-    if (span.current > 1) {
-      // 循环回 -span 到 0 之间
-      offset.current = ((offset.current % span.current) + span.current) % span.current - span.current;
+  const layout = useCallback(() => {
+    for (let i = 0; i < ORB_N; i++) {
+      const el = cards.current[i];
+      if (!el) continue;
+      const th = ((angle.current + i * ORB_STEP) * Math.PI) / 180;
+      const x = ORB_RX * Math.sin(th);
+      const y = ORB_KY * Math.cos(th);
+      const d = (Math.cos(th) + 1) / 2;            // 0 = 最后, 1 = 最前
+      const s = 0.60 + 0.40 * d;
+      el.style.transform =
+        `translate(-50%,-50%) translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${s.toFixed(3)})`;
+      el.style.opacity = (0.30 + 0.70 * d).toFixed(3);
+      el.style.filter = `brightness(${(0.52 + 0.48 * d).toFixed(2)})`;
+      el.style.zIndex = String(Math.round(d * 100));
     }
-    el.style.transform = `translate3d(${offset.current.toFixed(1)}px,0,0)`;
-  };
+    const f = ((Math.round(-angle.current / ORB_STEP) % ORB_N) + ORB_N) % ORB_N;
+    if (f !== frontRef.current) { frontRef.current = f; setFront(f); }
+  }, []);
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(mq.matches);
-    if (mq.matches) return;
-
-    const measure = () => {
-      const el = track.current;
-      if (!el) return;
-      span.current = el.scrollWidth / 2 || 1;   // 复制了一份,取一半
-    };
-    measure();
-    window.addEventListener('resize', measure);
+    reducedRef.current = mq.matches;
+    layout();
 
     let raf = 0;
     let last = 0;
     const tick = (t: number) => {
-      if (last && !paused.current && !drag.current) offset.current -= (t - last) * SPEED;
+      const dt = last ? t - last : 0;
       last = t;
-      apply();
+      if (goal.current !== null) {
+        const diff = goal.current - angle.current;
+        if (Math.abs(diff) < 0.4) {
+          angle.current = goal.current;
+          goal.current = null;
+          resumeAt.current = t + 2200;             // 停一下让他看清这张
+        } else {
+          angle.current += diff * 0.16;
+        }
+      } else if (!reducedRef.current && !paused.current && !drag.current && t > resumeAt.current) {
+        angle.current += dt * ORB_SPEED;
+      }
+      layout();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); };
+    return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [layout]);
+
+  /* 转到第 i 张 —— 走最近的一边 */
+  const goTo = (i: number) => {
+    const target = -i * ORB_STEP;
+    const k = Math.round((angle.current - target) / 360);
+    const g = target + k * 360;
+    if (reducedRef.current) { angle.current = g; goal.current = null; layout(); }
+    else goal.current = g;
+  };
 
   const down = (e: React.PointerEvent) => {
     paused.current = true;
-    drag.current = { x: e.clientX, o: offset.current, moved: 0 };
+    goal.current = null;
+    drag.current = { x: e.clientX, a: angle.current, moved: 0 };
   };
   const move = (e: React.PointerEvent) => {
     if (!drag.current) return;
     const dx = e.clientX - drag.current.x;
     drag.current.moved = Math.max(drag.current.moved, Math.abs(dx));
-    offset.current = drag.current.o + dx;
-    apply();
+    angle.current = drag.current.a - dx * 0.45;     // 往左拨,下一张转到前面
+    layout();
   };
-  const up = () => { drag.current = null; paused.current = false; };
+  const up = () => {
+    const d = drag.current;
+    drag.current = null;
+    paused.current = false;
+    if (reducedRef.current && d && d.moved > 6) {   // 关了动效就吸附到最近一张
+      goTo(((Math.round(-angle.current / ORB_STEP) % ORB_N) + ORB_N) % ORB_N);
+    }
+  };
 
   const tap = (id: EntryId) => {
     if (drag.current && drag.current.moved > 8) return;   // 拨牌不算点击
     onPick(id);
   };
 
-  const card = (c: typeof ENTRY_CARDS[number], dup: boolean) => (
-    <div
-      key={c.id + (dup ? '-b' : '')}
-      className="deck-card"
-      style={{ background: c.grad, borderColor: c.edge }}
-      onClick={() => tap(c.id)}
-      role="button"
-      tabIndex={dup ? -1 : 0}
-      aria-hidden={dup || undefined}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onPick(c.id); }}
-    >
-      <span className="deck-wm" aria-hidden="true">{c.mark}</span>
-      <span className="deck-mark deck-mark-tl">{c.mark}</span>
-      <span className="deck-mark deck-mark-br">{c.mark}</span>
-      <div className="deck-face">
-        <div className="deck-name">{c.titleEn}</div>
-        <div className="deck-name-cn">{c.titleCn}</div>
-        <div className="deck-rule" />
-        <div className="deck-hook">{c.hookCn}</div>
-        <div className="deck-hook-en">{c.hookEn}</div>
-        <div className="deck-go">进入 Enter ›</div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="deck-wrap">
-      <div className="deck-eyebrow">今天想看点什么 · TAP A CARD</div>
+    <div className="orb-wrap">
+      <div className="orb-eyebrow">YGF MALATANG · SAN DIEGO</div>
+      <div className="orb-title">今天想看点什么？</div>
 
-      {reduced ? (
-        <div className="deck-rail-static">
-          {ENTRY_CARDS.map(c => card(c, false))}
+      <div
+        className="orb-stage"
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={up}
+        onPointerLeave={up}
+      >
+        {ENTRY_CARDS.map((c, i) => (
+          <div
+            key={c.id}
+            ref={el => { cards.current[i] = el; }}
+            className="orb-card"
+            style={{ background: c.grad, borderColor: c.edge }}
+            onClick={() => tap(c.id)}
+            role="button"
+            tabIndex={0}
+            aria-label={`${c.titleEn} ${c.titleCn}`}
+            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") onPick(c.id); }}
+          >
+            <span className="orb-wm" aria-hidden="true">{c.mark}</span>
+            <span className="orb-mark orb-mark-tl" aria-hidden="true">{c.mark}</span>
+            <span className="orb-mark orb-mark-br" aria-hidden="true">{c.mark}</span>
+            <div className="orb-face">
+              <div className="orb-name">{c.titleEn}</div>
+              <div className="orb-name-cn">{c.titleCn}</div>
+              <div className="orb-rule" />
+              <div className="orb-hook">{c.hookCn}</div>
+              <div className="orb-hook-en">{c.hookEn}</div>
+              <div className="orb-go">进入 Enter ›</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="orb-foot">
+        <div className="orb-dots">
+          {reduced && (
+            <button className="orb-step" onClick={() => goTo((front - 1 + ORB_N) % ORB_N)} aria-label="上一张">‹</button>
+          )}
+          {ENTRY_CARDS.map((c, i) => (
+            <button key={c.id} className="orb-dot" data-on={i === front ? "1" : "0"}
+              onClick={() => goTo(i)} aria-label={`转到 ${c.titleEn}`} />
+          ))}
+          {reduced && (
+            <button className="orb-step" onClick={() => goTo((front + 1) % ORB_N)} aria-label="下一张">›</button>
+          )}
         </div>
-      ) : (
-        <div
-          className="deck-view"
-          onPointerDown={down}
-          onPointerMove={move}
-          onPointerUp={up}
-          onPointerCancel={up}
-          onPointerLeave={up}
-        >
-          <div ref={track} className="deck-track">
-            {ENTRY_CARDS.map(c => card(c, false))}
-            {ENTRY_CARDS.map(c => card(c, true))}
+        <div className="orb-hint">
+          {reduced ? "左右滑动 · 点击进入" : "按住暂停 · 左右拨动 · 点击进入"}
+        </div>
+      </div>
+
+      {/* 午餐特惠 —— 钉在最下面 */}
+      <div className="orb-lunch">
+        <span style={{ fontSize: 16 }}>🥤</span>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Lunch Special · 午餐特惠</div>
+          <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}>
+            11:30 AM – 3:00 PM · 购麻辣烫送饮料 Free drink · 仅限堂食 Dine-in
           </div>
         </div>
-      )}
-
-      <div className="deck-hint">
-        {reduced ? '左右滑动 · 点击进入' : '按住暂停 · 拖动拨牌 · 点击进入'}
       </div>
     </div>
   );
 }
 
+
+/* ══════════════════════════════════════════════════════════
+   二级横幅 —— 一个开,其余退让缩小
+   ══════════════════════════════════════════════════════════ */
+function AccItem({
+  open, onToggle, emoji, titleEn, titleCn, hookCn, grad, edge, children,
+}: {
+  open: boolean; onToggle: () => void;
+  emoji: string; titleEn: string; titleCn: string; hookCn?: string;
+  grad: string; edge: string; children: React.ReactNode;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const click = () => {
+    onToggle();
+    if (!open) {
+      setTimeout(() => {
+        box.current?.scrollIntoView({
+          block: "start",
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        });
+      }, 320);
+    }
+  };
+  return (
+    <div ref={box} className="acc2-item" data-on={open ? "1" : "0"} style={{ borderColor: edge }}>
+      <button className="acc2-bar" style={{ background: grad }} onClick={click} aria-expanded={open}>
+        <span className="acc2-chip">{emoji}</span>
+        <span className="acc2-t">
+          <b>{titleEn}</b>
+          <s>{titleCn}</s>
+          {hookCn && <i>{hookCn}</i>}
+        </span>
+        <span className="acc2-chev">▼</span>
+      </button>
+      <div className="acc2-panel">
+        <div><div className="acc2-inner">{children}</div></div>
+      </div>
+    </div>
+  );
+}
+
+/* 加点单品卡 —— 列表只放钩子,详情进弹层 */
+function PickCard({ raw, idx, tile, onOpen }: {
+  raw: Pick; idx?: number; tile?: boolean; onOpen: () => void;
+}) {
+  const p = resolvePick(raw);
+  return (
+    <article className={tile ? "pk-tile" : "pk-card"} data-press onClick={onOpen}>
+      <div className="pk-shot">
+        {p.img
+          ? <img src={p.img} alt={p.nameEn}
+              onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+          : <span className="pk-shot-fb">{tile ? "🍽" : "🧋"}</span>}
+        {idx !== undefined && <span className="pk-no">{String(idx + 1).padStart(2, "0")}</span>}
+      </div>
+      <div className="pk-body">
+        <div className="pk-name">{p.nameEn}</div>
+        <div className="pk-name-cn">{p.nameCn}</div>
+        {p.tasteCn && <div className="pk-note-cn pk-clamp" style={{ marginTop: 6 }}>{p.tasteCn}</div>}
+        <div className="pk-price">${p.total.toFixed(2)}<span>+Tax</span></div>
+        <div className="pk-more">详情 Details ›</div>
+      </div>
+    </article>
+  );
+}
+
+
 // ══════════════════════════════════════════════════════════
-// MAIN MENU
+// MAIN
 // ══════════════════════════════════════════════════════════
 export default function YGFPage() {
-  // 四个入口,各答一个问题:今天有什么福利 / 我该选什么汤 / 有什么值得拿 / 这碗怎么调
-  // ring = 落地的环形牌桌;进了某张牌才显示对应内容
+  // 落地是轨道;进了某张牌才显示对应内容
   const [view, setView] = useState<"ring" | EntryId>("ring");
-  const activeSection = view;
-  const [spot, setSpot] = useState<string | null>(null);
-  const [recipe, setRecipe] = useState<string | null>(SAUCE_RECIPES[0]?.key ?? null);
-  const [allSauce, setAllSauce] = useState(false);
-  const spotItem = spot ? SPOTLIGHTS.find(x => x.key === spot) ?? null : null;
-  const [brothIdx, setBrothIdx] = useState(0);
 
-  // 小福有话说 —— 进菜单后延时弹出,当天只弹一次
+  // 每个一级下,当前展开的那个二级横幅(默认第一个)
+  const [openMf, setOpenMf] = useState<string | null>("picks");
+  const [openBr, setOpenBr] = useState<string | null>(BROTHS[0]?.id ?? null);
+  const [openIt, setOpenIt] = useState<SpotlightTier | null>("new");
+  const [openSa, setOpenSa] = useState<string | null>("recipes");
+
+  // 三级:店长推荐落在饮品
+  const [pickTab, setPickTab] = useState<"drink" | "snack">("drink");
+  // 三级:调料配方
+  const [recipe, setRecipe] = useState<string | null>(SAUCE_RECIPES[0]?.key ?? null);
+
+  // 详情弹层
+  const [sheet, setSheet] = useState<{ k: "spot" | "pick"; id: string } | null>(null);
+  const spotItem = sheet?.k === "spot" ? SPOTLIGHTS.find(x => x.key === sheet.id) ?? null : null;
+  const pickRaw = sheet?.k === "pick"
+    ? [...DRINK_PICKS, ...SNACK_PICKS].find(x => x.key === sheet.id) ?? null
+    : null;
+
+  // 小福有话说 —— 进页面后延时弹出,当天只弹一次
   const [psst, setPsst] = useState(false);
   useEffect(() => {
     const today = new Date().toDateString();
@@ -502,6 +646,18 @@ export default function YGFPage() {
     return () => clearTimeout(t);
   }, []);
 
+  // 换一级时回到该级的第一个二级
+  const enter = (id: EntryId) => {
+    setView(id);
+    if (id === "mafans") setOpenMf("picks");
+    if (id === "broth")  setOpenBr(BROTHS[0]?.id ?? null);
+    if (id === "items")  setOpenIt("new");
+    if (id === "sauce")  setOpenSa("recipes");
+    window.scrollTo({ top: 0 });
+  };
+
+  const cur = ENTRY_CARDS.find(c => c.id === view);
+
   return (
     <>
     <style>{YGF_CSS}</style>
@@ -509,632 +665,589 @@ export default function YGFPage() {
     <AppShell
       nav={
         <>
-      {/* Allergen bar (rendered inside sticky header) */}
-      <div style={{
-        background: "#7C1D1D", padding: "10px 16px",
-        display: "flex", alignItems: "center", gap: 10,
-        borderBottom: "2px solid #9B2222" }}>
-        <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.5 }}>过敏源提示 · Allergen Notice</div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 2, lineHeight: 1.5 }}>
-            含：鱼 · 贝 · 大豆 · 麸质 · 芝麻 · 蛋 · 乳 · 花生 &nbsp;|&nbsp; Contains: Fish · Shellfish · Soy · Wheat · Sesame · Egg · Milk · Peanuts
+      {/* 过敏源 —— 落地页压成一行半,进了内容页给完整版 */}
+      {view === "ring" ? (
+        <div style={{ background: "#7C1D1D", padding: "7px 16px",
+          borderBottom: "2px solid #9B2222", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.9)", lineHeight: 1.45 }}>
+            <b style={{ color: "#fff", fontWeight: 800 }}>过敏源 Allergens ·</b>{" "}
+            鱼 · 贝 · 大豆 · 麸质 · 芝麻 · 蛋 · 乳 · 花生 · Fish · Shellfish · Soy · Wheat · Sesame · Egg · Milk · Peanuts
           </div>
         </div>
-      </div>
-      {/* ── 进了内容页:返回牌桌 + 当前位置;牌桌本身不显示 ── */}
-      {view !== "ring" && (() => {
-        const cur = ENTRY_CARDS.find(c => c.id === view);
-        return (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
-            background: C.bg, borderBottom: `2px solid ${C.border}` }}>
-            <button onClick={() => setView("ring")} aria-label="返回 Back"
-              style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 13, cursor: "pointer",
-                background: C.bgCard, border: `2px solid ${C.border}`, fontSize: 19, color: C.ink,
-                display: "grid", placeItems: "center" }}>‹</button>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 15.5, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>
-                {cur?.titleEn}
-              </div>
-              <div style={{ fontSize: 11, color: C.inkLight, marginTop: 1 }}>{cur?.titleCn}</div>
+      ) : (
+        <div style={{ background: "#7C1D1D", padding: "10px 16px",
+          display: "flex", alignItems: "center", gap: 10, borderBottom: "2px solid #9B2222" }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: 0.5 }}>过敏源提示 · Allergen Notice</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", marginTop: 2, lineHeight: 1.5 }}>
+              含：鱼 · 贝 · 大豆 · 麸质 · 芝麻 · 蛋 · 乳 · 花生 &nbsp;|&nbsp; Contains: Fish · Shellfish · Soy · Wheat · Sesame · Egg · Milk · Peanuts
             </div>
-            <span style={{ flexShrink: 0, fontSize: 20, opacity: 0.85 }}>{cur?.mark}</span>
           </div>
-        );
-      })()}
+        </div>
+      )}
+
+      {/* 内容页:返回轨道 + 当前位置 */}
+      {view !== "ring" && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+          background: C.bg, borderBottom: `2px solid ${C.border}` }}>
+          <button onClick={() => setView("ring")} aria-label="返回 Back"
+            style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 13, cursor: "pointer",
+              background: C.bgCard, border: `2px solid ${C.border}`, fontSize: 19, color: C.ink,
+              display: "grid", placeItems: "center" }}>‹</button>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 15.5, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{cur?.titleEn}</div>
+            <div style={{ fontSize: 11, color: C.inkLight, marginTop: 1 }}>{cur?.titleCn}</div>
+          </div>
+          <span style={{ flexShrink: 0, fontSize: 20, opacity: 0.85 }}>{cur?.mark}</span>
+        </div>
+      )}
         </>
       }
     >
       <div style={{ fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", color: C.ink }}>
 
-        {/* ═══ 落地:环形牌桌 ═══ */}
-        {view === "ring" && <EntryRing onPick={id => setView(id)} />}
+        {/* ═══ 落地:轨道 ═══ */}
+        {view === "ring" && <EntryOrbit onPick={enter} />}
 
-        {/* 午餐特惠 —— 只在内容页顶部出现,牌桌保持干净 */}
+        {/* ═══ 内容页 ═══ */}
         {view !== "ring" && (
-        <div style={{ background: C.gold, padding: "12px 20px",
-          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <span style={{ fontSize: 16 }}>🥤</span>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Lunch Special · 午餐特惠</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)" }}>
-              11:30 AM – 3:00 PM &nbsp;·&nbsp; Free drink with purchase 购麻辣烫送饮料 · Dine-in only 仅限堂食
-            </div>
-          </div>
-        </div>
-        )}
+          <div style={{ padding: "16px 16px 44px" }}>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION: 汤品介绍
-      ═══════════════════════════════════════════════ */}
-      {activeSection === "broth" && (
-        <div style={{ padding: "20px 16px 48px", display: "flex", flexDirection: "column", gap: 14 }}>
-
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 3 }}>OUR BROTHS</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: C.ink, marginTop: 5, lineHeight: 1.2, letterSpacing: -0.5 }}>
-              汤底 · 一碗的灵魂
-            </div>
-          </div>
-
-          {/* 称重定价 —— 先让顾客知道怎么算钱 */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: C.bgCard, border: `2px solid ${C.borderStrong}`, borderRadius: 14, padding: "12px 16px" }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>{PRICING.buildYourOwnEn}</div>
-              <div style={{ fontSize: 11, color: C.inkLight, marginTop: 2 }}>{PRICING.buildYourOwnZh} · 汤底另见下方</div>
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: C.red, whiteSpace: "nowrap" }}>{PRICING.perLbLabel}</div>
-          </div>
-
-          {/* 手风琴选择条 —— 五款一屏看完,点哪款哪款撑开 */}
-          <div className="ygf-acc">
-            {BROTHS.map((b, i) => {
-              const on = i === brothIdx;
-              return (
-                <button key={b.id} className="ygf-bar" data-on={on ? "1" : "0"}
-                  onClick={() => setBrothIdx(i)} aria-label={b.zh}
-                  style={{ background: b.color }}>
-                  {b.img && (
-                    <img src={b.img} alt="" aria-hidden="true"
-                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%",
-                        objectFit: "cover", opacity: on ? 1 : 0.34, transition: "opacity .28s ease" }}
-                      onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                  )}
-                  <span className="ygf-bar-vert">{b.zh}</span>
-                  <span className="ygf-bar-wide">
-                    <span style={{ display: "block", fontSize: 18, fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>{b.zh}</span>
-                    <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.86)", marginTop: 3, lineHeight: 1.3 }}>{b.en}</span>
-                  </span>
-                  <span style={{ position: "absolute", top: 8, left: 8, background: C.gold, color: "#fff",
-                    fontSize: 9.5, fontWeight: 800, padding: "3px 8px", borderRadius: 6,
-                    opacity: on ? 1 : 0, transition: "opacity .2s ease", whiteSpace: "nowrap" }}>{b.badge}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* 选中汤底的详情 —— 全宽,读得清 */}
-          {(() => {
-            const b = BROTHS[brothIdx];
-            return (
-              <div key={b.id} className="ygf-panel"
-                style={{ background: C.bgCard, borderRadius: 18, border: `2px solid ${C.border}`,
-                  padding: "16px 16px 14px", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-                <div style={{ fontSize: 20, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{b.zh}</div>
-                <div style={{ fontSize: 12, color: C.inkLight, marginTop: 3 }}>{b.en}</div>
-                <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 9, lineHeight: 1.55 }}>{b.taglineEn}</div>
-                <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{b.tagline}</div>
-
-                {/* 辣度 —— 每档单独一行 */}
-                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 4 }}>
-                  {b.spicyLevels.length === 0
-                    ? <span style={{ fontSize: 12.5, color: C.inkMid }}>🍃 {b.spicy}</span>
-                    : b.spicyLevels.map(lv => (
-                        <span key={lv.en} style={{ fontSize: 12.5, color: C.inkMid, display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ minWidth: 88 }}>{lv.en} {lv.zh}</span>
-                          <span style={{ letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
-                        </span>
-                      ))}
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, gap: 10 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap",
-                    color: b.surcharge ? "#fff" : C.inkMid,
-                    background: b.surcharge ? C.red : "transparent",
-                    border: b.surcharge ? "none" : `1px solid ${C.border}`,
-                    borderRadius: 8, padding: "5px 11px" }}>
-                    {b.surcharge ? `+$${b.surcharge.toFixed(2)} / bowl` : "Included 免费"}
-                  </span>
-                  <Link href={`/menu/ygf/broth/${b.id}`} data-press
-                    style={{ textDecoration: "none", background: C.red, color: "#fff",
-                      fontSize: 13, fontWeight: 800, borderRadius: 10, padding: "9px 16px", whiteSpace: "nowrap" }}>
-                    查看搭配 Combos ›
-                  </Link>
-                </div>
+            {/* 这页干什么用 —— 两行说完 */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12.5, color: C.inkMid, lineHeight: 1.55 }}>
+                {SECTION_INTRO[view].en}
               </div>
-            );
-          })()}
-        </div>
-      )}
+              <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 2, lineHeight: 1.55 }}>
+                {SECTION_INTRO[view].cn}
+              </div>
+            </div>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION: 菜品介绍
-      ═══════════════════════════════════════════════ */}
-      {activeSection === "items" && (
-        <div style={{ padding: "20px 16px 48px" }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 3 }}>INGREDIENTS</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: C.ink, marginTop: 5, lineHeight: 1.2, letterSpacing: -0.5 }}>
-            食材 · 今天吃什么
-          </div>
-          <div style={{ fontSize: 13, color: C.inkMid, marginTop: 9, lineHeight: 1.6 }}>
-            Over 100 items at the bar. These are the ones worth a closer look.
-          </div>
-          <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.6 }}>
-            台上一百多种,这几样值得看一眼。
-          </div>
-
-          {(["new", "favorite", "try"] as SpotlightTier[]).map(tier => {
-            const list = SPOTLIGHTS.filter(sp => sp.tier === tier);
-            if (list.length === 0) return null;
-            const meta = TIER_META[tier];
-            return (
-              <section key={tier} style={{ marginTop: 26 }}>
-                <div className="sp-head">
-                  <span className="sp-head-dot" style={{ background: meta.color }} />
-                  <span className="sp-head-en" style={{ color: meta.color }}>{meta.emoji} {meta.en}</span>
-                  <span className="sp-head-cn">{meta.cn}</span>
+            {/* ── 汤底:称重先说清怎么算钱 ── */}
+            {view === "broth" && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                background: C.bgCard, border: `2px solid ${C.borderStrong}`, borderRadius: 14,
+                padding: "12px 15px", marginBottom: 14 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: C.ink }}>{PRICING.buildYourOwnEn}</div>
+                  <div style={{ fontSize: 11, color: C.inkLight, marginTop: 2 }}>{PRICING.buildYourOwnZh} · 汤底另计</div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginTop: 12 }}>
-                  {list.map(sp => {
-                    const it = sp.itemId ? getItem(sp.itemId) : undefined;
-                    const img = sp.img ?? it?.img;
-                    return (
-                      <article key={sp.key} className="pk-tile" data-press
-                        onClick={() => setSpot(sp.key)} style={{ cursor: "pointer" }}>
-                        <div className="pk-shot">
-                          {img
-                            ? <img src={img} alt={sp.nameEn}
-                                onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                            : <span className="pk-shot-fb">🥬</span>}
-                          <span className="pk-no" style={{ background: meta.color, color: "#fff" }}>{meta.emoji}</span>
+                <div style={{ fontSize: 20, fontWeight: 900, color: C.red, whiteSpace: "nowrap" }}>{PRICING.perLbLabel}</div>
+              </div>
+            )}
+
+            <div className="acc2">
+
+              {/* ══════════ Ma-Fans ══════════ */}
+              {view === "mafans" && MAFANS_BANNERS.map(b => {
+                if (b.key === "new" && NEW_ARRIVALS.length === 0) return null;
+                if (b.key === "campaign" && !CAMPAIGN.active) return null;
+                const open = openMf === b.key;
+                return (
+                  <AccItem key={b.key} open={open} onToggle={() => setOpenMf(open ? null : b.key)}
+                    emoji={b.emoji} titleEn={b.titleEn} titleCn={b.titleCn} hookCn={b.hookCn}
+                    grad={b.grad} edge={b.edge}>
+
+                    {/* ── 三级:饮品 / 小吃 ── */}
+                    {b.key === "picks" && (
+                      <>
+                        <div className="acc3">
+                          <button data-on={pickTab === "drink" ? "1" : "0"} onClick={() => setPickTab("drink")}>
+                            🧋 Drinks 饮品 · {DRINK_PICKS.length}
+                          </button>
+                          <button data-on={pickTab === "snack" ? "1" : "0"} onClick={() => setPickTab("snack")}>
+                            🍗 Snacks 小吃 · {SNACK_PICKS.length}
+                          </button>
                         </div>
-                        <div className="pk-body" style={{ padding: "11px 12px 13px" }}>
-                          <div className="pk-name" style={{ fontSize: 14.5 }}>{sp.nameEn}</div>
-                          <div className="pk-name-cn">{sp.nameCn}</div>
-                          {sp.whatCn && (
-                            <div style={{ fontSize: 11.5, color: C.inkMid, marginTop: 6, lineHeight: 1.5 }}>
-                              {sp.whatCn}
+
+                        {pickTab === "drink" ? (
+                          <>
+                            <div style={{ fontSize: 11.5, color: C.inkLight, lineHeight: 1.55, marginBottom: 4 }}>
+                              甜度、茶底、加料都替你配好了。出自隔壁北苑南家,同一个收银台。
                             </div>
-                          )}
-                          <div style={{ fontSize: 11, fontWeight: 800, color: meta.color, marginTop: 8 }}>
-                            详情 Details ›
+                            <div className="pk-rail">
+                              {DRINK_PICKS.map((raw, i) => (
+                                <PickCard key={raw.key} raw={raw} idx={i}
+                                  onOpen={() => setSheet({ k: "pick", id: raw.key })} />
+                              ))}
+                              <div className="pk-rail-end" aria-hidden="true" />
+                            </div>
+                            <div style={{ textAlign: "center", fontSize: 10.5, color: C.inkLight, marginTop: 4 }}>
+                              ← 左右滑动 swipe →
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 11 }}>
+                            {SNACK_PICKS.map(raw => (
+                              <PickCard key={raw.key} raw={raw} tile
+                                onOpen={() => setSheet({ k: "pick", id: raw.key })} />
+                            ))}
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: 14, background: C.goldPale, borderRadius: 13,
+                          padding: "12px 14px", border: `1px solid ${C.goldLight}`, textAlign: "center" }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 900, color: C.gold }}>Order at the counter</div>
+                          <div style={{ fontSize: 11.5, color: C.inkMid, marginTop: 3 }}>到柜台加点即可 · 和麻辣烫一起上</div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* ── 三级:当季活动 ── */}
+                    {b.key === "campaign" && (
+                      <>
+                        <div className="mf-season">
+                          <span className="mf-season-line" />
+                          <span className="mf-season-en">{CAMPAIGN.seasonEn}</span>
+                          <span className="mf-season-line" />
+                        </div>
+                        <div className="mf-season-cn">{CAMPAIGN.seasonCn}</div>
+
+                        <div className="mf-offer">
+                          <div className="mf-offer-shot">
+                            {CAMPAIGN.img
+                              ? <img src={CAMPAIGN.img} alt={CAMPAIGN.nameEn}
+                                  onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                              : <span style={{ fontSize: 42 }}>🍗</span>}
+                          </div>
+                          <div className="mf-offer-info">
+                            <span className="mf-excl">Ma-Fans Exclusive · 会员专享</span>
+                            <span className="mf-offer-name">{CAMPAIGN.nameEn}</span>
+                            <span className="mf-offer-cn">{CAMPAIGN.nameCn}</span>
+                            <span className="mf-offer-price">
+                              {CAMPAIGN.wasPrice && <s>${CAMPAIGN.wasPrice.toFixed(2)}</s>}
+                              <b>${CAMPAIGN.price.toFixed(2)}</b>
+                            </span>
                           </div>
                         </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
 
-          <div style={{ marginTop: 26, textAlign: "center", fontSize: 11.5, color: C.inkLight, lineHeight: 1.7 }}>
-            Full selection and allergen labels are posted at the bar.<br />
-            全部食材与过敏源标示以自助台现场为准。
-          </div>
-        </div>
-      )}
+                        <div className="mf-rules">
+                          {CAMPAIGN.rulesEn.map((r, i) => (
+                            <div key={r} className="mf-rule">
+                              <span className="mf-rule-dot" />
+                              <span><b>{r}</b><i>{CAMPAIGN.rulesCn[i]}</i></span>
+                            </div>
+                          ))}
+                        </div>
 
-      {/* 食材详情 */}
-      {spotItem && (
-        <div className="mf-lightbox" onClick={() => setSpot(null)}>
-          <div className="sp-sheet" onClick={e => e.stopPropagation()}>
-            {(() => {
-              const it = spotItem.itemId ? getItem(spotItem.itemId) : undefined;
-              const img = spotItem.img ?? it?.img;
-              const meta = TIER_META[spotItem.tier];
-              return (
-                <>
-                  <div className="pk-shot" style={{ borderRadius: "20px 20px 0 0" }}>
-                    {img
-                      ? <img src={img} alt={spotItem.nameEn} />
-                      : <span className="pk-shot-fb">🥬</span>}
-                    <span className="pk-no" style={{ background: meta.color, color: "#fff" }}>
-                      {meta.emoji} {meta.en}
-                    </span>
-                  </div>
-                  <div style={{ padding: "18px 20px 24px" }}>
-                    <div style={{ fontSize: 22, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{spotItem.nameEn}</div>
-                    <div style={{ fontSize: 14, color: C.inkLight, marginTop: 3 }}>{spotItem.nameCn}</div>
+                        <button className="mf-cta"
+                          onClick={() => window.open(YGF_CHANNEL, "_blank", "noopener,noreferrer")}>
+                          Join Ma-Fans<span>关注频道 · 领取会员价</span>
+                        </button>
+                      </>
+                    )}
 
-                    {([
-                      ["What it is 是什么",        spotItem.whatEn,    spotItem.whatCn],
-                      ["Texture 什么口感",         spotItem.textureEn, spotItem.textureCn],
-                      ["How to cook 怎么煮好吃",   spotItem.cookEn,    spotItem.cookCn],
-                      ["Best broth 配什么汤底",    spotItem.brothEn,   spotItem.brothCn],
-                    ] as const).map(([label, en, cn]) => (en || cn) ? (
-                      <div key={label} style={{ marginTop: 15 }}>
+                    {/* ── 三级:会员福利 ── */}
+                    {b.key === "perks" && (
+                      <div className="mf-join">
+                        <div className="mf-join-top">
+                          <span className="mf-join-emoji">🧧</span>
+                          <span>
+                            <span className="mf-join-t">Join Ma-Fans</span>
+                            <span className="mf-join-cn">立即加入 · 免费</span>
+                          </span>
+                        </div>
+                        <div className="mf-perks">
+                          {MEMBER_PERKS.map(p => (
+                            <div key={p.en} className="mf-perk">
+                              <span className="mf-perk-emoji">{p.emoji}</span>
+                              <span><b>{p.en}</b><i>{p.cn}</i></span>
+                            </div>
+                          ))}
+                        </div>
+                        <button className="mf-cta"
+                          onClick={() => window.open(YGF_CHANNEL, "_blank", "noopener,noreferrer")}>
+                          Follow on WhatsApp<span>关注频道 · 领取会员价</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* ── 三级:新品 / 限时 ── */}
+                    {b.key === "new" && (
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 11 }}>
+                        {NEW_ARRIVALS.map(a => (
+                          <article key={a.key} className="pk-tile" style={{ cursor: "default" }}>
+                            <div className="pk-shot">
+                              {a.img
+                                ? <img src={a.img} alt={a.nameEn}
+                                    onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                                : <span className="pk-shot-fb">🆕</span>}
+                              {a.tag && <span className="pk-no">{a.tag}</span>}
+                            </div>
+                            <div className="pk-body">
+                              <div className="pk-name">{a.nameEn}</div>
+                              <div className="pk-name-cn">{a.nameCn}</div>
+                              {a.blurbCn && <div className="pk-note-cn" style={{ marginTop: 5 }}>{a.blurbCn}</div>}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </AccItem>
+                );
+              })}
+
+              {/* ══════════ Our Broths —— 五款各一个横幅 ══════════ */}
+              {view === "broth" && BROTHS.map(br => {
+                const open = openBr === br.id;
+                const note = BROTH_NOTES[br.id];
+                const rows: [string, string | undefined, string | undefined][] = [
+                  ["Character 特点",    note?.charEn,  note?.charCn],
+                  ["What's in it 原料", note?.madeEn,  note?.madeCn],
+                  ["Taste 风味",        note?.tasteEn, note?.tasteCn],
+                  ["Goes with 适合配",  note?.forEn,   note?.forCn],
+                ];
+                return (
+                  <AccItem key={br.id} open={open} onToggle={() => setOpenBr(open ? null : br.id)}
+                    emoji="🍲" titleEn={br.en} titleCn={br.zh} hookCn={br.badge}
+                    grad={`linear-gradient(120deg,${br.color},rgba(0,0,0,.55))`} edge={br.color}>
+
+                    {br.img && (
+                      <div style={{ position: "relative", borderRadius: 14, overflow: "hidden",
+                        aspectRatio: "16 / 9", background: br.color, marginBottom: 13 }}>
+                        <img src={br.img} alt={br.zh}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                      </div>
+                    )}
+
+                    <div style={{ fontSize: 13.5, color: C.inkMid, lineHeight: 1.55 }}>{br.taglineEn}</div>
+                    <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{br.tagline}</div>
+
+                    {/* 店里确认可公开的内容,填了才出现 */}
+                    {rows.map(([label, en, cn]) => (en || cn) ? (
+                      <div key={label} style={{ marginTop: 14 }}>
                         <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2 }}>{label}</div>
-                        {en && <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 4, lineHeight: 1.55 }}>{en}</div>}
+                        {en && <div style={{ fontSize: 13, color: C.inkMid, marginTop: 4, lineHeight: 1.55 }}>{en}</div>}
                         {cn && <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 2, lineHeight: 1.55 }}>{cn}</div>}
                       </div>
                     ) : null)}
 
-                    {it?.allergens?.length ? (
-                      <div style={{ marginTop: 17 }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: C.red, letterSpacing: 1.2, marginBottom: 7 }}>
-                          ALLERGENS 过敏源
-                        </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {it.allergens.map(a => <AllergenTag key={a} a={a} />)}
-                        </div>
+                    {/* 辣度 */}
+                    <div style={{ marginTop: 14 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2, marginBottom: 6 }}>
+                        Heat 辣度
                       </div>
-                    ) : null}
-
-                    <button onClick={() => setSpot(null)} style={{
-                      width: "100%", marginTop: 22, padding: "15px 0", borderRadius: 14, border: "none",
-                      background: C.ink, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-                      关闭 Close
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
-
-      {activeSection === "sauce" && (
-        <div style={{ padding: "20px 16px 48px" }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 3 }}>SAUCE BAR</div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: C.ink, marginTop: 5, lineHeight: 1.2, letterSpacing: -0.5 }}>
-            调料 · 调出你的味道
-          </div>
-          <div style={{ fontSize: 13, color: C.inkMid, marginTop: 9, lineHeight: 1.6 }}>
-            The sauce bar is free and unlimited. Start with one of these.
-          </div>
-          <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.6 }}>
-            调料台免费、不限量。不知道怎么调,照着下面来。
-          </div>
-
-          {/* ① 先给配方 —— 顾客站在调料台前要的是答案,不是目录 */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 13, marginTop: 20 }}>
-            {SAUCE_RECIPES.map(r => {
-              const open = recipe === r.key;
-              return (
-                <div key={r.key} className="sb-card" data-open={open ? "1" : "0"}
-                  style={{ borderColor: open ? r.color : C.border }}>
-                  <button className="sb-head" onClick={() => setRecipe(open ? null : r.key)}>
-                    <span className="sb-emoji" style={{ background: `${r.color}18`, borderColor: `${r.color}44` }}>
-                      {r.emoji}
-                    </span>
-                    <span style={{ minWidth: 0, flex: 1 }}>
-                      <span className="sb-name" style={{ color: r.color }}>{r.nameEn}</span>
-                      <span className="sb-name-cn">{r.nameCn}</span>
-                      {r.noteCn && <span className="sb-note">{r.noteCn}</span>}
-                    </span>
-                    <span className="lx-chev" style={{ color: r.color }}>▼</span>
-                  </button>
-                  <div className="sb-body"><div><div className="sb-inner">
-                    {r.noteEn && (
-                      <div style={{ fontSize: 12.5, color: C.inkMid, lineHeight: 1.55, marginBottom: 11 }}>
-                        {r.noteEn}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {br.spicyLevels.length === 0
+                          ? <span style={{ fontSize: 12.5, color: C.inkMid }}>🍃 {br.spicy}</span>
+                          : br.spicyLevels.map(lv => (
+                              <span key={lv.en} style={{ fontSize: 12.5, color: C.inkMid, display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ minWidth: 92 }}>{lv.en} {lv.zh}</span>
+                                <span style={{ letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
+                              </span>
+                            ))}
                       </div>
-                    )}
-                    <ol className="sb-steps">
-                      {r.steps.map((st, i) => (
-                        <li key={st.cn}>
-                          <span className="sb-n" style={{ background: r.color }}>{i + 1}</span>
-                          <span className="sb-s">
-                            <b>{st.cn}</b>
-                            <i>{st.en}</i>
-                          </span>
-                          {st.amount && <span className="sb-amt">{st.amount}</span>}
-                        </li>
-                      ))}
-                    </ol>
-                  </div></div></div>
-                </div>
-              );
-            })}
-          </div>
+                    </div>
 
-          {/* ② 认识一下 */}
-          {SAUCE_NOTES.length > 0 && (
-            <section style={{ marginTop: 30 }}>
-              <div className="sp-head">
-                <span className="sp-head-dot" style={{ background: C.inkMid }} />
-                <span className="sp-head-en" style={{ color: C.inkMid }}>KNOW YOUR SAUCES</span>
-                <span className="sp-head-cn">认识一下</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
-                {SAUCE_NOTES.map(sn => (
-                  <div key={sn.key} style={{ background: C.bgCard, border: `2px solid ${C.border}`,
-                    borderRadius: 15, padding: "13px 15px" }}>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: C.ink }}>{sn.nameEn}</div>
-                    <div style={{ fontSize: 12, color: C.inkLight, marginTop: 2 }}>{sn.nameCn}</div>
-                    <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 7, lineHeight: 1.55 }}>{sn.descEn}</div>
-                    <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{sn.descCn}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ③ 全部调料 —— 折叠,想看的人自己展开 */}
-          <div className="lx-tray" data-open={allSauce ? "1" : "0"} style={{ marginTop: 20 }}>
-            <button className="lx-tray-head" onClick={() => setAllSauce(o => !o)}>
-              <span style={{ minWidth: 0 }}>
-                <span className="lx-tray-title">ALL SAUCES 全部调料</span>
-                <span className="lx-tray-sum" style={{ display: "block" }}>
-                  {SAUCE_CATEGORIES.reduce((s, c) => s + c.items.length, 0)} 种 · tap to browse
-                </span>
-              </span>
-              <span className="lx-chev">▼</span>
-            </button>
-            <div className="lx-tray-body"><div><div className="lx-tray-inner">
-              {SAUCE_CATEGORIES.map(cat => (
-                <div key={cat.zh} style={{ marginTop: 10 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 1 }}>
-                    {cat.en} · {cat.zh}
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 7 }}>
-                    {cat.items.map(it => (
-                      <span key={it.zh} style={{ fontSize: 11.5, fontWeight: 700, color: C.inkMid,
-                        background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, padding: "5px 9px" }}>
-                        {it.zh} <span style={{ color: C.inkLight, fontWeight: 500 }}>{it.en}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 15, gap: 10 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap",
+                        color: br.surcharge ? "#fff" : C.inkMid,
+                        background: br.surcharge ? C.red : "transparent",
+                        border: br.surcharge ? "none" : `1px solid ${C.border}`,
+                        borderRadius: 8, padding: "6px 11px" }}>
+                        {br.surcharge ? `+$${br.surcharge.toFixed(2)} / bowl` : "Included 免费"}
                       </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div></div></div>
-          </div>
+                      <Link href={`/menu/ygf/broth/${br.id}`} data-press
+                        style={{ textDecoration: "none", background: C.red, color: "#fff",
+                          fontSize: 13, fontWeight: 800, borderRadius: 10, padding: "9px 15px", whiteSpace: "nowrap" }}>
+                        查看搭配 Combos ›
+                      </Link>
+                    </div>
+                  </AccItem>
+                );
+              })}
 
-          {/* ④ Secret Mixes —— 不在 App 里公布,指向频道 */}
-          <div className="sb-secret">
-            <div className="sb-secret-emoji">🤫</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: "#F5D98A" }}>{SECRET_MIX.titleEn}</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.66)", marginTop: 2 }}>{SECRET_MIX.titleCn}</div>
-            <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.82)", marginTop: 10, lineHeight: 1.6 }}>
-              {SECRET_MIX.bodyEn}
-            </div>
-            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.6)", marginTop: 3, lineHeight: 1.6 }}>
-              {SECRET_MIX.bodyCn}
-            </div>
-            <button className="mf-cta" style={{ marginTop: 15 }}
-              onClick={() => window.open(YGF_CHANNEL, "_blank", "noopener,noreferrer")}>
-              Join Ma-Fans<span>关注频道看隐藏配方</span>
-            </button>
-          </div>
+              {/* ══════════ Ingredients —— 三档 ══════════ */}
+              {view === "items" && (["new", "favorite", "try"] as SpotlightTier[]).map(tier => {
+                const list = SPOTLIGHTS.filter(sp => sp.tier === tier);
+                if (list.length === 0) return null;
+                const meta = TIER_META[tier];
+                const skin = ITEM_BANNERS[tier];
+                const open = openIt === tier;
+                return (
+                  <AccItem key={tier} open={open} onToggle={() => setOpenIt(open ? null : tier)}
+                    emoji={meta.emoji} titleEn={meta.en} titleCn={`${meta.cn} · ${list.length} 款`}
+                    hookCn={skin.hookCn} grad={skin.grad} edge={skin.edge}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 11 }}>
+                      {list.map(sp => {
+                        const it = sp.itemId ? getItem(sp.itemId) : undefined;
+                        const img = sp.img ?? it?.img;
+                        return (
+                          <article key={sp.key} className="pk-tile" data-press
+                            onClick={() => setSheet({ k: "spot", id: sp.key })}>
+                            <div className="pk-shot">
+                              {img
+                                ? <img src={img} alt={sp.nameEn}
+                                    onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+                                : <span className="pk-shot-fb">🥬</span>}
+                              <span className="pk-no" style={{ background: meta.color, color: "#fff" }}>{meta.emoji}</span>
+                            </div>
+                            <div className="pk-body">
+                              <div className="pk-name">{sp.nameEn}</div>
+                              <div className="pk-name-cn">{sp.nameCn}</div>
+                              {sp.whatCn && <div className="pk-note-cn pk-clamp" style={{ marginTop: 6 }}>{sp.whatCn}</div>}
+                              <div className="pk-more" style={{ color: meta.color }}>详情 Details ›</div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </AccItem>
+                );
+              })}
 
-          <div style={{ marginTop: 16, background: C.goldPale, borderRadius: 14,
-            padding: "14px 16px", border: `1px solid ${C.goldLight}` }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: C.gold }}>🥣 Free &amp; unlimited</div>
-            <div style={{ fontSize: 11.5, color: C.inkMid, marginTop: 3 }}>
-              调料台完全免费,不限量,随时可以再去添加。
-            </div>
-          </div>
-        </div>
-      )}
+              {/* ══════════ Sauce Bar ══════════ */}
+              {view === "sauce" && SAUCE_BANNERS.map(b => {
+                const open = openSa === b.key;
+                return (
+                  <AccItem key={b.key} open={open} onToggle={() => setOpenSa(open ? null : b.key)}
+                    emoji={b.emoji} titleEn={b.titleEn} titleCn={b.titleCn} hookCn={b.hookCn}
+                    grad={b.grad} edge={b.edge}>
 
-
-      {activeSection === "mafans" && (
-        <div style={{ paddingBottom: 48 }}>
-
-          {/* ① 当季活动大标题 */}
-          {CAMPAIGN.active && (
-            <div style={{ padding: "22px 16px 0" }}>
-              <div className="mf-season">
-                <span className="mf-season-line" />
-                <span className="mf-season-en">{CAMPAIGN.seasonEn}</span>
-                <span className="mf-season-line" />
-              </div>
-              <div className="mf-season-cn">{CAMPAIGN.seasonCn}</div>
-
-              {/* ② 具体福利 */}
-              <div className="mf-offer">
-                <div className="mf-offer-shot">
-                  {CAMPAIGN.img
-                    ? <img src={CAMPAIGN.img} alt={CAMPAIGN.nameEn}
-                        onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                    : <span style={{ fontSize: 44 }}>🍗</span>}
-                </div>
-                <div className="mf-offer-info">
-                  <span className="mf-excl">Ma-Fans Exclusive · 会员专享</span>
-                  <span className="mf-offer-name">{CAMPAIGN.nameEn}</span>
-                  <span className="mf-offer-cn">{CAMPAIGN.nameCn}</span>
-                  <span className="mf-offer-price">
-                    {CAMPAIGN.wasPrice && <s>${CAMPAIGN.wasPrice.toFixed(2)}</s>}
-                    <b>${CAMPAIGN.price.toFixed(2)}</b>
-                  </span>
-                </div>
-              </div>
-
-              <div className="mf-rules">
-                {CAMPAIGN.rulesEn.map((r, i) => (
-                  <div key={r} className="mf-rule">
-                    <span className="mf-rule-dot" />
-                    <span>
-                      <b>{r}</b>
-                      <i>{CAMPAIGN.rulesCn[i]}</i>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ③ 立即加入 + ④ 三条权益 */}
-          <div style={{ padding: "16px 16px 0" }}>
-            <div className="mf-join">
-              <div className="mf-join-top">
-                <span className="mf-join-emoji">🧧</span>
-                <span>
-                  <span className="mf-join-t">Join Ma-Fans</span>
-                  <span className="mf-join-cn">立即加入 · 免费</span>
-                </span>
-              </div>
-              <div className="mf-perks">
-                {MEMBER_PERKS.map(p => (
-                  <div key={p.en} className="mf-perk">
-                    <span className="mf-perk-emoji">{p.emoji}</span>
-                    <span>
-                      <b>{p.en}</b>
-                      <i>{p.cn}</i>
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <button className="mf-cta"
-                onClick={() => window.open(YGF_CHANNEL, "_blank", "noopener,noreferrer")}>
-                Follow on WhatsApp<span>关注频道 · 领取会员价</span>
-              </button>
-            </div>
-          </div>
-
-          {/* ⑤ Drinks */}
-          <div style={{ padding: "30px 16px 0" }}>
-            <div className="sp-head">
-              <span className="sp-head-dot" style={{ background: C.gold }} />
-              <span className="sp-head-en" style={{ color: C.gold }}>🧋 DRINKS</span>
-              <span className="sp-head-cn">饮品 · {DRINK_PICKS.length} 款</span>
-            </div>
-            <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 9, lineHeight: 1.6 }}>
-              Sweetness, tea base and toppings already chosen — just show the counter.
-            </div>
-            <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.6 }}>
-              甜度、茶底、加料都替你配好了。出自隔壁北苑南家,同一个收银台。
-            </div>
-          </div>
-
-          <div className="pk-rail">
-            {DRINK_PICKS.map((raw, i) => {
-              const p = resolvePick(raw);
-              return (
-                <article key={p.key} className="pk-card">
-                  <div className="pk-shot">
-                    {p.img
-                      ? <img src={p.img} alt={p.nameEn}
-                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                      : <span className="pk-shot-fb">🧋</span>}
-                    <span className="pk-no">{String(i + 1).padStart(2, "0")}</span>
-                  </div>
-                  <div className="pk-body">
-                    <div className="pk-name">{p.nameEn}</div>
-                    <div className="pk-name-cn">{p.nameCn}</div>
-                    {p.tasteEn && <div className="pk-note">{p.tasteEn}</div>}
-                    {p.tasteCn && <div className="pk-note-cn">{p.tasteCn}</div>}
-                    {p.pairCn && (
-                      <div className="pk-pair">
-                        <b>配麻辣烫</b>
-                        <i>{p.pairCn}</i>
+                    {/* 三级:三个配方 */}
+                    {b.key === "recipes" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                        {SAUCE_RECIPES.map(r => {
+                          const on = recipe === r.key;
+                          return (
+                            <div key={r.key} className="sb-card" data-open={on ? "1" : "0"}
+                              style={{ borderColor: on ? r.color : C.border }}>
+                              <button className="sb-head" onClick={() => setRecipe(on ? null : r.key)}>
+                                <span className="sb-emoji" style={{ background: `${r.color}18`, borderColor: `${r.color}44` }}>
+                                  {r.emoji}
+                                </span>
+                                <span style={{ minWidth: 0, flex: 1 }}>
+                                  <span className="sb-name" style={{ color: r.color }}>{r.nameEn}</span>
+                                  <span className="sb-name-cn">{r.nameCn}</span>
+                                  {r.noteCn && <span className="sb-note">{r.noteCn}</span>}
+                                </span>
+                                <span className="sb-chev" style={{ color: r.color }}>▼</span>
+                              </button>
+                              <div className="sb-body"><div><div className="sb-inner">
+                                {r.noteEn && (
+                                  <div style={{ fontSize: 12.5, color: C.inkMid, lineHeight: 1.55, marginBottom: 11 }}>
+                                    {r.noteEn}
+                                  </div>
+                                )}
+                                <ol className="sb-steps">
+                                  {r.steps.map((st, i) => (
+                                    <li key={st.cn}>
+                                      <span className="sb-n" style={{ background: r.color }}>{i + 1}</span>
+                                      <span className="sb-s"><b>{st.cn}</b><i>{st.en}</i></span>
+                                      {st.amount && <span className="sb-amt">{st.amount}</span>}
+                                    </li>
+                                  ))}
+                                </ol>
+                              </div></div></div>
+                            </div>
+                          );
+                        })}
+                        <div style={{ background: C.goldPale, borderRadius: 13, padding: "12px 14px",
+                          border: `1px solid ${C.goldLight}` }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: C.gold }}>🥣 Free &amp; unlimited</div>
+                          <div style={{ fontSize: 11.5, color: C.inkMid, marginTop: 3 }}>
+                            调料台完全免费,不限量,随时可以再去添加。
+                          </div>
+                        </div>
                       </div>
                     )}
-                    <div className="pk-mods">
-                      {p.mods.map(m => <span key={m} className="pk-mod">{m}</span>)}
-                    </div>
-                    <div className="pk-price">${p.total.toFixed(2)}<span>+Tax</span></div>
-                  </div>
-                </article>
-              );
-            })}
-            <div className="pk-rail-end" aria-hidden="true" />
-          </div>
-          <div style={{ textAlign: "center", fontSize: 11, color: C.inkLight, marginTop: 8 }}>
-            ← 左右滑动 swipe →
-          </div>
 
-          {/* ⑥ Snacks */}
-          <div style={{ padding: "30px 16px 0" }}>
-            <div className="sp-head">
-              <span className="sp-head-dot" style={{ background: C.red }} />
-              <span className="sp-head-en" style={{ color: C.red }}>🍗 SNACKS</span>
-              <span className="sp-head-cn">小吃 · {SNACK_PICKS.length} 款</span>
-            </div>
-          </div>
-          <div style={{ padding: "14px 16px 0", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
-            {SNACK_PICKS.map(raw => {
-              const p = resolvePick(raw);
-              return (
-                <article key={p.key} className="pk-tile">
-                  <div className="pk-shot">
-                    {p.img
-                      ? <img src={p.img} alt={p.nameEn}
-                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                      : <span className="pk-shot-fb">🍽</span>}
-                  </div>
-                  <div className="pk-body" style={{ padding: "11px 12px 13px" }}>
-                    <div className="pk-name" style={{ fontSize: 14.5 }}>{p.nameEn}</div>
-                    <div className="pk-name-cn">{p.nameCn}</div>
-                    {p.tasteCn && <div className="pk-note-cn" style={{ marginTop: 5 }}>{p.tasteCn}</div>}
-                    {p.mods.length > 0 && (
-                      <div className="pk-mods">
-                        {p.mods.map(m => <span key={m} className="pk-mod">{m}</span>)}
+                    {/* 三级:认识调料 */}
+                    {b.key === "know" && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {SAUCE_NOTES.map(sn => (
+                          <div key={sn.key} style={{ background: C.bgCard, border: `2px solid ${C.border}`,
+                            borderRadius: 14, padding: "13px 14px" }}>
+                            <div style={{ fontSize: 15, fontWeight: 900, color: C.ink }}>{sn.nameEn}</div>
+                            <div style={{ fontSize: 12, color: C.inkLight, marginTop: 2 }}>{sn.nameCn}</div>
+                            <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 7, lineHeight: 1.55 }}>{sn.descEn}</div>
+                            <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{sn.descCn}</div>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    <div className="pk-price" style={{ fontSize: 19, marginTop: 7 }}>
-                      ${p.total.toFixed(2)}<span>+Tax</span>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
 
-          {/* ⑦ 新品 / 限时 —— 空时整块不出现 */}
-          {NEW_ARRIVALS.length > 0 && (
-            <>
-              <div style={{ padding: "30px 16px 0" }}>
-                <div className="sp-head">
-                  <span className="sp-head-dot" style={{ background: "#0F766E" }} />
-                  <span className="sp-head-en" style={{ color: "#0F766E" }}>🆕 NEW &amp; LIMITED</span>
-                  <span className="sp-head-cn">新品 · 限时</span>
-                </div>
-              </div>
-              <div style={{ padding: "14px 16px 0", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
-                {NEW_ARRIVALS.map(a => (
-                  <article key={a.key} className="pk-tile">
-                    <div className="pk-shot">
-                      {a.img
-                        ? <img src={a.img} alt={a.nameEn}
-                            onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                        : <span className="pk-shot-fb">🆕</span>}
-                      {a.tag && <span className="pk-no">{a.tag}</span>}
-                    </div>
-                    <div className="pk-body" style={{ padding: "11px 12px 13px" }}>
-                      <div className="pk-name" style={{ fontSize: 14.5 }}>{a.nameEn}</div>
-                      <div className="pk-name-cn">{a.nameCn}</div>
-                      {a.blurbCn && <div className="pk-note-cn" style={{ marginTop: 5 }}>{a.blurbCn}</div>}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </>
-          )}
+                    {/* 三级:全部调料 */}
+                    {b.key === "all" && (
+                      <div>
+                        <div style={{ fontSize: 11.5, color: C.inkLight, marginBottom: 4 }}>
+                          {SAUCE_CATEGORIES.reduce((s, c) => s + c.items.length, 0)} 种 · 以调料台现场为准
+                        </div>
+                        {SAUCE_CATEGORIES.map(cat => (
+                          <div key={cat.zh} style={{ marginTop: 13 }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 1 }}>
+                              {cat.en} · {cat.zh}
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 7 }}>
+                              {cat.items.map(it => (
+                                <span key={it.zh} style={{ fontSize: 11.5, fontWeight: 700, color: C.inkMid,
+                                  background: "#fff", border: `1px solid ${C.border}`, borderRadius: 8, padding: "5px 9px" }}>
+                                  {it.zh} <span style={{ color: C.inkLight, fontWeight: 500 }}>{it.en}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-          <div style={{ margin: "24px 16px 0", background: C.goldPale, borderRadius: 16,
-            padding: "16px", border: `1.5px solid ${C.goldLight}`, textAlign: "center" }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: C.gold }}>Order at the counter</div>
-            <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 4, lineHeight: 1.6 }}>
-              到柜台加点即可 · 和麻辣烫一起上
+                    {/* 三级:隐藏配方 → 频道 */}
+                    {b.key === "secret" && (
+                      <div className="sb-secret">
+                        <div className="sb-secret-emoji">🤫</div>
+                        <div style={{ fontSize: 16.5, fontWeight: 900, color: C.ink }}>{SECRET_MIX.titleEn}</div>
+                        <div style={{ fontSize: 12, color: C.inkLight, marginTop: 2 }}>{SECRET_MIX.titleCn}</div>
+                        <div style={{ fontSize: 12.5, color: C.inkMid, marginTop: 10, lineHeight: 1.6 }}>
+                          {SECRET_MIX.bodyEn}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: C.inkLight, marginTop: 3, lineHeight: 1.6 }}>
+                          {SECRET_MIX.bodyCn}
+                        </div>
+                        <button className="mf-cta"
+                          onClick={() => window.open(YGF_CHANNEL, "_blank", "noopener,noreferrer")}>
+                          Join Ma-Fans<span>关注频道看隐藏配方</span>
+                        </button>
+                      </div>
+                    )}
+                  </AccItem>
+                );
+              })}
+
+            </div>
+
+            {/* 页脚 */}
+            <div style={{ marginTop: 22, textAlign: "center", fontSize: 10.5, color: C.inkLight, lineHeight: 1.7 }}>
+              {view === "items" && <>Full selection and allergen labels are posted at the bar.<br />全部食材与过敏源标示以自助台现场为准。<br /></>}
+              图片仅供参考、以实物为准 · Pictures are for reference only
             </div>
           </div>
-
-          <div style={{ marginTop: 12, textAlign: "center", fontSize: 10.5, color: C.inkLight, lineHeight: 1.6 }}>
-            图片仅供参考、以实物为准<br />Pictures are for reference only
-          </div>
-        </div>
-      )}
-
-
-
+        )}
 
       </div>
     </AppShell>
     </div>
+
+    {/* ═══ 详情:食材 ═══ */}
+    {spotItem && (
+      <div className="mf-lightbox" onClick={() => setSheet(null)}>
+        <div className="sp-sheet" onClick={e => e.stopPropagation()}>
+          {(() => {
+            const it = spotItem.itemId ? getItem(spotItem.itemId) : undefined;
+            const img = spotItem.img ?? it?.img;
+            const meta = TIER_META[spotItem.tier];
+            return (
+              <>
+                <div className="pk-shot" style={{ borderRadius: "20px 20px 0 0" }}>
+                  {img ? <img src={img} alt={spotItem.nameEn} /> : <span className="pk-shot-fb">🥬</span>}
+                  <span className="pk-no" style={{ background: meta.color, color: "#fff" }}>
+                    {meta.emoji} {meta.en}
+                  </span>
+                </div>
+                <div style={{ padding: "18px 20px 24px" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{spotItem.nameEn}</div>
+                  <div style={{ fontSize: 14, color: C.inkLight, marginTop: 3 }}>{spotItem.nameCn}</div>
+
+                  {([
+                    ["What it is 是什么",      spotItem.whatEn,    spotItem.whatCn],
+                    ["Texture 什么口感",       spotItem.textureEn, spotItem.textureCn],
+                    ["How to cook 怎么煮好吃", spotItem.cookEn,    spotItem.cookCn],
+                    ["Best broth 配什么汤底",  spotItem.brothEn,   spotItem.brothCn],
+                  ] as const).map(([label, en, cn]) => (en || cn) ? (
+                    <div key={label} style={{ marginTop: 15 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2 }}>{label}</div>
+                      {en && <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 4, lineHeight: 1.55 }}>{en}</div>}
+                      {cn && <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 2, lineHeight: 1.55 }}>{cn}</div>}
+                    </div>
+                  ) : null)}
+
+                  {it?.allergens?.length ? (
+                    <div style={{ marginTop: 17 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.red, letterSpacing: 1.2, marginBottom: 7 }}>
+                        ALLERGENS 过敏源
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {it.allergens.map(a => <AllergenTag key={a} a={a} />)}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <button onClick={() => setSheet(null)} style={{
+                    width: "100%", marginTop: 22, padding: "15px 0", borderRadius: 14, border: "none",
+                    background: C.ink, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+                    关闭 Close
+                  </button>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      </div>
+    )}
+
+    {/* ═══ 详情:饮品 / 小吃 ═══ */}
+    {pickRaw && (
+      <div className="mf-lightbox" onClick={() => setSheet(null)}>
+        <div className="sp-sheet" onClick={e => e.stopPropagation()}>
+          {(() => {
+            const p = resolvePick(pickRaw);
+            return (
+              <>
+                <div className="pk-shot" style={{ borderRadius: "20px 20px 0 0" }}>
+                  {p.img ? <img src={p.img} alt={p.nameEn} /> : <span className="pk-shot-fb">🧋</span>}
+                </div>
+                <div style={{ padding: "18px 20px 24px" }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{p.nameEn}</div>
+                  <div style={{ fontSize: 14, color: C.inkLight, marginTop: 3 }}>{p.nameCn}</div>
+
+                  {(p.tasteEn || p.tasteCn) && (
+                    <div style={{ marginTop: 15 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2 }}>Taste 什么味道</div>
+                      {p.tasteEn && <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 4, lineHeight: 1.55 }}>{p.tasteEn}</div>}
+                      {p.tasteCn && <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 2, lineHeight: 1.55 }}>{p.tasteCn}</div>}
+                    </div>
+                  )}
+
+                  {(p.pairEn || p.pairCn) && (
+                    <div className="pk-pair" style={{ marginTop: 15 }}>
+                      <b>WITH MALATANG 配麻辣烫</b>
+                      {p.pairEn && <i>{p.pairEn}</i>}
+                      {p.pairCn && <i>{p.pairCn}</i>}
+                    </div>
+                  )}
+
+                  {p.mods.length > 0 && (
+                    <div style={{ marginTop: 15 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2, marginBottom: 7 }}>
+                        Already set 已替你配好
+                      </div>
+                      <div className="pk-mods" style={{ marginTop: 0 }}>
+                        {p.mods.map(m => <span key={m} className="pk-mod">{m}</span>)}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 17 }}>
+                    <span style={{ fontSize: 30, fontWeight: 900, color: C.red, letterSpacing: -1 }}>
+                      ${p.total.toFixed(2)}
+                    </span>
+                    <span style={{ fontSize: 11, color: C.inkLight }}>+Tax · 到柜台加点</span>
+                  </div>
+
+                  <button onClick={() => setSheet(null)} style={{
+                    width: "100%", marginTop: 20, padding: "15px 0", borderRadius: 14, border: "none",
+                    background: C.ink, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+                    关闭 Close
+                  </button>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      </div>
+    )}
 
     <PsstWidget open={psst} onClose={() => setPsst(false)} channelUrl={YGF_CHANNEL} />
     </>
