@@ -57,80 +57,76 @@ const YGF_CSS = `
 }
 .ygf-bar[data-on="1"] .ygf-bar-wide{ opacity:1 }
 
-/* ══ 一级入口:环形牌桌 ══ */
-.ring-wrap{
-  min-height:calc(100dvh - 210px);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:26px 0 30px;
+/* ══ 一级入口:横向滚动的大牌 ══ */
+.deck-wrap{
+  padding:16px 0 20px;
   background:
-    radial-gradient(120% 70% at 50% 8%, rgba(200,145,42,.16), transparent 60%),
-    linear-gradient(170deg,#1B0F08,#0C0705 62%,#140A06);
+    radial-gradient(130% 60% at 50% 0%, rgba(200,145,42,.14), transparent 62%),
+    linear-gradient(170deg,#1B0F08,#0B0604);
+  overflow:hidden;
 }
-.ring-eyebrow{
-  font-size:9.5px; font-weight:800; letter-spacing:3.5px;
-  color:rgba(245,217,138,.66); text-align:center;
+.deck-eyebrow{
+  font-size:10px; font-weight:800; letter-spacing:3px;
+  color:rgba(245,217,138,.6); text-align:center; margin-bottom:14px;
 }
-.ring-title{
-  font-size:26px; font-weight:900; color:#fff; margin-top:9px;
-  letter-spacing:-.4px; text-align:center;
+.deck-view{ overflow:hidden; touch-action:pan-y; -webkit-tap-highlight-color:transparent }
+.deck-track{ display:flex; gap:14px; padding:0 16px; will-change:transform }
+.deck-rail-static{
+  display:flex; gap:14px; padding:0 16px; overflow-x:auto;
+  scroll-snap-type:x mandatory; scrollbar-width:none;
 }
-.ring-sub{
-  font-size:11.5px; color:rgba(255,255,255,.44); margin-top:5px;
-  letter-spacing:.8px; text-align:center;
+.deck-rail-static::-webkit-scrollbar{ display:none }
+.deck-rail-static .deck-card{ scroll-snap-align:center }
+
+/* 竖版大牌 —— 约占屏高 3/5,纯色,大标题大标签 */
+.deck-card{
+  position:relative; flex:0 0 auto;
+  width:min(74vw, 300px);
+  height:clamp(360px, 58vh, 500px);
+  border-radius:24px; overflow:hidden; cursor:pointer;
+  border:2px solid; box-shadow:0 16px 40px rgba(0,0,0,.45);
+  display:flex; flex-direction:column; justify-content:flex-end;
 }
-.ring-stage{
-  position:relative; width:100%; height:328px; margin-top:16px;
-  touch-action:pan-y; overflow:hidden;
-  -webkit-tap-highlight-color:transparent;
+/* 巨大的半透明角标做底纹,避免纯色发空 */
+.deck-wm{
+  position:absolute; top:-14px; right:-18px;
+  font-size:170px; line-height:1; opacity:.10;
+  transform:rotate(-12deg); pointer-events:none; user-select:none;
 }
-/* 扑克牌:5:7,金边,满幅图 + 底部渐变压字 */
-.ring-card{
-  position:absolute; top:50%; left:50%;
-  width:186px; height:260px; margin:0;
-  border-radius:17px; overflow:hidden; cursor:pointer;
-  border:2px solid; background:#140A06;
-  box-shadow:0 14px 34px rgba(0,0,0,.5);
-  will-change:transform,opacity,filter;
-  transform:translate(-50%,-50%);
+.deck-mark{
+  position:absolute; z-index:2; font-size:17px; line-height:1;
+  text-shadow:0 1px 6px rgba(0,0,0,.6);
 }
-.ring-shot{
-  position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; display:block;
+.deck-mark-tl{ top:14px; left:15px }
+.deck-mark-br{ bottom:14px; right:15px; transform:rotate(180deg) }
+
+.deck-face{ position:relative; z-index:3; padding:0 20px 24px }
+.deck-name{
+  font-size:34px; font-weight:900; color:#fff;
+  line-height:1.05; letter-spacing:-1px;
 }
-.ring-card::after{
-  content:""; position:absolute; inset:0;
-  background:linear-gradient(to top, rgba(8,4,2,.95) 34%, rgba(8,4,2,.35) 62%, transparent 86%);
+.deck-name-cn{
+  font-size:14px; font-weight:800; color:rgba(255,255,255,.82);
+  margin-top:7px; letter-spacing:.5px;
 }
-.ring-mark{
-  position:absolute; z-index:2; font-size:15px; line-height:1;
-  text-shadow:0 1px 5px rgba(0,0,0,.7);
+.deck-rule{
+  width:40px; height:3px; border-radius:2px; margin:15px 0 13px;
+  background:rgba(255,255,255,.55);
 }
-.ring-mark-tl{ top:10px; left:11px }
-.ring-mark-br{ bottom:10px; right:11px; transform:rotate(180deg) }
-.ring-face{
-  position:absolute; left:0; right:0; bottom:0; z-index:3;
-  padding:0 13px 14px; text-align:left;
+.deck-hook{ font-size:15.5px; font-weight:800; color:#fff; line-height:1.45 }
+.deck-hook-en{
+  font-size:11.5px; color:rgba(255,255,255,.62);
+  margin-top:5px; line-height:1.4;
 }
-.ring-name{ font-size:17px; font-weight:900; color:#fff; line-height:1.15; letter-spacing:-.3px }
-.ring-name-cn{ font-size:10.5px; color:rgba(245,217,138,.9); margin-top:3px; font-weight:700 }
-.ring-hook{ font-size:12px; color:#fff; margin-top:8px; line-height:1.4; font-weight:700 }
-.ring-hook-en{ font-size:9.5px; color:rgba(255,255,255,.58); margin-top:2px; line-height:1.35 }
-.ring-go{
-  display:inline-block; margin-top:10px; border-radius:8px;
-  padding:5px 11px; font-size:10.5px; font-weight:900; color:#fff;
+.deck-go{
+  display:inline-block; margin-top:17px;
+  background:rgba(255,255,255,.95); color:#14100C;
+  border-radius:10px; padding:9px 16px;
+  font-size:13px; font-weight:900; letter-spacing:.3px;
 }
-.ring-hint{
-  margin-top:18px; font-size:11px; color:rgba(255,255,255,.4);
-  letter-spacing:.5px; text-align:center;
-}
-/* 减弱动态:不转,竖排铺开 */
-.ring-stage.is-static{
-  height:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:4px 16px;
-}
-.ring-stage.is-static .ring-card{
-  position:relative; top:auto; left:auto;
-  transform:none!important; opacity:1!important; filter:none!important;
-  width:100%; max-width:300px; height:190px;
+.deck-hint{
+  margin-top:16px; text-align:center;
+  font-size:11px; color:rgba(255,255,255,.4); letter-spacing:.5px;
 }
 
 /* ── Ma-Fans:当季活动 ── */
@@ -353,121 +349,126 @@ const YGF_CSS = `
 
 
 /* ══════════════════════════════════════════════════════════
-   一级入口 —— 环形扑克牌
-   四张牌 90° 均分在一个圆环上,始终正面朝向顾客,靠前后大小与明暗
-   拉开纵深。按住停转、松开继续;拖动可以自己拨。
-   transform 直接写 DOM,不走 React 重渲染 —— 老安卓也稳。
+   一级入口 —— 横向不停滚动的大卡
+   竖版大牌占屏约 3/5,纯色不配图,大标题大标签。
+   轨道整体位移,牌复制一份做无缝循环;按住停、拖动拨、点击进。
+   transform 直接写 DOM,零 React 重渲染。
    ══════════════════════════════════════════════════════════ */
 function EntryRing({ onPick }: { onPick: (id: EntryId) => void }) {
-  const stage = useRef<HTMLDivElement>(null);
-  const cards = useRef<(HTMLDivElement | null)[]>([]);
-  const angle = useRef(0);
+  const track = useRef<HTMLDivElement>(null);
+  const offset = useRef(0);          // 轨道位移(px)
+  const span = useRef(1);            // 一组牌的总宽,用于取模循环
   const paused = useRef(false);
-  const drag = useRef<{ x: number; a: number; t: number; moved: number } | null>(null);
+  const drag = useRef<{ x: number; o: number; moved: number } | null>(null);
   const [reduced, setReduced] = useState(false);
 
-  const N = ENTRY_CARDS.length;
-  const R = 116;              // 轨道半径
-  const SPEED = 360 / 18000;  // 一圈 18 秒 —— 慢到能读,又始终在动
+  const SPEED = 38 / 1000;           // px/ms —— 慢到能读完一张牌
 
-  const layout = () => {
-    for (let i = 0; i < N; i++) {
-      const el = cards.current[i];
-      if (!el) continue;
-      const th = ((angle.current + i * (360 / N)) * Math.PI) / 180;
-      const x = R * Math.sin(th);
-      const z = R * Math.cos(th);
-      const d = (z + R) / (2 * R);                 // 0 = 最后, 1 = 最前
-      const scale = 0.60 + 0.40 * d;
-      el.style.transform = `translate(-50%,-50%) translateX(${x.toFixed(1)}px) scale(${scale.toFixed(3)})`;
-      el.style.opacity = (0.22 + 0.78 * d).toFixed(3);
-      el.style.zIndex = String(Math.round(d * 100));
-      el.style.filter = `brightness(${(0.55 + 0.45 * d).toFixed(2)})`;
+  const apply = () => {
+    const el = track.current;
+    if (!el) return;
+    if (span.current > 1) {
+      // 循环回 -span 到 0 之间
+      offset.current = ((offset.current % span.current) + span.current) % span.current - span.current;
     }
+    el.style.transform = `translate3d(${offset.current.toFixed(1)}px,0,0)`;
   };
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setReduced(mq.matches);
-    layout();
     if (mq.matches) return;
+
+    const measure = () => {
+      const el = track.current;
+      if (!el) return;
+      span.current = el.scrollWidth / 2 || 1;   // 复制了一份,取一半
+    };
+    measure();
+    window.addEventListener('resize', measure);
 
     let raf = 0;
     let last = 0;
     const tick = (t: number) => {
-      if (last && !paused.current && !drag.current) angle.current += (t - last) * SPEED;
+      if (last && !paused.current && !drag.current) offset.current -= (t - last) * SPEED;
       last = t;
-      layout();
+      apply();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* 按住停住 · 拖动拨动 · 松手继续 */
   const down = (e: React.PointerEvent) => {
     paused.current = true;
-    drag.current = { x: e.clientX, a: angle.current, t: Date.now(), moved: 0 };
+    drag.current = { x: e.clientX, o: offset.current, moved: 0 };
   };
   const move = (e: React.PointerEvent) => {
     if (!drag.current) return;
     const dx = e.clientX - drag.current.x;
     drag.current.moved = Math.max(drag.current.moved, Math.abs(dx));
-    angle.current = drag.current.a + dx * 0.55;
-    layout();
+    offset.current = drag.current.o + dx;
+    apply();
   };
   const up = () => { drag.current = null; paused.current = false; };
 
-  /* 拖过就不算点击 —— 避免拨牌时误进 */
   const tap = (id: EntryId) => {
-    if (drag.current && drag.current.moved > 8) return;
+    if (drag.current && drag.current.moved > 8) return;   // 拨牌不算点击
     onPick(id);
   };
 
-  return (
-    <div className="ring-wrap">
-      <div className="ring-eyebrow">YGF MALATANG · SAN DIEGO</div>
-      <div className="ring-title">今天想看点什么？</div>
-      <div className="ring-sub">Tap a card to explore</div>
-
-      <div
-        ref={stage}
-        className={`ring-stage${reduced ? ' is-static' : ''}`}
-        onPointerDown={down}
-        onPointerMove={move}
-        onPointerUp={up}
-        onPointerCancel={up}
-        onPointerLeave={up}
-      >
-        {ENTRY_CARDS.map((c, i) => (
-          <div
-            key={c.id}
-            ref={el => { cards.current[i] = el; }}
-            className="ring-card"
-            style={{ borderColor: c.color }}
-            onClick={() => tap(c.id)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onPick(c.id); }}
-          >
-            <img className="ring-shot" src={c.img} alt=""
-              onError={e => { (e.target as HTMLImageElement).style.opacity = '0'; }} />
-            <span className="ring-mark ring-mark-tl">{c.mark}</span>
-            <span className="ring-mark ring-mark-br">{c.mark}</span>
-            <div className="ring-face">
-              <div className="ring-name">{c.titleEn}</div>
-              <div className="ring-name-cn">{c.titleCn}</div>
-              <div className="ring-hook">{c.hookCn}</div>
-              <div className="ring-hook-en">{c.hookEn}</div>
-              <div className="ring-go" style={{ background: c.color }}>进入 Enter ›</div>
-            </div>
-          </div>
-        ))}
+  const card = (c: typeof ENTRY_CARDS[number], dup: boolean) => (
+    <div
+      key={c.id + (dup ? '-b' : '')}
+      className="deck-card"
+      style={{ background: c.grad, borderColor: c.edge }}
+      onClick={() => tap(c.id)}
+      role="button"
+      tabIndex={dup ? -1 : 0}
+      aria-hidden={dup || undefined}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onPick(c.id); }}
+    >
+      <span className="deck-wm" aria-hidden="true">{c.mark}</span>
+      <span className="deck-mark deck-mark-tl">{c.mark}</span>
+      <span className="deck-mark deck-mark-br">{c.mark}</span>
+      <div className="deck-face">
+        <div className="deck-name">{c.titleEn}</div>
+        <div className="deck-name-cn">{c.titleCn}</div>
+        <div className="deck-rule" />
+        <div className="deck-hook">{c.hookCn}</div>
+        <div className="deck-hook-en">{c.hookEn}</div>
+        <div className="deck-go">进入 Enter ›</div>
       </div>
+    </div>
+  );
 
-      <div className="ring-hint">
-        {reduced ? '点击卡片进入' : '按住暂停 · 左右拖动拨牌 · 点击进入'}
+  return (
+    <div className="deck-wrap">
+      <div className="deck-eyebrow">今天想看点什么 · TAP A CARD</div>
+
+      {reduced ? (
+        <div className="deck-rail-static">
+          {ENTRY_CARDS.map(c => card(c, false))}
+        </div>
+      ) : (
+        <div
+          className="deck-view"
+          onPointerDown={down}
+          onPointerMove={move}
+          onPointerUp={up}
+          onPointerCancel={up}
+          onPointerLeave={up}
+        >
+          <div ref={track} className="deck-track">
+            {ENTRY_CARDS.map(c => card(c, false))}
+            {ENTRY_CARDS.map(c => card(c, true))}
+          </div>
+        </div>
+      )}
+
+      <div className="deck-hint">
+        {reduced ? '左右滑动 · 点击进入' : '按住暂停 · 拖动拨牌 · 点击进入'}
       </div>
     </div>
   );

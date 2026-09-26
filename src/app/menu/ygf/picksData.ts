@@ -28,9 +28,9 @@ export interface EntryCard {
   /** 勾子:给他一个点进去的理由,不是这页有什么 */
   hookEn: string;
   hookCn: string;
-  img: string;
-  /** 牌面主色 */
-  color: string;
+  /** 牌面 —— 不配图,靠配色立起来 */
+  grad: string;
+  edge: string;
 }
 
 export const ENTRY_CARDS: EntryCard[] = [
@@ -39,28 +39,32 @@ export const ENTRY_CARDS: EntryCard[] = [
     titleEn: 'Ma-Fans', titleCn: '小福会员',
     hookEn: 'Popcorn chicken for $1.99',
     hookCn: '$1.99 盐酥鸡,会员专享',
-    img: '/beiyuan-S06.webp', color: '#B91C1C',
+    grad: 'linear-gradient(158deg,#C4181A 0%,#8A0F12 46%,#4A0709 100%)',
+    edge: '#F2C14E',
   },
   {
     id: 'broth', mark: '🍲',
     titleEn: 'Our Broths', titleCn: '汤底 · 一碗的灵魂',
     hookEn: 'Why the broth is worth the extra',
     hookCn: '五款汤底,凭什么值得多花钱',
-    img: '/ygf-broth-spicy.webp', color: '#8B1A1A',
+    grad: 'linear-gradient(158deg,#E08A1E 0%,#A8480C 44%,#4E1B05 100%)',
+    edge: '#FFD98A',
   },
   {
     id: 'items', mark: '🥬',
     titleEn: 'Ingredients', titleCn: '食材 · 今天吃什么',
     hookEn: '100+ at the bar. These few are worth it.',
     hookCn: '台上一百多种,这几样别错过',
-    img: '/ygf-meat-beef-brisket.webp', color: '#0F766E',
+    grad: 'linear-gradient(158deg,#1C8F7A 0%,#0E5A4C 46%,#04241F 100%)',
+    edge: '#8FE3CE',
   },
   {
     id: 'sauce', mark: '🥣',
     titleEn: 'Sauce Bar', titleCn: '调料 · 调出你的味道',
     hookEn: 'Free and unlimited. Here is how to mix it.',
     hookCn: '免费不限量,照着这个调',
-    img: '/ygf-sauce-sesame-peanut-v2.webp', color: '#C8912A',
+    grad: 'linear-gradient(158deg,#5E4B2E 0%,#3A2C18 48%,#181008 100%)',
+    edge: '#E7C87A',
   },
 ];
 
