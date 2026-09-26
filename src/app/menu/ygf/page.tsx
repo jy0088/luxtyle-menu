@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { BROTHS, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, getItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
@@ -39,7 +39,9 @@ const YGF_CSS = `
    前面的大、亮、压在上面;后面的小、暗、从上缘露出来。
    ══════════════════════════════════════════════════════════ */
 .orb-wrap{
-  min-height:calc(100dvh - 190px);
+  /* 高度由 EntryOrbit 实测写入 --orb-h:视口 − Header − BottomNav。
+     未测量前(首帧 / SSR)用 100dvh 兜底,不再有魔数。 */
+  height:var(--orb-h,100dvh);
   display:flex; flex-direction:column; overflow:hidden;
   background:
     radial-gradient(120% 55% at 50% 4%, rgba(200,145,42,.17), transparent 62%),
@@ -54,13 +56,14 @@ const YGF_CSS = `
   font-size:20px; font-weight:900; color:#fff; letter-spacing:.5px;
 }
 .orb-stage{
-  position:relative; flex:1 1 auto;
-  min-height:clamp(348px,49vh,466px);
+  position:relative; flex:1 1 0; min-height:0;
+  isolation:isolate;   /* 牌的 z-index(0–100)只在轨道内比较,不压 Psst 弹窗和 Header */
   touch-action:pan-y; -webkit-tap-highlight-color:transparent;
 }
 .orb-card{
   position:absolute; top:50%; left:50%;
-  width:min(60vw,238px); height:clamp(258px,37vh,338px);
+  /* --orb-card-h 由 EntryOrbit 按轨道区实测高度写入,保证最前那张不压到指示点 */
+  width:min(60vw,238px); height:var(--orb-card-h,clamp(258px,37vh,338px));
   border-radius:22px; overflow:hidden; cursor:pointer;
   border:2px solid; box-shadow:0 18px 44px rgba(0,0,0,.52);
   display:flex; flex-direction:column; justify-content:flex-end;
@@ -91,7 +94,7 @@ const YGF_CSS = `
   font-size:12px; font-weight:900; letter-spacing:.3px;
 }
 /* 轨道指示 + 提示 */
-.orb-foot{ padding:2px 0 14px; display:flex; flex-direction:column; align-items:center; gap:11px }
+.orb-foot{ flex-shrink:0; padding:2px 0 14px; display:flex; flex-direction:column; align-items:center; gap:11px }
 .orb-dots{ display:flex; align-items:center; gap:9px }
 .orb-dot{
   width:8px; height:8px; padding:0; border-radius:50%; cursor:pointer;
@@ -104,10 +107,12 @@ const YGF_CSS = `
   border:1.5px solid rgba(245,217,138,.4); background:rgba(255,255,255,.07);
   color:#F5D98A; font-size:19px; line-height:1;
 }
-/* 午餐横幅 —— 钉在落地页最下面 */
+/* 落地页:轨道区自己贴住 BottomNav,不要 main 再垫一层底部留白 */
+.ygf-root main:has(.orb-wrap){ padding-bottom:0 !important }
+/* 午餐横幅 —— 落地页最后一个 flex 子项,自然贴底 */
 .orb-lunch{
-  margin-top:auto; background:#C8912A;
-  padding:11px 18px calc(11px + env(safe-area-inset-bottom));
+  flex-shrink:0; background:#C8912A;
+  padding:11px 18px;
   display:flex; align-items:center; justify-content:center; gap:10px;
 }
 
@@ -371,7 +376,51 @@ const ORB_RX = 100;              // 轨道横半径
 const ORB_KY = 56;               // 纵向压扁量 —— 决定后面那张露出多少
 const ORB_SPEED = 360 / 20000;   // 一圈 20 秒
 
+/* 落地页 = 视口里 Header 下沿到 BottomNav 上沿之间的整块。
+   两者高度都会变(过敏源行随屏宽折行、safe-area、iOS 工具栏收放),所以实测。
+   牌高跟着轨道区走:最前那张中心在 stage 中线下方 ORB_KY、缩放 1,
+   下缘 = H/2 + KY + h/2 ≤ H − 8  →  h ≤ H − 2·KY − 16。
+   屏幕矮到连最小牌都放不下时(iPhone SE),落地页加高、页面略滚动,
+   而不是让牌压住指示点。 */
+const ORB_CARD_MAX = 338;        // 牌高上限(A2 再放大)
+const ORB_CARD_MIN = 220;
+const ORB_CARD_PAD = 2 * ORB_KY + 16;
+
+function useFillViewport(ref: React.RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const stage = el?.querySelector<HTMLElement>(".orb-stage");
+    if (!el || !stage) return;
+    const nav = Array.from(document.querySelectorAll("nav"))
+      .find(n => getComputedStyle(n).position === "fixed") ?? null;
+    const fit = () => {
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const navH = nav ? nav.getBoundingClientRect().height : 0;
+      const chrome = el.clientHeight - stage.clientHeight;      // 标题 + 指示点 + 午餐横幅
+      const avail = Math.floor(window.innerHeight - top - navH);
+      const wrapH = Math.max(avail, chrome + ORB_CARD_MIN + ORB_CARD_PAD);
+      const cardH = Math.min(ORB_CARD_MAX, wrapH - chrome - ORB_CARD_PAD);
+      el.style.setProperty("--orb-h", `${wrapH}px`);
+      el.style.setProperty("--orb-card-h", `${cardH}px`);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    const header = document.querySelector("header");
+    if (header) ro.observe(header);
+    if (nav) ro.observe(nav);
+    window.addEventListener("resize", fit);
+    window.visualViewport?.addEventListener("resize", fit);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", fit);
+      window.visualViewport?.removeEventListener("resize", fit);
+    };
+  }, [ref]);
+}
+
 function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
+  const wrap = useRef<HTMLDivElement>(null);
+  useFillViewport(wrap);
   const cards = useRef<(HTMLDivElement | null)[]>([]);
   const angle = useRef(0);
   const goal = useRef<number | null>(null);
@@ -469,7 +518,7 @@ function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
   };
 
   return (
-    <div className="orb-wrap">
+    <div className="orb-wrap" ref={wrap}>
       <div className="orb-eyebrow">YGF MALATANG · SAN DIEGO</div>
       <div className="orb-title">今天想看点什么？</div>
 
@@ -526,7 +575,7 @@ function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
         </div>
       </div>
 
-      {/* 午餐特惠 —— 钉在最下面 */}
+      {/* 午餐特惠 —— 最后一个 flex 子项,贴底 */}
       <div className="orb-lunch">
         <span style={{ fontSize: 16 }}>🥤</span>
         <div style={{ textAlign: "left" }}>
