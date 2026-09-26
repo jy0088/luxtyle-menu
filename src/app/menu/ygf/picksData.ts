@@ -13,6 +13,58 @@
 import { allCategories, toppings, type MenuItem as ByItem } from '@/app/menu/beiyuan/menuData';
 
 /* ═══════════════════════════════════════════════════════════
+   0. 一级入口 —— 环形扑克牌
+   扫码落地看到的就是这四张牌在慢慢转。文案要勾人,不要"XX介绍"。
+   ═══════════════════════════════════════════════════════════ */
+
+export type EntryId = 'mafans' | 'broth' | 'items' | 'sauce';
+
+export interface EntryCard {
+  id: EntryId;
+  /** 牌角标记 —— 像扑克牌左上右下那两个角 */
+  mark: string;
+  titleEn: string;
+  titleCn: string;
+  /** 勾子:给他一个点进去的理由,不是这页有什么 */
+  hookEn: string;
+  hookCn: string;
+  img: string;
+  /** 牌面主色 */
+  color: string;
+}
+
+export const ENTRY_CARDS: EntryCard[] = [
+  {
+    id: 'mafans', mark: '🧧',
+    titleEn: 'Ma-Fans', titleCn: '小福会员',
+    hookEn: 'Popcorn chicken for $1.99',
+    hookCn: '$1.99 盐酥鸡,会员专享',
+    img: '/beiyuan-S06.webp', color: '#B91C1C',
+  },
+  {
+    id: 'broth', mark: '🍲',
+    titleEn: 'Our Broths', titleCn: '汤底 · 一碗的灵魂',
+    hookEn: 'Why the broth is worth the extra',
+    hookCn: '五款汤底,凭什么值得多花钱',
+    img: '/ygf-broth-spicy.webp', color: '#8B1A1A',
+  },
+  {
+    id: 'items', mark: '🥬',
+    titleEn: 'Ingredients', titleCn: '食材 · 今天吃什么',
+    hookEn: '100+ at the bar. These few are worth it.',
+    hookCn: '台上一百多种,这几样别错过',
+    img: '/ygf-meat-beef-brisket.webp', color: '#0F766E',
+  },
+  {
+    id: 'sauce', mark: '🥣',
+    titleEn: 'Sauce Bar', titleCn: '调料 · 调出你的味道',
+    hookEn: 'Free and unlimited. Here is how to mix it.',
+    hookCn: '免费不限量,照着这个调',
+    img: '/ygf-sauce-sesame-peanut-v2.webp', color: '#C8912A',
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════
    1. Ma-Fans —— 当季活动 / 会员权益
    换季只改这一段:万圣节、冬季热饮、春节,一级菜单永远不动
    ═══════════════════════════════════════════════════════════ */

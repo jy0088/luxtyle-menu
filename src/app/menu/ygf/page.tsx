@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { BROTHS, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, getItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
@@ -7,7 +7,7 @@ import PsstWidget from "@/components/ygf/PsstWidget";
 import {
   DRINK_PICKS, SNACK_PICKS, NEW_ARRIVALS, CAMPAIGN, MEMBER_PERKS,
   SPOTLIGHTS, TIER_META, SAUCE_RECIPES, SAUCE_NOTES, SECRET_MIX,
-  resolvePick, type SpotlightTier,
+  ENTRY_CARDS, resolvePick, type SpotlightTier, type EntryId,
 } from "./picksData";
 
 // 杨国福 WhatsApp 频道
@@ -56,6 +56,82 @@ const YGF_CSS = `
   text-align:left; opacity:0; transition:opacity .25s ease .08s;
 }
 .ygf-bar[data-on="1"] .ygf-bar-wide{ opacity:1 }
+
+/* ══ 一级入口:环形牌桌 ══ */
+.ring-wrap{
+  min-height:calc(100dvh - 210px);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:26px 0 30px;
+  background:
+    radial-gradient(120% 70% at 50% 8%, rgba(200,145,42,.16), transparent 60%),
+    linear-gradient(170deg,#1B0F08,#0C0705 62%,#140A06);
+}
+.ring-eyebrow{
+  font-size:9.5px; font-weight:800; letter-spacing:3.5px;
+  color:rgba(245,217,138,.66); text-align:center;
+}
+.ring-title{
+  font-size:26px; font-weight:900; color:#fff; margin-top:9px;
+  letter-spacing:-.4px; text-align:center;
+}
+.ring-sub{
+  font-size:11.5px; color:rgba(255,255,255,.44); margin-top:5px;
+  letter-spacing:.8px; text-align:center;
+}
+.ring-stage{
+  position:relative; width:100%; height:328px; margin-top:16px;
+  touch-action:pan-y; overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+/* 扑克牌:5:7,金边,满幅图 + 底部渐变压字 */
+.ring-card{
+  position:absolute; top:50%; left:50%;
+  width:186px; height:260px; margin:0;
+  border-radius:17px; overflow:hidden; cursor:pointer;
+  border:2px solid; background:#140A06;
+  box-shadow:0 14px 34px rgba(0,0,0,.5);
+  will-change:transform,opacity,filter;
+  transform:translate(-50%,-50%);
+}
+.ring-shot{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; display:block;
+}
+.ring-card::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(8,4,2,.95) 34%, rgba(8,4,2,.35) 62%, transparent 86%);
+}
+.ring-mark{
+  position:absolute; z-index:2; font-size:15px; line-height:1;
+  text-shadow:0 1px 5px rgba(0,0,0,.7);
+}
+.ring-mark-tl{ top:10px; left:11px }
+.ring-mark-br{ bottom:10px; right:11px; transform:rotate(180deg) }
+.ring-face{
+  position:absolute; left:0; right:0; bottom:0; z-index:3;
+  padding:0 13px 14px; text-align:left;
+}
+.ring-name{ font-size:17px; font-weight:900; color:#fff; line-height:1.15; letter-spacing:-.3px }
+.ring-name-cn{ font-size:10.5px; color:rgba(245,217,138,.9); margin-top:3px; font-weight:700 }
+.ring-hook{ font-size:12px; color:#fff; margin-top:8px; line-height:1.4; font-weight:700 }
+.ring-hook-en{ font-size:9.5px; color:rgba(255,255,255,.58); margin-top:2px; line-height:1.35 }
+.ring-go{
+  display:inline-block; margin-top:10px; border-radius:8px;
+  padding:5px 11px; font-size:10.5px; font-weight:900; color:#fff;
+}
+.ring-hint{
+  margin-top:18px; font-size:11px; color:rgba(255,255,255,.4);
+  letter-spacing:.5px; text-align:center;
+}
+/* 减弱动态:不转,竖排铺开 */
+.ring-stage.is-static{
+  height:auto; display:flex; flex-direction:column; align-items:center; gap:14px; padding:4px 16px;
+}
+.ring-stage.is-static .ring-card{
+  position:relative; top:auto; left:auto;
+  transform:none!important; opacity:1!important; filter:none!important;
+  width:100%; max-width:300px; height:190px;
+}
 
 /* ── Ma-Fans:当季活动 ── */
 .mf-season{ display:flex; align-items:center; gap:11px }
@@ -275,12 +351,136 @@ const YGF_CSS = `
 }
 `;
 
+
+/* ══════════════════════════════════════════════════════════
+   一级入口 —— 环形扑克牌
+   四张牌 90° 均分在一个圆环上,始终正面朝向顾客,靠前后大小与明暗
+   拉开纵深。按住停转、松开继续;拖动可以自己拨。
+   transform 直接写 DOM,不走 React 重渲染 —— 老安卓也稳。
+   ══════════════════════════════════════════════════════════ */
+function EntryRing({ onPick }: { onPick: (id: EntryId) => void }) {
+  const stage = useRef<HTMLDivElement>(null);
+  const cards = useRef<(HTMLDivElement | null)[]>([]);
+  const angle = useRef(0);
+  const paused = useRef(false);
+  const drag = useRef<{ x: number; a: number; t: number; moved: number } | null>(null);
+  const [reduced, setReduced] = useState(false);
+
+  const N = ENTRY_CARDS.length;
+  const R = 116;              // 轨道半径
+  const SPEED = 360 / 18000;  // 一圈 18 秒 —— 慢到能读,又始终在动
+
+  const layout = () => {
+    for (let i = 0; i < N; i++) {
+      const el = cards.current[i];
+      if (!el) continue;
+      const th = ((angle.current + i * (360 / N)) * Math.PI) / 180;
+      const x = R * Math.sin(th);
+      const z = R * Math.cos(th);
+      const d = (z + R) / (2 * R);                 // 0 = 最后, 1 = 最前
+      const scale = 0.60 + 0.40 * d;
+      el.style.transform = `translate(-50%,-50%) translateX(${x.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+      el.style.opacity = (0.22 + 0.78 * d).toFixed(3);
+      el.style.zIndex = String(Math.round(d * 100));
+      el.style.filter = `brightness(${(0.55 + 0.45 * d).toFixed(2)})`;
+    }
+  };
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    layout();
+    if (mq.matches) return;
+
+    let raf = 0;
+    let last = 0;
+    const tick = (t: number) => {
+      if (last && !paused.current && !drag.current) angle.current += (t - last) * SPEED;
+      last = t;
+      layout();
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* 按住停住 · 拖动拨动 · 松手继续 */
+  const down = (e: React.PointerEvent) => {
+    paused.current = true;
+    drag.current = { x: e.clientX, a: angle.current, t: Date.now(), moved: 0 };
+  };
+  const move = (e: React.PointerEvent) => {
+    if (!drag.current) return;
+    const dx = e.clientX - drag.current.x;
+    drag.current.moved = Math.max(drag.current.moved, Math.abs(dx));
+    angle.current = drag.current.a + dx * 0.55;
+    layout();
+  };
+  const up = () => { drag.current = null; paused.current = false; };
+
+  /* 拖过就不算点击 —— 避免拨牌时误进 */
+  const tap = (id: EntryId) => {
+    if (drag.current && drag.current.moved > 8) return;
+    onPick(id);
+  };
+
+  return (
+    <div className="ring-wrap">
+      <div className="ring-eyebrow">YGF MALATANG · SAN DIEGO</div>
+      <div className="ring-title">今天想看点什么？</div>
+      <div className="ring-sub">Tap a card to explore</div>
+
+      <div
+        ref={stage}
+        className={`ring-stage${reduced ? ' is-static' : ''}`}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={up}
+        onPointerLeave={up}
+      >
+        {ENTRY_CARDS.map((c, i) => (
+          <div
+            key={c.id}
+            ref={el => { cards.current[i] = el; }}
+            className="ring-card"
+            style={{ borderColor: c.color }}
+            onClick={() => tap(c.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onPick(c.id); }}
+          >
+            <img className="ring-shot" src={c.img} alt=""
+              onError={e => { (e.target as HTMLImageElement).style.opacity = '0'; }} />
+            <span className="ring-mark ring-mark-tl">{c.mark}</span>
+            <span className="ring-mark ring-mark-br">{c.mark}</span>
+            <div className="ring-face">
+              <div className="ring-name">{c.titleEn}</div>
+              <div className="ring-name-cn">{c.titleCn}</div>
+              <div className="ring-hook">{c.hookCn}</div>
+              <div className="ring-hook-en">{c.hookEn}</div>
+              <div className="ring-go" style={{ background: c.color }}>进入 Enter ›</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="ring-hint">
+        {reduced ? '点击卡片进入' : '按住暂停 · 左右拖动拨牌 · 点击进入'}
+      </div>
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════
 // MAIN MENU
 // ══════════════════════════════════════════════════════════
 export default function YGFPage() {
   // 四个入口,各答一个问题:今天有什么福利 / 我该选什么汤 / 有什么值得拿 / 这碗怎么调
-  const [activeSection, setActiveSection] = useState<"mafans" | "broth" | "items" | "sauce">("mafans");
+  // ring = 落地的环形牌桌;进了某张牌才显示对应内容
+  const [view, setView] = useState<"ring" | EntryId>("ring");
+  const activeSection = view;
   const [spot, setSpot] = useState<string | null>(null);
   const [recipe, setRecipe] = useState<string | null>(SAUCE_RECIPES[0]?.key ?? null);
   const [allSauce, setAllSauce] = useState(false);
@@ -321,36 +521,36 @@ export default function YGFPage() {
           </div>
         </div>
       </div>
-      {/* ── Section nav ──────────────────────────────── */}
-      <div style={{ display: "flex", padding: "14px 16px", gap: 10, background: C.bg,
-        borderBottom: `2px solid ${C.border}` }}>
-        {([
-          { id: "mafans", en: "Ma-Fans",     zh: "小福会员", emoji: "🧧", hot: true  },
-          { id: "broth",  en: "Our Broths",  zh: "汤底",     emoji: "🍲", hot: false },
-          { id: "items",  en: "Ingredients", zh: "食材",     emoji: "🥬", hot: false },
-          { id: "sauce",  en: "Sauce Bar",   zh: "调料",     emoji: "🥣", hot: false },
-        ] as const).map(sec => {
-          const on = activeSection === sec.id;
-          return (
-          <button key={sec.id} onClick={() => setActiveSection(sec.id)}
-            style={{ flex: sec.hot ? 1.25 : 1, padding: "11px 2px", borderRadius: 14,
-              border: `2px solid ${on ? C.gold : (sec.hot ? C.goldLight : C.border)}`,
-              background: on ? C.goldPale : (sec.hot ? "#FFFBF0" : C.bgCard),
-              cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-              boxShadow: on ? `0 2px 12px rgba(200,145,42,0.2)` : "none",
-              transition: "all 0.2s" }}>
-            <span style={{ fontSize: 19 }}>{sec.emoji}</span>
-            <span style={{ fontSize: 12, fontWeight: 800, whiteSpace: "nowrap",
-              color: on ? C.gold : (sec.hot ? C.gold : C.inkMid) }}>{sec.en}</span>
-            <span style={{ fontSize: 9.5, color: C.inkLight, whiteSpace: "nowrap" }}>{sec.zh}</span>
-          </button>
-        );})}
-      </div>
+      {/* ── 进了内容页:返回牌桌 + 当前位置;牌桌本身不显示 ── */}
+      {view !== "ring" && (() => {
+        const cur = ENTRY_CARDS.find(c => c.id === view);
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+            background: C.bg, borderBottom: `2px solid ${C.border}` }}>
+            <button onClick={() => setView("ring")} aria-label="返回 Back"
+              style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 13, cursor: "pointer",
+                background: C.bgCard, border: `2px solid ${C.border}`, fontSize: 19, color: C.ink,
+                display: "grid", placeItems: "center" }}>‹</button>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 15.5, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>
+                {cur?.titleEn}
+              </div>
+              <div style={{ fontSize: 11, color: C.inkLight, marginTop: 1 }}>{cur?.titleCn}</div>
+            </div>
+            <span style={{ flexShrink: 0, fontSize: 20, opacity: 0.85 }}>{cur?.mark}</span>
+          </div>
+        );
+      })()}
         </>
       }
     >
       <div style={{ fontFamily: "'Noto Sans SC','PingFang SC',sans-serif", color: C.ink }}>
-        {/* Special offer banner — tappable */}
+
+        {/* ═══ 落地:环形牌桌 ═══ */}
+        {view === "ring" && <EntryRing onPick={id => setView(id)} />}
+
+        {/* 午餐特惠 —— 只在内容页顶部出现,牌桌保持干净 */}
+        {view !== "ring" && (
         <div style={{ background: C.gold, padding: "12px 20px",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
           <span style={{ fontSize: 16 }}>🥤</span>
@@ -361,6 +561,7 @@ export default function YGFPage() {
             </div>
           </div>
         </div>
+        )}
 
       {/* ═══════════════════════════════════════════════
           SECTION: 汤品介绍
