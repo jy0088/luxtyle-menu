@@ -49,11 +49,14 @@ function AddOnTray({ picked, bump }: {
                 border: q > 0 ? `1.5px solid ${C.brand}` : `1.5px solid ${C.border}`,
                 background: q > 0 ? '#F0FDF4' : '#fff',
               }}>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: C.text, display: 'block', lineHeight: 1.25 }}>
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: C.text, display: 'block', lineHeight: 1.2 }}>
                     {a.nameCn}
                   </span>
-                  <span style={{ fontSize: 10, color: C.sub, display: 'block', marginTop: 1 }}>
+                  <span style={{ fontSize: 9.5, color: C.sub, display: 'block', lineHeight: 1.25, marginTop: 1 }}>
+                    {a.nameEn}
+                  </span>
+                  <span style={{ fontSize: 10.5, fontWeight: 800, color: C.brand, display: 'block', marginTop: 3 }}>
                     +${a.price.toFixed(2)}
                   </span>
                 </span>

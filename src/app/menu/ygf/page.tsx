@@ -28,7 +28,7 @@ const C = {
 
 const YGF_CSS = `
 /* 横向手风琴 —— 选中的汤底撑开,其余收成彩条 */
-.ygf-acc{ display:flex; gap:6px; height:124px }
+.ygf-acc{ display:flex; gap:7px; height:248px }
 .ygf-bar{
   position:relative; overflow:hidden; cursor:pointer; padding:0;
   border:2px solid rgba(0,0,0,.06); border-radius:14px;
@@ -36,18 +36,18 @@ const YGF_CSS = `
               flex-basis .3s cubic-bezier(.22,1,.36,1),
               box-shadow .25s ease, border-color .25s ease;
 }
-.ygf-bar[data-on="0"]{ flex:0 0 46px; box-shadow:none }
+.ygf-bar[data-on="0"]{ flex:0 0 50px; box-shadow:none }
 .ygf-bar[data-on="1"]{ flex:1 1 auto; box-shadow:0 4px 16px rgba(0,0,0,.18); border-color:rgba(0,0,0,.14) }
 .ygf-bar-vert{
   position:absolute; inset:0; display:grid; place-items:center;
   writing-mode:vertical-rl; text-orientation:mixed;
-  font-size:13px; font-weight:800; color:#fff; letter-spacing:2px;
+  font-size:15px; font-weight:800; color:#fff; letter-spacing:3px;
   text-shadow:0 1px 4px rgba(0,0,0,.45);
   transition:opacity .2s ease;
 }
 .ygf-bar[data-on="1"] .ygf-bar-vert{ opacity:0; pointer-events:none }
 .ygf-bar-wide{
-  position:absolute; left:0; right:0; bottom:0; padding:10px 12px;
+  position:absolute; left:0; right:0; bottom:0; padding:13px 14px;
   background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
   text-align:left; opacity:0; transition:opacity .25s ease .08s;
 }
@@ -394,11 +394,11 @@ function MainMenu() {
                   )}
                   <span className="ygf-bar-vert">{b.zh}</span>
                   <span className="ygf-bar-wide">
-                    <span style={{ display: "block", fontSize: 16, fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>{b.zh}</span>
-                    <span style={{ display: "block", fontSize: 10.5, color: "rgba(255,255,255,0.86)", marginTop: 2 }}>{b.en}</span>
+                    <span style={{ display: "block", fontSize: 18, fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>{b.zh}</span>
+                    <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.86)", marginTop: 3, lineHeight: 1.3 }}>{b.en}</span>
                   </span>
-                  <span style={{ position: "absolute", top: 6, left: 6, background: C.gold, color: "#fff",
-                    fontSize: 8.5, fontWeight: 800, padding: "2px 6px", borderRadius: 5,
+                  <span style={{ position: "absolute", top: 8, left: 8, background: C.gold, color: "#fff",
+                    fontSize: 9.5, fontWeight: 800, padding: "3px 8px", borderRadius: 6,
                     opacity: on ? 1 : 0, transition: "opacity .2s ease", whiteSpace: "nowrap" }}>{b.badge}</span>
                 </button>
               );
