@@ -1,15 +1,22 @@
 "use client";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { BROTHS, SAUCE_CATEGORIES, ALLERGEN_COLOR, PRICING, getItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
 import PsstWidget from "@/components/ygf/PsstWidget";
+
+// Manager's Picks stage pulls in GSAP (~60KB gz); load it only on the client, only when Ma-Fans renders
+const PickStage = dynamic(() => import("@/components/ygf/PickStage"), {
+  ssr: false,
+  loading: () => <div style={{ height: 640, borderRadius: 18, background: "#140E0A" }} aria-hidden="true" />,
+});
 import {
   DRINK_PICKS, SNACK_PICKS, NEW_ARRIVALS, CAMPAIGN, MEMBER_PERKS,
   SPOTLIGHTS, TIER_META, SAUCE_RECIPES, SAUCE_NOTES, SECRET_MIX,
   ENTRY_CARDS, MAFANS_BANNERS, ITEM_BANNERS, SAUCE_BANNERS,
   SECTION_INTRO, BROTH_NOTES,
-  resolvePick, type SpotlightTier, type EntryId, type Pick,
+  resolvePick, type SpotlightTier, type EntryId,
 } from "./picksData";
 
 // 杨国福 WhatsApp 频道
@@ -678,30 +685,9 @@ function AccItem({
   );
 }
 
-/* 加点单品卡 —— 列表只放钩子,详情进弹层 */
-function PickCard({ raw, idx, tile, onOpen }: {
-  raw: Pick; idx?: number; tile?: boolean; onOpen: () => void;
-}) {
-  const p = resolvePick(raw);
-  return (
-    <article className={tile ? "pk-tile" : "pk-card"} data-press onClick={onOpen}>
-      <div className="pk-shot">
-        {p.img
-          ? <img src={p.img} alt={p.nameEn}
-              onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-          : <span className="pk-shot-fb">{tile ? "🍽" : "🧋"}</span>}
-        {idx !== undefined && <span className="pk-no">{String(idx + 1).padStart(2, "0")}</span>}
-      </div>
-      <div className="pk-body">
-        <div className="pk-name">{p.nameEn}</div>
-        <div className="pk-name-cn">{p.nameCn}</div>
-        {p.tasteCn && <div className="pk-note-cn pk-clamp" style={{ marginTop: 6 }}>{p.tasteCn}</div>}
-        <div className="pk-price">${p.total.toFixed(2)}<span>+Tax</span></div>
-        <div className="pk-more">详情 Details ›</div>
-      </div>
-    </article>
-  );
-}
+/* 店长推荐:饮品 / 小吃 —— 算好一次,舞台直接用 */
+const DRINKS_RESOLVED = DRINK_PICKS.map(resolvePick);
+const SNACKS_RESOLVED = SNACK_PICKS.map(resolvePick);
 
 
 // ══════════════════════════════════════════════════════════
@@ -717,8 +703,6 @@ export default function YGFPage() {
   const [openIt, setOpenIt] = useState<SpotlightTier | null>("new");
   const [openSa, setOpenSa] = useState<string | null>("recipes");
 
-  // 三级:店长推荐落在饮品
-  const [pickTab, setPickTab] = useState<"drink" | "snack">("drink");
   // 三级:调料配方
   const [recipe, setRecipe] = useState<string | null>(SAUCE_RECIPES[0]?.key ?? null);
 
@@ -850,39 +834,8 @@ export default function YGFPage() {
                     {/* ── 三级:饮品 / 小吃 ── */}
                     {b.key === "picks" && (
                       <>
-                        <div className="acc3">
-                          <button data-on={pickTab === "drink" ? "1" : "0"} onClick={() => setPickTab("drink")}>
-                            🧋 Drinks 饮品 · {DRINK_PICKS.length}
-                          </button>
-                          <button data-on={pickTab === "snack" ? "1" : "0"} onClick={() => setPickTab("snack")}>
-                            🍗 Snacks 小吃 · {SNACK_PICKS.length}
-                          </button>
-                        </div>
-
-                        {pickTab === "drink" ? (
-                          <>
-                            <div style={{ fontSize: 11.5, color: C.inkLight, lineHeight: 1.55, marginBottom: 4 }}>
-                              甜度、茶底、加料都替你配好了。出自隔壁北苑南家,同一个收银台。
-                            </div>
-                            <div className="pk-rail">
-                              {DRINK_PICKS.map((raw, i) => (
-                                <PickCard key={raw.key} raw={raw} idx={i}
-                                  onOpen={() => setSheet({ k: "pick", id: raw.key })} />
-                              ))}
-                              <div className="pk-rail-end" aria-hidden="true" />
-                            </div>
-                            <div style={{ textAlign: "center", fontSize: 10.5, color: C.inkLight, marginTop: 4 }}>
-                              ← 左右滑动 swipe →
-                            </div>
-                          </>
-                        ) : (
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 11 }}>
-                            {SNACK_PICKS.map(raw => (
-                              <PickCard key={raw.key} raw={raw} tile
-                                onOpen={() => setSheet({ k: "pick", id: raw.key })} />
-                            ))}
-                          </div>
-                        )}
+                        <PickStage drinks={DRINKS_RESOLVED} snacks={SNACKS_RESOLVED}
+                          onOpenSnack={id => setSheet({ k: "pick", id })} />
 
                         <div style={{ marginTop: 14, background: C.goldPale, borderRadius: 13,
                           padding: "12px 14px", border: `1px solid ${C.goldLight}`, textAlign: "center" }}>
@@ -1298,6 +1251,14 @@ export default function YGFPage() {
                 <div style={{ padding: "18px 20px 24px" }}>
                   <div style={{ fontSize: 22, fontWeight: 900, color: C.ink, lineHeight: 1.2 }}>{p.nameEn}</div>
                   <div style={{ fontSize: 14, color: C.inkLight, marginTop: 3 }}>{p.nameCn}</div>
+
+                  {(p.storyEn || p.storyCn) && (
+                    <div style={{ marginTop: 15 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2 }}>Story 故事</div>
+                      {p.storyEn && <div style={{ fontSize: 13.5, color: C.inkMid, marginTop: 4, lineHeight: 1.55 }}>{p.storyEn}</div>}
+                      {p.storyCn && <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 2, lineHeight: 1.55 }}>{p.storyCn}</div>}
+                    </div>
+                  )}
 
                   {(p.tasteEn || p.tasteCn) && (
                     <div style={{ marginTop: 15 }}>

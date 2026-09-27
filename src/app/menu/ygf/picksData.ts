@@ -135,7 +135,17 @@ export interface Pick {
   /** 为什么配麻辣烫 —— [草稿] 待确认 */
   pairEn?: string;
   pairCn?: string;
+  /** 这杯/这份的来历 —— 店长推荐舞台详情里的 STORY 段 */
+  storyEn?: string;
+  storyCn?: string;
+  /** PAIR IT 点名的配料 —— 舞台上会有一个配料 chip 滑到杯子旁边;文案没点名配料就不填 */
+  pairItem?: PairItem;
+  /** 舞台卡片与详情背景的主色 */
+  tint?: { accent: string; deep: string };
 }
+
+export type PairGlyph = 'aloe' | 'milk' | 'cream';
+export interface PairItem { en: string; cn: string; glyph: PairGlyph }
 
 const BY_ITEMS = new Map<string, ByItem>();
 for (const cat of allCategories) {
@@ -152,6 +162,9 @@ export interface ResolvedPick {
   total: number;
   tasteEn?: string; tasteCn?: string;
   pairEn?: string;  pairCn?: string;
+  storyEn?: string; storyCn?: string;
+  pairItem?: PairItem;
+  tint?: { accent: string; deep: string };
   missing: boolean;
 }
 
@@ -173,6 +186,8 @@ export function resolvePick(p: Pick): ResolvedPick {
     total,
     tasteEn: p.tasteEn, tasteCn: p.tasteCn,
     pairEn: p.pairEn,   pairCn: p.pairCn,
+    storyEn: p.storyEn, storyCn: p.storyCn,
+    pairItem: p.pairItem, tint: p.tint,
     missing: !!p.ref && !base,
   };
 }
@@ -180,26 +195,66 @@ export function resolvePick(p: Pick): ResolvedPick {
 // ─── 饮品 8 款 ────────────────────────────────────────────
 // 前 3 款已填 [草稿] 口味/搭配文案,用于定版式;其余待补
 export const DRINK_PICKS: Pick[] = [
-  { key: 'd1', ref: 'C-A-05', mods: ['Green Tea 绿茶', '50% Sugar 半糖'], toppingIds: ['T-23'],
+  { key: 'd1', ref: 'C-A-05', tint: { accent: '#D9A441', deep: '#46300B' }, mods: ['Green Tea 绿茶', '50% Sugar 半糖'], toppingIds: ['T-23'],
     tasteEn: 'Light and floral, honey up front, tea kept in the background.',
     tasteCn: '清甜带花香,茶味不抢戏。',
     pairEn: 'The easiest way to cool down a málà bowl.',
     pairCn: '解辣最顺口的一杯,微辣以上推荐。' },
-  { key: 'd2', ref: 'C-B-01', mods: ['Black Tea 红茶', '50% Sugar 半糖'], toppingIds: ['T-01'],
+  { key: 'd2', ref: 'C-B-01', tint: { accent: '#B8835A', deep: '#3A2414' }, mods: ['Black Tea 红茶', '50% Sugar 半糖'], toppingIds: ['T-01'],
     tasteEn: 'The classic — full black tea, creamy, chewy boba.',
     tasteCn: '最经典的一杯,红茶厚、奶香足、珍珠有嚼劲。',
     pairEn: 'Milk rounds off the heat; safe pick for a first visit.',
     pairCn: '奶感压辣,第一次来点这杯不会错。' },
-  { key: 'd3', ref: 'C-B-05', mods: ['75% Sugar 七分糖'], toppingIds: ['T-02'],
+  { key: 'd3', ref: 'C-B-05', tint: { accent: '#E07B39', deep: '#45200C' }, mods: ['75% Sugar 七分糖'], toppingIds: ['T-02'],
     tasteEn: 'Bold and aromatic Thai tea with soft egg pudding.',
     tasteCn: '泰式茶香浓,配滑嫩鸡蛋布丁。',
     pairEn: 'Stands up to the spiciest bowl without getting lost.',
     pairCn: '味道够厚,大辣也压得住。' },
-  { key: 'd4', ref: 'R-A-04', mods: ['50% Sugar 半糖'], toppingIds: ['T-15'] },
-  { key: 'd5', ref: 'R-A-05', mods: ['House Milk Blend 招牌特调奶', '75% Sugar 七分糖'], extra: 0.5 },
-  { key: 'd6', ref: 'R-A-01', mods: ['House Creamer 招牌奶香', '50% Sugar 半糖'], toppingIds: ['T-24'] },
-  { key: 'd7', ref: 'R-A-06', mods: ['House Milk Blend 招牌特调奶', '50% Sugar 半糖'], toppingIds: ['T-06'], extra: 0.5 },
-  { key: 'd8', ref: 'H-B-07', mods: ['Large 大杯', '75% Sugar 七分糖'], extra: 1.0 },
+  { key: 'd4', ref: 'R-A-04', mods: ['50% Sugar 半糖'], toppingIds: ['T-15'],
+    tint: { accent: '#D9A441', deep: '#4A330C' },
+    storyEn: 'Real osmanthus meets oolong, letting the floral aroma settle naturally into the tea.',
+    storyCn: '桂花与乌龙同制，让真实花香慢慢融进茶里。',
+    tasteEn: 'Smooth oolong, gentle sweetness, and a lingering osmanthus finish.',
+    tasteCn: '乌龙醇香回甘，桂花清甜，花香悠长。',
+    pairEn: 'Add aloe for a crisp, juicy bite that refreshes after spicy food.',
+    pairCn: '加芦荟果肉，清脆爽口，吃辣后格外清爽。',
+    pairItem: { en: 'Aloe', cn: '芦荟', glyph: 'aloe' } },
+  { key: 'd5', ref: 'R-A-05', mods: ['House Milk Blend 招牌特调奶', '75% Sugar 七分糖'], extra: 0.5,
+    tint: { accent: '#EE9F88', deep: '#552723' },
+    storyEn: 'Real white peach flesh meets oolong, lifted with just a touch of chrysanthemum.',
+    storyCn: '白桃果肉入乌龙，再借一缕菊香提亮茶韵。',
+    tasteEn: 'Fresh peach sweetness, smooth tea, and a light floral finish.',
+    tasteCn: '桃香鲜甜，乌龙回甘，尾段带淡淡菊香。',
+    pairEn: 'Our signature milk softens the tea and rounds out the heat.',
+    pairCn: '配招牌特调奶，柔和茶感，也更衬麻辣。',
+    pairItem: { en: 'House Milk Blend', cn: '招牌特调奶', glyph: 'milk' } },
+  { key: 'd6', ref: 'R-A-01', mods: ['House Creamer 招牌奶香', '50% Sugar 半糖'], toppingIds: ['T-24'],
+    tint: { accent: '#C8763A', deep: '#3B1C0B' },
+    storyEn: 'A roasted rock oolong made for people who want to taste the tea itself.',
+    storyCn: '岩茶重焙火，大红袍喝的就是茶香本身。',
+    tasteEn: 'Bold roast, full body, and a warm, lingering finish.',
+    tasteCn: '焙火香明显，茶汤厚实，回甘温润悠长。',
+    // Kevin's draft said "signature milk"; this drink is set with House Creamer, so the English names that instead
+    pairEn: 'Add our house creamer—the tea stays bold even beside rich, spicy broth.',
+    pairCn: '配招牌奶香，茶味依旧站得住，搭浓辣也不弱。',
+    pairItem: { en: 'House Creamer', cn: '招牌奶香', glyph: 'cream' } },
+  { key: 'd7', ref: 'R-A-06', mods: ['House Milk Blend 招牌特调奶', '50% Sugar 半糖'], toppingIds: ['T-06'], extra: 0.5,
+    tint: { accent: '#CDB48C', deep: '#3A2F22' },
+    storyEn: 'Real coconut flesh is blended with oolong for a naturally soft coconut aroma.',
+    storyCn: '真椰肉与乌龙同制，让椰香自然融进茶里。',
+    tasteEn: 'Smooth oolong, mellow coconut, clean and gently sweet.',
+    tasteCn: '乌龙回甘，椰香柔和，清甜却不腻。',
+    pairEn: 'Signature milk makes it silkier and especially easy with spicy food.',
+    pairCn: '配招牌特调奶，更柔顺醇厚，也更适合麻辣。',
+    pairItem: { en: 'House Milk Blend', cn: '招牌特调奶', glyph: 'milk' } },
+  { key: 'd8', ref: 'H-B-07', mods: ['Large 大杯', '75% Sugar 七分糖'], extra: 1.0,
+    tint: { accent: '#8FAE5E', deep: '#22321A' },
+    storyEn: 'Pure matcha powder. Nothing needed to hide the tea.',
+    storyCn: '纯抹茶粉现调，喝的就是抹茶本身。',
+    tasteEn: 'Fresh, earthy and gently bitter, followed by a clean sweetness.',
+    tasteCn: '入口鲜醇微苦，随后回甘，茶感干净。',
+    pairEn: 'Warm matcha gives your palate a softer break between spicy bites.',
+    pairCn: '热抹茶穿插麻辣之间，让味觉节奏更柔和。' },
 ];
 
 // ─── 小吃 6 款 ────────────────────────────────────────────
@@ -210,12 +265,40 @@ export const SNACK_PICKS: Pick[] = [
     pairEn: 'Crunch against soup — the pairing everyone orders twice.',
     pairCn: '一口酥一口汤,点过的人基本都会再点。' },
   { key: 's2', nameEn: 'Night Market Sausage (3 Sticks)', nameCn: '夜市烤香肠(3条)', price: 11.98,
-    tasteEn: 'Sweet-savory Taiwanese sausage, grilled until the skin snaps.',
-    tasteCn: '台式香肠,微甜,烤到脆皮。' },
-  { key: 's3', ref: 'S12' },
-  { key: 's4', ref: 'S16', mods: ['Mild 微辣'] },
-  { key: 's5', nameEn: 'Fried Rice', nameCn: '蛋炒饭', price: 5.99, img: '/beiyuan-fried-rice.webp' },
-  { key: 's6', ref: 'S09' },
+    storyEn: 'House-made sausage inspired by the sweet-savory flavors of Taiwan’s night markets.',
+    storyCn: '把台湾夜市那口甜香，做进自制手工香肠里。',
+    tasteEn: 'Lightly charred outside, juicy inside, with a sweet savory finish.',
+    tasteCn: '外皮微焦，肉香带甜，越嚼越香。',
+    pairEn: 'Sweet meets spicy—a natural contrast beside malatang.',
+    pairCn: '一甜一辣，配麻辣烫层次特别明显。' },
+  { key: 's3', ref: 'S12',
+    storyEn: 'A soft Taiwanese-style scallion pancake where the scallion aroma leads.',
+    storyCn: '台式葱油饼，葱香才是主角。',
+    tasteEn: 'Soft, chewy and savory—not the thin, crispy kind.',
+    tasteCn: '柔软带韧，咸香十足，不走酥脆路线。',
+    pairEn: 'Its soft, savory bite works especially well with rich broth and spice.',
+    pairCn: '柔软葱香，刚好接住浓汤和辣味。' },
+  { key: 's4', ref: 'S16', mods: ['Mild 微辣'],
+    storyEn: 'House-prepared and fried for a crisp shell with a springy bite inside.',
+    storyCn: '店内自制现炸，外酥里嫩，保留鱿鱼弹牙口感。',
+    tasteEn: 'Crispy outside, tender and bouncy inside, finished with fragrant salt and pepper.',
+    tasteCn: '外酥里嫩，弹牙鲜香，椒盐味十足。',
+    pairEn: 'Add chili salt & pepper for an extra kick beside malatang.',
+    pairCn: '推荐加辣椒椒盐，配麻辣烫更带劲。' },
+  { key: 's5', nameEn: 'Fried Rice', nameCn: '蛋炒饭', price: 5.99, img: '/beiyuan-fried-rice.webp',
+    storyEn: 'High-heat wok frying brings out the aroma before the first bite.',
+    storyCn: '大火快炒，锅气先到。',
+    tasteEn: 'Eggy, savory and balanced, with rice cooked to a comfortable bite.',
+    tasteCn: '蛋香明显，咸香顺口，米饭软硬适中。',
+    pairEn: 'A mellow, savory break between rich and spicy bites.',
+    pairCn: '穿插麻辣之间，刚好把浓辣味道稳下来。' },
+  { key: 's6', ref: 'S09',
+    storyEn: 'Real octopus pieces in every bite, finished with sauce and bonito flakes.',
+    storyCn: '每一口都有章鱼颗粒，再铺浓酱和柴鱼片。',
+    tasteEn: 'Soft, savory and rich, with plenty of umami from sauce and bonito.',
+    tasteCn: '软香咸鲜，浓酱与柴鱼片香气很足。',
+    pairEn: 'Rich umami and spicy broth take turns keeping every bite interesting.',
+    pairCn: '浓香与麻辣交替，吃起来更有层次。' },
 ];
 
 // ─── 新品 / 限时 —— 空时该区块不出现 ──────────────────────
