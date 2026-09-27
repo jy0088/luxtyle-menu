@@ -418,8 +418,8 @@ export default function TomoPage() {
         <div style={{ margin: '8px 20px 0', background: 'linear-gradient(135deg, #E8E9F5, #F5E6D3)', borderRadius: 20, padding: '18px 20px', border: '1.5px dashed #C2773A44' }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: '#C2773A', fontFamily: 'system-ui,sans-serif' }}>🌸 More flavors coming soon</div>
           <div style={{ fontSize: 12, color: '#aaa', marginTop: 4, fontFamily: 'system-ui,sans-serif', lineHeight: 1.6 }}>
-            Shaved ice · Snow jelly · Diamond ice · Yogurt series<br />
-            <span style={{ fontSize: 10 }}>雪泥 · 刨冰 · 钻石冰 · 优格</span>
+            Snow ice · Yogurt series<br />
+            <span style={{ fontSize: 10 }}>雪泥 · 优格</span>
           </div>
         </div>
 

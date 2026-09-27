@@ -201,29 +201,14 @@ export const houseSpecialIcedFood: MenuCategory = {
   nameEn: 'House Special Iced',
   nameCn: '经典特制冰品',
   type: 'subcategories',
-  customization: { sweetness: true, iceFixed: true, topping: true, size: 'fixed' },
+  customization: { sweetness: true, iceFixed: true, topping: true, size: 'fixed' },   // all cold drinks: one size
   subcategories: [
-    {
-      id: 'C-D-01',
-      img: '/beiyuan-C-D-01.webp',
-      nameEn: 'Flavored Jelly Ice',
-      nameCn: '风味钻石冰',
-      price: 6.98,
-      note: 'Large Only',
-      items: [
-        { nameEn: 'Passion Fruit Jelly Ice', nameCn: '百香钻石冰' },
-        { nameEn: 'Strawberry Jelly Ice', nameCn: '草莓钻石冰' },
-        { nameEn: 'Mango Jelly Ice', nameCn: '芒果钻石冰' },
-        { nameEn: 'Lychee Jelly Ice', nameCn: '荔枝钻石冰' },
-      ],
-    },
     {
       id: 'C-D-02',
       img: '/beiyuan-C-D-02.webp',
       nameEn: 'Fruit Flavored Snow Ice',
       nameCn: '水果风味雪泥',
       price: 6.98,
-      note: 'Large Only',
       items: [
         { nameEn: 'Strawberry Snow Ice', nameCn: '草莓雪泥' },
         { nameEn: 'Lychee Snow Ice', nameCn: '荔枝雪泥' },
@@ -237,28 +222,11 @@ export const houseSpecialIcedFood: MenuCategory = {
       nameEn: 'Milky Flavored Snow Ice',
       nameCn: '奶香风味雪泥',
       price: 6.98,
-      note: 'Large Only',
       items: [
         { nameEn: 'Taro Snow Ice', nameCn: '芋头雪泥' },
         { nameEn: 'Honey Dew Snow Ice', nameCn: '哈密瓜雪泥' },
         { nameEn: 'Mocha Snow Ice', nameCn: '摩卡雪泥' },
         { nameEn: 'Milk Slush', nameCn: '风味冻奶' },
-      ],
-    },
-    {
-      id: 'C-D-04',
-      img: '/beiyuan-C-D-04.webp',
-      nameEn: 'Flavored Shaved Ice',
-      nameCn: '刨冰类',
-      price: 6.98,
-      note: 'One Size Only',
-      items: [
-        { nameEn: 'Red Bean Milk Shaved Ice', nameCn: '红豆牛奶刨冰' },
-        { nameEn: 'Green Bean Milk Shaved Ice', nameCn: '绿豆牛奶刨冰' },
-        { nameEn: 'Passion Fruit w/ Crystal Jelly Shaved Ice', nameCn: '水晶百香刨冰' },
-        { nameEn: 'Strawberry Milk Shaved Ice', nameCn: '草莓牛奶刨冰' },
-        { nameEn: 'Mango Shaved Ice', nameCn: '芒果刨冰', seasonal: true, note: '$7.98' },
-        { nameEn: 'Iced Coconut Combination', nameCn: '椰香总汇圆仔冰', note: '$7.98' },
       ],
     },
   ],
@@ -532,6 +500,44 @@ export const toppings = [
 // ─────────────────────────────────────────────
 // ALL CATEGORIES (for Tab navigation)
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// RETIRED 已下架 (2026-09-26): 风味钻石冰 C-D-01 and 刨冰类 C-D-04, all locations.
+// Not in allCategories, so nothing renders them. Kept (with their images still in /public)
+// so they can be restored by moving them back into houseSpecialIcedFood.subcategories.
+// ─────────────────────────────────────────────
+export const retiredSubcategories: MenuSubCategory[] = [
+    {
+      id: 'C-D-01',
+      img: '/beiyuan-C-D-01.webp',
+      nameEn: 'Flavored Jelly Ice',
+      nameCn: '风味钻石冰',
+      price: 6.98,
+      note: 'Large Only',
+      items: [
+        { nameEn: 'Passion Fruit Jelly Ice', nameCn: '百香钻石冰' },
+        { nameEn: 'Strawberry Jelly Ice', nameCn: '草莓钻石冰' },
+        { nameEn: 'Mango Jelly Ice', nameCn: '芒果钻石冰' },
+        { nameEn: 'Lychee Jelly Ice', nameCn: '荔枝钻石冰' },
+      ],
+    },
+    {
+      id: 'C-D-04',
+      img: '/beiyuan-C-D-04.webp',
+      nameEn: 'Flavored Shaved Ice',
+      nameCn: '刨冰类',
+      price: 6.98,
+      note: 'One Size Only',
+      items: [
+        { nameEn: 'Red Bean Milk Shaved Ice', nameCn: '红豆牛奶刨冰' },
+        { nameEn: 'Green Bean Milk Shaved Ice', nameCn: '绿豆牛奶刨冰' },
+        { nameEn: 'Passion Fruit w/ Crystal Jelly Shaved Ice', nameCn: '水晶百香刨冰' },
+        { nameEn: 'Strawberry Milk Shaved Ice', nameCn: '草莓牛奶刨冰' },
+        { nameEn: 'Mango Shaved Ice', nameCn: '芒果刨冰', seasonal: true, note: '$7.98' },
+        { nameEn: 'Iced Coconut Combination', nameCn: '椰香总汇圆仔冰', note: '$7.98' },
+      ],
+    },
+];
+
 export const allCategories = [
   icedFlavoredTea,
   icedMilkTea,
