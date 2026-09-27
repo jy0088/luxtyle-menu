@@ -194,6 +194,10 @@ export function resolvePick(p: Pick): ResolvedPick {
 
 // ─── 饮品 8 款 ────────────────────────────────────────────
 // 前 3 款已填 [草稿] 口味/搭配文案,用于定版式;其余待补
+// STORY / TASTE / PAIR IT for d4–d8 and s2–s6: copy supplied by Kevin on 2026-09-26 ("YGF Explore ·
+// Drinks & Snacks Copy"), including the product facts in it (real osmanthus / white peach flesh /
+// chrysanthemum / coconut flesh, house-made sausage, calamari prepared in store). Only change made:
+// d6's English PAIR IT names "house creamer" to match the preset (see the note on d6).
 export const DRINK_PICKS: Pick[] = [
   { key: 'd1', ref: 'C-A-05', tint: { accent: '#D9A441', deep: '#46300B' }, mods: ['Green Tea 绿茶', '50% Sugar 半糖'], toppingIds: ['T-23'],
     tasteEn: 'Light and floral, honey up front, tea kept in the background.',

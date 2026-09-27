@@ -166,6 +166,7 @@ export default function PickStage({ drinks, snacks, onOpenSnack }: Props) {
     reinit: null as (() => void) | null,
     requestOpen: null as ((i: number) => void) | null,
     scrollAbort: null as AbortController | null,
+    inerted: [] as Element[],
     proxy: null as HTMLDivElement | null, drag: null as Draggable | null,
     flipState: null as Flip.FlipState | null, tl: null as gsap.core.Timeline | null,
     splits: [] as SplitText[], autoScroll: null as gsap.core.Tween | null,
@@ -349,6 +350,10 @@ export default function PickStage({ drinks, snacks, onOpenSnack }: Props) {
     const card = cardEls.current[open], det = detailRef.current!, body = dBody.current!;
     st.drag?.disable();
     document.documentElement.style.overflow = "hidden";
+    // modal: everything behind the dialog (a direct child of <body> via the portal) is inert, so Tab
+    // and VoiceOver can't wander into the covered page
+    st.inerted = Array.from(document.body.children).filter(el => el !== det && !el.hasAttribute("inert"));
+    st.inerted.forEach(el => el.setAttribute("inert", ""));
     body.scrollTop = 0;
     gsap.set(card, { autoAlpha: 0 });                 // the photo is "lifted" out of this card
 
@@ -391,6 +396,8 @@ export default function PickStage({ drinks, snacks, onOpenSnack }: Props) {
       document.fonts.ready.then(go); setTimeout(go, 300);
     } else run();
 
+    // Auto-scroll runs in BOTH motion modes — Kevin's call (2026-09-26). It is slow (~26px/s),
+    // waits 1.4s, and any touch / wheel / key stops it for the rest of this open.
     function startAutoScroll() {
       const max = body.scrollHeight - body.clientHeight;
       if (max < 12) return;
@@ -413,7 +420,9 @@ export default function PickStage({ drinks, snacks, onOpenSnack }: Props) {
       st.tl = null; st.flipState = null;
       gsap.set(cardEls.current[i], { autoAlpha: 1 });
       document.documentElement.style.overflow = "";
+      st.inerted.forEach(el => el.removeAttribute("inert")); st.inerted = [];
       st.drag?.enable();
+      stage.current?.focus({ preventScroll: true });   // hand focus back to where the guest came from
       st.openIdx = -1;
       setOpen(null);
       st.busy = false;
@@ -433,6 +442,7 @@ export default function PickStage({ drinks, snacks, onOpenSnack }: Props) {
     return () => {
       document.documentElement.style.overflow = "";
       st.tl?.kill(); st.autoScroll?.kill(); st.scrollAbort?.abort();
+      st.inerted.forEach(n => n.removeAttribute("inert"));
       st.splits.forEach(sp => sp.revert());
       if (el) gsap.killTweensOf(el.querySelectorAll("*"));
     };
