@@ -317,7 +317,9 @@ export const NEW_ARRIVALS: NewArrival[] = [];
    只讲值得讲的。100 多种还常换,做全目录维护不住也没人看。
    ═══════════════════════════════════════════════════════════ */
 
-export type SpotlightTier = 'new' | 'favorite' | 'try';
+/** 食材二级(Kevin 2026-09-26):展示新品 / 推荐搭配 / 店内招牌。空的一档自动隐藏。 */
+export type SpotlightTier = 'new' | 'pair' | 'signature';
+export const SPOTLIGHT_TIERS: SpotlightTier[] = ['new', 'pair', 'signature'];
 
 export interface Spotlight {
   key: string;
@@ -338,9 +340,9 @@ export interface Spotlight {
 }
 
 export const TIER_META: Record<SpotlightTier, { en: string; cn: string; emoji: string; color: string }> = {
-  new:      { en: 'NEW',            cn: '新品',     emoji: '🆕', color: '#B91C1C' },
-  favorite: { en: 'YGF FAVORITES',  cn: '招牌推荐', emoji: '⭐', color: '#C8912A' },
-  try:      { en: 'TRY THIS',       cn: '值得试试', emoji: '👀', color: '#0F766E' },
+  new:       { en: 'NEW ARRIVALS',     cn: '展示新品', emoji: '🆕', color: '#B91C1C' },
+  pair:      { en: 'GOES WELL WITH',   cn: '推荐搭配', emoji: '🥢', color: '#0F766E' },
+  signature: { en: 'HOUSE SIGNATURES', cn: '店内招牌', emoji: '⭐', color: '#C8912A' },
 };
 
 // 每档先放 2 款真实样品,用于定版式;内容待店内确认后批量补
@@ -354,20 +356,20 @@ export const SPOTLIGHTS: Spotlight[] = [
     whatEn: 'Fish tofu with a cheese centre that melts in the broth.',
     whatCn: '鱼豆腐夹芝士,在汤里会化开。' },
 
-  { key: 'sp3', tier: 'favorite', itemId: 'beef-brisket',
+  { key: 'sp3', tier: 'signature', itemId: 'beef-brisket',
     nameEn: 'Fatty Beef Slices', nameCn: '牛五花',
     whatEn: 'Thin-cut beef with even marbling.',
     whatCn: '薄切牛五花,肥瘦相间。' },
-  { key: 'sp4', tier: 'favorite', itemId: 'shrimp-paste',
+  { key: 'sp4', tier: 'signature', itemId: 'shrimp-paste',
     nameEn: 'Handmade Shrimp Paste', nameCn: '手工虾滑',
     whatEn: 'Shrimp minced and folded by hand, spooned straight into the bowl.',
     whatCn: '整虾手打成滑,现舀现下。' },
 
-  { key: 'sp5', tier: 'try', itemId: 'beef-aorta',
+  { key: 'sp5', tier: 'signature', itemId: 'beef-aorta',
     nameEn: 'Beef Aorta', nameCn: '黄喉',
     whatEn: 'Not a throat despite the name — it is the aorta, prized for its snap.',
     whatCn: '名字叫喉,其实是主动脉,吃的就是那口脆。' },
-  { key: 'sp6', tier: 'try', itemId: 'konjac-knots',
+  { key: 'sp6', tier: 'signature', itemId: 'konjac-knots',
     nameEn: 'Konjac Knots', nameCn: '魔芋结',
     whatEn: 'Plant-based, almost no calories, soaks up whatever broth it sits in.',
     whatCn: '植物做的,几乎没有热量,特别吸汤。' },
@@ -492,9 +494,19 @@ export const MAFANS_BANNERS: Banner[] = [
 
 // Ingredients —— 三档;色值跟 TIER_META 对齐
 export const ITEM_BANNERS: Record<SpotlightTier, { hookCn: string; grad: string; edge: string }> = {
-  new:      { hookCn: '刚上台的几样', grad: 'linear-gradient(120deg,#B91C1C,#6E0B0D)', edge: '#F2A9A9' },
-  favorite: { hookCn: '回头客拿得最多的', grad: 'linear-gradient(120deg,#C8912A,#8A5E12)', edge: '#F5D98A' },
-  try:      { hookCn: '第一次来可以大胆试', grad: 'linear-gradient(120deg,#0F766E,#064E45)', edge: '#8FE3CE' },
+  new:       { hookCn: '刚上台的几样',   grad: 'linear-gradient(120deg,#B91C1C,#6E0B0D)', edge: '#F2A9A9' },
+  pair:      { hookCn: '这几样放一碗',   grad: 'linear-gradient(120deg,#0F766E,#064E45)', edge: '#8FE3CE' },
+  signature: { hookCn: '回头客拿得最多的', grad: 'linear-gradient(120deg,#C8912A,#8A5E12)', edge: '#F5D98A' },
+};
+
+/* 汤底横幅配色 —— 中国传统色,按口味取色(Kevin 2026-09-26)。
+   只管 Explore 页的横幅;menuData 里的 color 仍给汤底详情页用。 */
+export const BROTH_SKIN: Record<string, { en: string; cn: string; grad: string; edge: string }> = {
+  spicy:  { cn: '胭脂', en: 'Rouge',      grad: 'linear-gradient(120deg,#B8323A,#5E1119)', edge: '#E7A1A6' },  // 麻辣骨汤:深红
+  tomato: { cn: '橘红', en: 'Tangerine',  grad: 'linear-gradient(120deg,#E8692A,#9C3413)', edge: '#FFC39C' },  // 酸甜番茄:橙红
+  tomyum: { cn: '竹青', en: 'Bamboo',     grad: 'linear-gradient(120deg,#7A9650,#34502A)', edge: '#C9DDA8' },  // 冬阴功:香茅青柠
+  drymix: { cn: '赭石', en: 'Ochre',      grad: 'linear-gradient(120deg,#946538,#472A16)', edge: '#DDBF97' },  // 石磨麻辣拌:芝麻焙香
+  clear:  { cn: '石青', en: 'Azurite',    grad: 'linear-gradient(120deg,#2A86A6,#1B4458)', edge: '#A6D6E6' },  // 清汤:清透
 };
 
 // Sauce Bar
