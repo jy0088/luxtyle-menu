@@ -12,12 +12,12 @@ const SauceBubbles = dynamic(() => import("@/components/ygf/SauceBubbles"), {
   loading: () => <div style={{ height: 440, borderRadius: 22, background: "#F7EBD8" }} aria-hidden="true" />,
 });
 
-// Sauce Bar 气泡颜色:芝麻金 / 酱色 / 陈醋褐 / 夜色(隐藏配方)
+// Sauce Bar 气泡颜色:芝麻金 / 辣油红 / 葱香绿 / 黛紫(隐藏配方)
 const SAUCE_BUBBLE_TINT: Record<string, { color: string; deep: string }> = {
-  recipes: { color: "#D09A48", deep: "#8A5A1C" },
-  know:    { color: "#B0603F", deep: "#6A2E1A" },
-  all:     { color: "#7A6448", deep: "#3E3020" },
-  secret:  { color: "#3A2C22", deep: "#120C08" },
+  recipes: { color: "#E8A93C", deep: "#9A5E10" },
+  know:    { color: "#E0583A", deep: "#8E2414" },
+  all:     { color: "#6FA84A", deep: "#34601E" },
+  secret:  { color: "#5B4486", deep: "#241640" },
 };
 
 const PickStage = dynamic(() => import("@/components/ygf/PickStage"), {
@@ -169,10 +169,6 @@ const YGF_CSS = `
 .acc2[data-fill="1"][data-many="1"] .acc2-t s{ font-size:13px }
 .acc2[data-fill="1"][data-many="1"] .acc2-t i{ display:none }
 .acc2[data-fill="1"][data-many="1"] .acc2-chip{ width:44px; height:44px; font-size:22px; border-radius:13px }
-.acc2-tag{
-  flex-shrink:0; font-size:11px; font-weight:800; letter-spacing:.08em; color:#fff;
-  padding:4px 8px; border-radius:999px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
-}
 .acc2-item{
   border-radius:18px; overflow:hidden; border:2px solid;
   box-shadow:0 4px 16px rgba(0,0,0,.09);
@@ -683,10 +679,10 @@ function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
    二级横幅 —— 一个开,其余退让缩小
    ══════════════════════════════════════════════════════════ */
 function AccItem({
-  open, onToggle, emoji, titleEn, titleCn, hookCn, grad, edge, tag, tagTitle, children,
+  open, onToggle, emoji, titleEn, titleCn, hookCn, grad, edge, children,
 }: {
   open: boolean; onToggle: () => void;
-  emoji: string; titleEn: string; titleCn: string; hookCn?: string; tag?: string; tagTitle?: string;
+  emoji: string; titleEn: string; titleCn: string; hookCn?: string;
   grad: string; edge: string; children: React.ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
@@ -710,7 +706,6 @@ function AccItem({
           <s>{titleCn}</s>
           {hookCn && <i>{hookCn}</i>}
         </span>
-        {tag && <span className="acc2-tag" title={tagTitle} aria-label={tagTitle}>{tag}</span>}
         <span className="acc2-chev">▼</span>
       </button>
       <div className="acc2-panel">
@@ -993,7 +988,6 @@ export default function YGFPage() {
                 return (
                   <AccItem key={br.id} open={open} onToggle={() => setOpenBr(open ? null : br.id)}
                     emoji="🍲" titleEn={br.en} titleCn={br.zh} hookCn={br.badge}
-                    tag={skin?.cn} tagTitle={skin ? `${skin.cn} · ${skin.en}` : undefined}
                     grad={skin?.grad ?? `linear-gradient(120deg,${br.color},rgba(0,0,0,.55))`} edge={skin?.edge ?? br.color}>
 
                     {br.img && (
@@ -1055,15 +1049,23 @@ export default function YGFPage() {
               {/* ══════════ Ingredients —— 三档 ══════════ */}
               {view === "items" && SPOTLIGHT_TIERS.map(tier => {
                 const list = SPOTLIGHTS.filter(sp => sp.tier === tier);
-                if (list.length === 0) return null;
                 const meta = TIER_META[tier];
                 const skin = ITEM_BANNERS[tier];
                 const open = openIt === tier;
                 return (
                   <AccItem key={tier} open={open} onToggle={() => setOpenIt(open ? null : tier)}
-                    emoji={meta.emoji} titleEn={meta.en} titleCn={`${meta.cn} · ${list.length} 款`}
+                    emoji={meta.emoji} titleEn={meta.en} titleCn={list.length ? `${meta.cn} · ${list.length} 款` : meta.cn}
                     hookCn={skin.hookCn} grad={skin.grad} edge={skin.edge}>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 11 }}>
+                    {list.length === 0 && (
+                      <div style={{ textAlign: "center", padding: "18px 8px 10px" }}>
+                        <div style={{ fontSize: 28 }}>{meta.emoji}</div>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: C.ink, marginTop: 8 }}>店长正在配 · Coming soon</div>
+                        <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 4, lineHeight: 1.55 }}>
+                          下次来就能看到 · Check back on your next visit
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: list.length ? "grid" : "none", gridTemplateColumns: "repeat(2,1fr)", gap: 11 }}>
                       {list.map(sp => {
                         const it = sp.itemId ? getItem(sp.itemId) : undefined;
                         const img = sp.img ?? it?.img;

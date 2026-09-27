@@ -317,9 +317,10 @@ export const NEW_ARRIVALS: NewArrival[] = [];
    只讲值得讲的。100 多种还常换,做全目录维护不住也没人看。
    ═══════════════════════════════════════════════════════════ */
 
-/** 食材二级(Kevin 2026-09-26):展示新品 / 推荐搭配 / 店内招牌。空的一档自动隐藏。 */
-export type SpotlightTier = 'new' | 'pair' | 'signature';
-export const SPOTLIGHT_TIERS: SpotlightTier[] = ['new', 'pair', 'signature'];
+/** 食材二级(Kevin 2026-09-26):新品上架 / 特色招牌 / 推荐搭配,三个固定显示;
+    某一档还没内容时显示「店长正在配」而不是隐藏(Kevin 要求三个都在)。 */
+export type SpotlightTier = 'new' | 'signature' | 'pair';
+export const SPOTLIGHT_TIERS: SpotlightTier[] = ['new', 'signature', 'pair'];
 
 export interface Spotlight {
   key: string;
@@ -340,9 +341,9 @@ export interface Spotlight {
 }
 
 export const TIER_META: Record<SpotlightTier, { en: string; cn: string; emoji: string; color: string }> = {
-  new:       { en: 'NEW ARRIVALS',     cn: '展示新品', emoji: '🆕', color: '#B91C1C' },
-  pair:      { en: 'GOES WELL WITH',   cn: '推荐搭配', emoji: '🥢', color: '#0F766E' },
-  signature: { en: 'HOUSE SIGNATURES', cn: '店内招牌', emoji: '⭐', color: '#C8912A' },
+  new:       { en: 'NEW ARRIVALS',          cn: '新品上架', emoji: '🆕', color: '#B91C1C' },
+  signature: { en: 'HOUSE SIGNATURES',      cn: '特色招牌', emoji: '⭐', color: '#C8912A' },
+  pair:      { en: 'RECOMMENDED PAIRINGS',  cn: '推荐搭配', emoji: '🥢', color: '#0F766E' },
 };
 
 // 每档先放 2 款真实样品,用于定版式;内容待店内确认后批量补
