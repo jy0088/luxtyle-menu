@@ -94,6 +94,17 @@ const YGF_CSS = `
   border-radius:9px; padding:8px 14px;
   font-size:12px; font-weight:900; letter-spacing:.3px;
 }
+/* 矮屏(iPhone SE 等)牌被压小时整体收紧字号,中英两行都保留 */
+.orb-card{ container-type:size }
+@container (max-height:300px){
+  .orb-face{ padding:0 13px 14px }
+  .orb-name{ font-size:21px; letter-spacing:-.5px }
+  .orb-name-cn{ font-size:11px; margin-top:4px }
+  .orb-rule{ margin:8px 0 7px }
+  .orb-hook{ font-size:12px; line-height:1.35 }
+  .orb-hook-en{ font-size:9.5px; margin-top:2px }
+  .orb-go{ margin-top:9px; padding:6px 11px; font-size:11px }
+}
 /* 轨道指示 + 提示 */
 .orb-foot{ flex-shrink:0; padding:2px 0 14px; display:flex; flex-direction:column; align-items:center; gap:11px }
 .orb-dots{ display:flex; align-items:center; gap:9px }
@@ -127,7 +138,8 @@ const YGF_CSS = `
   scroll-margin-top:132px;
   transition:transform .26s cubic-bezier(.22,1,.36,1), opacity .26s ease, box-shadow .26s ease;
 }
-.acc2-item[data-on="0"]{ transform:scale(.978); opacity:.9 }
+/* 只有在有一个展开时,其余的才退让;全收起时(Ma-Fans 刚进来)一样大 */
+.acc2:has(.acc2-item[data-on="1"]) .acc2-item[data-on="0"]{ transform:scale(.978); opacity:.9 }
 .acc2-item[data-on="1"]{ box-shadow:0 12px 32px rgba(0,0,0,.17) }
 .acc2-bar{
   width:100%; display:flex; align-items:center; gap:13px;
@@ -389,6 +401,7 @@ const ORB_EDGE = 8;
 const ORB_ASPECT = 0.70;                  // 宽 / 高,接近 2:3 竖版图
 const ORB_SIDE_MIN = 44;                  // 前排左右至少各露出这么多给两侧的牌
 const ORB_CARD_MIN = 220;
+const ORB_CARD_W_MIN = 196;               // 最长的英文标题 "Ingredients" 在紧凑字号下要放得下
 const ORB_CARD_MAX = 560;                 // 平板上别无限长大
 
 type OrbGeom = { rx: number; ky: number };
@@ -423,7 +436,7 @@ function useOrbitFit(
       let w = h * ORB_ASPECT;
       if (w > wMax) { w = wMax; h = Math.min(h, w / 0.62); }   // 窄屏允许略瘦长一点
       h = Math.max(ORB_CARD_MIN, Math.floor(h));
-      w = Math.floor(w);
+      w = Math.floor(Math.min(wMax, Math.max(ORB_CARD_W_MIN, w)));   // 矮屏时宽度不随高度一起缩
 
       const ky = ORB_KY_K * h;
       const rx = Math.max(ORB_SIDE_MIN + 0.1 * w, vw / 2 - 0.4 * w);
@@ -699,7 +712,7 @@ export default function YGFPage() {
   const [view, setView] = useState<"ring" | EntryId>("ring");
 
   // 每个一级下,当前展开的那个二级横幅(默认第一个)
-  const [openMf, setOpenMf] = useState<string | null>("picks");
+  const [openMf, setOpenMf] = useState<string | null>(null);   // Ma-Fans 进来四个横幅全收起
   const [openBr, setOpenBr] = useState<string | null>(BROTHS[0]?.id ?? null);
   const [openIt, setOpenIt] = useState<SpotlightTier | null>("new");
   const [openSa, setOpenSa] = useState<string | null>("recipes");
@@ -730,10 +743,10 @@ export default function YGFPage() {
     return () => clearTimeout(t);
   }, []);
 
-  // 换一级时回到该级的第一个二级
+  // 换一级时:Ma-Fans 落在二级(横幅全收起,让客人自己挑);其余三级默认展开第一个二级
   const enter = (id: EntryId) => {
     setView(id);
-    if (id === "mafans") setOpenMf("picks");
+    if (id === "mafans") setOpenMf(null);
     if (id === "broth")  setOpenBr(BROTHS[0]?.id ?? null);
     if (id === "items")  setOpenIt("new");
     if (id === "sauce")  setOpenSa("recipes");
