@@ -62,8 +62,10 @@ const BY_CSS = `
 @keyframes by-in-l { from { opacity:0; transform:translateX(20px) } to { opacity:1; transform:none } }
 @keyframes by-in-r { from { opacity:0; transform:translateX(-20px) } to { opacity:1; transform:none } }
 @keyframes by-sheet-up { from { transform:translateY(24px); opacity:0 } to { transform:none; opacity:1 } }
-.by-swap-l { animation: by-in-l .24s cubic-bezier(.22,.9,.3,1) both; }
-.by-swap-r { animation: by-in-r .24s cubic-bezier(.22,.9,.3,1) both; }
+/* fill-mode backwards, not both: a held end-state transform (even an identity matrix) turns this
+   container into the containing block for position:fixed, pinning item sheets below the fold */
+.by-swap-l { animation: by-in-l .24s cubic-bezier(.22,.9,.3,1) backwards; }
+.by-swap-r { animation: by-in-r .24s cubic-bezier(.22,.9,.3,1) backwards; }
 .by-sheet  { animation: by-sheet-up .26s cubic-bezier(.22,1,.36,1) both; }
 /* CHIP —— 选中的标签真实变宽,相邻标签跟着让位 */
 .by-chip{
