@@ -214,12 +214,16 @@ export default function SauceBubbles({ bubbles, renderContent }: Props) {
   }, [size.w, size.h]);
 
   /* grab / flick / tap */
+  // one finger at a time: a second pointer is ignored while a bubble is held
   const drag = useRef<{ i: number; id: number; ox: number; oy: number; sx: number; sy: number; moved: number;
     hist: { x: number; y: number; t: number }[] } | null>(null);
+  // set when a gesture was a drag/flick, so the click the browser fires afterwards doesn't open the bubble
+  const swallowClick = useRef(-1);
 
   const onDown = (i: number) => (e: React.PointerEvent<HTMLButtonElement>) => {
     const b = bodies.current[i], f = field.current;
-    if (!b || !f || st.current.busy) return;
+    if (!b || !f || st.current.busy || drag.current) return;
+    swallowClick.current = -1;              // touch drags don't always fire a click; never let the flag outlive its gesture
     const fr = f.getBoundingClientRect();
     const px = e.clientX - fr.left, py = e.clientY - fr.top;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -245,7 +249,10 @@ export default function SauceBubbles({ bubbles, renderContent }: Props) {
     drag.current = null;
     const b = bodies.current[d.i];
     b.held = false;
-    if (d.moved < TAP_SLOP) { openBubble(d.i); return; }
+    if (e.type === "pointercancel" || e.type === "lostpointercapture") return;
+    // a tap is opened by onClick (the same path VoiceOver / Switch Control and keyboards use)
+    if (d.moved < TAP_SLOP) return;
+    swallowClick.current = d.i;
     const h = d.hist, a = h[0], z = h[h.length - 1], dt = Math.max(16, z.t - a.t) / 1000;
     let vx = (z.x - a.x) / dt, vy = (z.y - a.y) / dt;
     const sp = Math.hypot(vx, vy);
@@ -326,7 +333,8 @@ export default function SauceBubbles({ bubbles, renderContent }: Props) {
           return (
             <button key={b.key} ref={el => { els.current[i] = el; }} className="sbb"
               onPointerDown={onDown(i)} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
-              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openBubble(i); } }}
+              onLostPointerCapture={onUp}
+              onClick={() => { if (swallowClick.current === i) { swallowClick.current = -1; return; } openBubble(i); }}
               aria-haspopup="dialog" aria-label={`${b.titleEn} ${b.titleCn}`}
               style={{ width: d, height: d, ["--b-c" as string]: b.color, ["--b-d" as string]: b.deep, ["--b-s" as string]: `${d}px` }}>
               <span className="sbb-body" ref={el => { inner.current[i] = el; }}>
