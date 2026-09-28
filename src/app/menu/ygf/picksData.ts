@@ -502,12 +502,12 @@ export const ITEM_BANNERS: Record<SpotlightTier, { hookCn: string; grad: string;
 
 /* 汤底横幅配色 —— 中国传统色,按口味取色(Kevin 2026-09-26)。
    只管 Explore 页的横幅;menuData 里的 color 仍给汤底详情页用。 */
-export const BROTH_SKIN: Record<string, { en: string; cn: string; grad: string; edge: string }> = {
-  spicy:  { cn: '胭脂', en: 'Rouge',      grad: 'linear-gradient(120deg,#B8323A,#5E1119)', edge: '#E7A1A6' },  // 麻辣骨汤:深红
-  tomato: { cn: '橘红', en: 'Tangerine',  grad: 'linear-gradient(120deg,#E8692A,#9C3413)', edge: '#FFC39C' },  // 酸甜番茄:橙红
-  tomyum: { cn: '竹青', en: 'Bamboo',     grad: 'linear-gradient(120deg,#7A9650,#34502A)', edge: '#C9DDA8' },  // 冬阴功:香茅青柠
-  drymix: { cn: '赭石', en: 'Ochre',      grad: 'linear-gradient(120deg,#946538,#472A16)', edge: '#DDBF97' },  // 石磨麻辣拌:芝麻焙香
-  clear:  { cn: '石青', en: 'Azurite',    grad: 'linear-gradient(120deg,#2A86A6,#1B4458)', edge: '#A6D6E6' },  // 清汤:清透
+export const BROTH_SKIN: Record<string, { en: string; cn: string; grad: string; edge: string; c: string; d: string }> = {
+  spicy:  { cn: '胭脂', en: 'Rouge',     grad: 'linear-gradient(120deg,#B8323A,#5E1119)', edge: '#E7A1A6', c: '#B8323A', d: '#5E1119' },  // 麻辣骨汤:深红
+  tomato: { cn: '橘红', en: 'Tangerine', grad: 'linear-gradient(120deg,#E8692A,#9C3413)', edge: '#FFC39C', c: '#E8692A', d: '#9C3413' },  // 酸甜番茄:橙红
+  tomyum: { cn: '竹青', en: 'Bamboo',    grad: 'linear-gradient(120deg,#7A9650,#34502A)', edge: '#C9DDA8', c: '#7A9650', d: '#34502A' },  // 冬阴功:香茅青柠
+  drymix: { cn: '赭石', en: 'Ochre',     grad: 'linear-gradient(120deg,#946538,#472A16)', edge: '#DDBF97', c: '#946538', d: '#472A16' },  // 石磨麻辣拌:芝麻焙香
+  clear:  { cn: '石青', en: 'Azurite',   grad: 'linear-gradient(120deg,#2A86A6,#1B4458)', edge: '#A6D6E6', c: '#2A86A6', d: '#1B4458' },  // 清汤:清透
 };
 
 // Sauce Bar
@@ -539,22 +539,127 @@ export const SECTION_INTRO: Record<EntryId, { en: string; cn: string }> = {
 };
 
 /* ═══════════════════════════════════════════════════════════
-   6. 汤底可公开信息 —— 按 menuData 里的 broth id 填
-   现在留空:面板只显示 menuData 已有的内容,不出现空壳标题。
-   店里确认每款能透露什么之后,逐款补进来即可,页面自动多出对应段落。
+   6. 汤底故事 —— Kevin 2026-09-28 提供的五款汤底介绍,按手机阅读精简。
+   只保留原文里的事实,没有新增任何原料 / 工艺说法。页面按「熬汤工序」逐步展开。
    ═══════════════════════════════════════════════════════════ */
 
-export interface BrothNote {
-  /** 特点 —— 一句话立住这款汤 */
-  charEn?: string;  charCn?: string;
-  /** 原料 —— 只写店里确认可公开的,绝不猜 */
-  madeEn?: string;  madeCn?: string;
-  /** 风味 */
-  tasteEn?: string; tasteCn?: string;
-  /** 适合谁 / 配什么食材 */
-  forEn?: string;   forCn?: string;
+type Bi = { en: string; cn: string };
+export interface BrothStep {
+  label: Bi;                    // STORY / CRAFT / … 段落名
+  en: string; cn: string;
+  /** 一个会从 0 跳到目标值的数字(如 17 种草本) */
+  stat?: { n: number; unit: Bi };
+  /** 依次弹出的配料小标签 */
+  chips?: Bi[];
+}
+export interface BrothStory {
+  kicker: Bi;                   // 一句话立住这款汤
+  steps: BrothStep[];
+  checkTitle: Bi;               // 怎么判断一锅好汤
+  checks: Bi[];                 // 三条标准,前面的勾一笔画出
 }
 
-export const BROTH_NOTES: Record<string, BrothNote> = {
-  // 例: 'mala': { charCn: '…', madeCn: '…', tasteCn: '…', forCn: '…' },
+const L = {
+  story:   { en: 'STORY', cn: '故事' },
+  craft:   { en: 'CRAFT', cn: '工序' },
+  why:     { en: 'WHY IT WORKS', cn: '为什么好喝' },
+  balance: { en: 'BALANCE', cn: '平衡' },
+  herbs:   { en: 'HERBAL LAYER', cn: '草本' },
+  final:   { en: 'THE FINAL STEP', cn: '收尾' },
+};
+const GOOD_BROTH = { en: 'How to tell a good broth', cn: '怎么判断一锅好汤' };
+
+export const BROTH_STORY: Record<string, BrothStory> = {
+  spicy: {
+    kicker: { en: 'Beef and chicken stocks, 17 herbs, then the málà.', cn: '牛鸡双汤、17 种草本，最后才是麻辣。' },
+    steps: [
+      { label: L.story, en: 'Beef bones, beef shank, chicken feet and chicken bones — built for depth, aroma and body.',
+        cn: '牛大骨、牛腱、鸡爪、鸡骨打底，要的是厚度、肉香和胶质感。' },
+      { label: L.craft, en: 'Beef and chicken stocks simmer separately, then blend by a fixed ratio — every pot tastes the same.',
+        cn: '牛骨汤、鸡骨汤分开熬，再按固定比例调和，每一锅味道都稳。' },
+      { label: L.herbs, en: 'Natural herbs and spices, timed closely: too short lacks aroma, too long turns bitter.',
+        cn: '天然草本香料，严控时间：短了不香，久了发苦。', stat: { n: 17, unit: { en: 'herbs & spices', cn: '种草本香料' } } },
+      { label: L.final, en: 'Chili oil, chili and Sichuan pepper finish the classic YGF málà — adjusted to your taste.',
+        cn: '辣椒油、辣椒、花椒收尾，完成经典麻辣；出品时按你的口味再调。' },
+    ],
+    checkTitle: GOOD_BROTH,
+    checks: [
+      { en: 'Rich, never heavy', cn: '浓而不腻' },
+      { en: 'Fragrant, never bitter', cn: '香而不苦' },
+      { en: 'Body to carry the whole bowl', cn: '托得住整碗食材' },
+    ],
+  },
+  tomato: {
+    kicker: { en: 'No water — chicken broth and stir-fried tomato.', cn: '不用清水，鸡汤加炒番茄。' },
+    steps: [
+      { label: L.story, en: 'Instead of water, our house-made chicken broth is the base — savory from the first sip.',
+        cn: '不用清水，用自熬鸡汤打底，一开始就更鲜、更有厚度。' },
+      { label: L.craft, en: 'Two tomato pastes stir-fried with fresh carrot until the tomato turns sandy and concentrated.',
+        cn: '两种番茄膏加新鲜胡萝卜翻炒，炒到翻砂，香气和浓度才出来。' },
+      { label: L.why, en: 'Chicken broth carries the savory depth; the sautéed tomato brings brightness, sweetness and body.',
+        cn: '鸡汤负责托鲜，炒番茄负责酸甜和浓度，两层味道叠在一起。' },
+    ],
+    checkTitle: GOOD_BROTH,
+    checks: [
+      { en: 'Bright sweet-and-sour', cn: '酸甜明亮' },
+      { en: 'Full, never watery', cn: '有厚度，不水不寡' },
+      { en: 'Naturally sweet, not sugary', cn: '甜得自然，不只剩甜' },
+    ],
+  },
+  tomyum: {
+    kicker: { en: 'Classic Thai tom yum, tuned for a malatang bowl.', cn: '传统泰式冬阴功，调成适合麻辣烫的一碗。' },
+    steps: [
+      { label: L.story, en: 'Built on the classic Thai tom yum profile, then lightly tuned for malatang.',
+        cn: '以传统泰式冬阴功风味为基础，再轻微调整，更适合麻辣烫。' },
+      { label: L.craft, en: 'Seven ingredients build it layer by layer — sour, spicy and fragrant.',
+        cn: '七样原料层层叠出酸、辣与香气。',
+        chips: [
+          { en: 'Tom yum paste', cn: '冬阴功酱' }, { en: 'Lemongrass', cn: '香茅' }, { en: 'Fish sauce', cn: '鱼露' },
+          { en: "Bird's eye chili", cn: '小米辣' }, { en: 'Lime', cn: '青柠' }, { en: 'Galangal', cn: '南姜' },
+          { en: 'Kaffir lime leaf', cn: '柠檬叶' },
+        ] },
+      { label: L.balance, en: 'Bright and herbal like the original, with the edges softened so more ingredients fit in.',
+        cn: '保留明亮酸香和草本气息，微调刺激感，让更多食材都融得进。' },
+    ],
+    checkTitle: GOOD_BROTH,
+    checks: [
+      { en: 'Sour, but bright', cn: '酸得明亮' },
+      { en: 'Spicy, with layers', cn: '辣得有层次' },
+      { en: 'Aroma that holds up', cn: '香气立得住' },
+    ],
+  },
+  drymix: {
+    kicker: { en: 'No broth — sesame sauce that coats every bite.', cn: '不是汤底，是裹住每一口的芝麻酱。' },
+    steps: [
+      { label: L.story, en: 'Unlike a broth bowl, this one is built on a rich sesame sauce that coats every ingredient.',
+        cn: '和汤底麻辣烫不同，麻辣拌以浓香芝麻酱为核心，裹住每一种食材。' },
+      { label: L.craft, en: 'Sesame sauce goes in first, then chili, numbing spice and seasoning, layer by layer.',
+        cn: '芝麻酱先打底，再叠加辣、麻与调味，香、麻、辣各有层次。' },
+      { label: L.why, en: 'The sauce clings, so every bite is sesame-rich with a spicy, savory finish.',
+        cn: '酱汁均匀挂在食材上，每一口都有芝麻浓香，再带出麻辣咸香。' },
+    ],
+    checkTitle: { en: 'How to tell a good dry mix', cn: '怎么判断一碗好的麻辣拌' },
+    checks: [
+      { en: 'Evenly coated', cn: '挂酱均匀' },
+      { en: 'Creamy, never gluey', cn: '浓而不糊' },
+      { en: 'Fragrant, never greasy', cn: '香而不腻' },
+    ],
+  },
+  clear: {
+    kicker: { en: 'Our house broth, held back — taste the stock itself.', cn: '原汤做得更克制，喝的就是汤底本身。' },
+    steps: [
+      { label: L.story, en: 'A simpler take on our house broth, for guests who want to taste the stock itself.',
+        cn: '把原汤做得更克制，适合想喝清爽、直接感受汤底的人。' },
+      { label: L.craft, en: 'Our beef-bone house broth with only light seasoning, so its own savoriness leads.',
+        cn: '以牛骨原汤为基础，只做少量调味，让原汤的鲜香站在最前面。' },
+      { label: L.why, en: 'Less seasoning means the broth has to stand on its own body, aroma and clean finish.',
+        cn: '调味越少，越考验原汤本身的厚度、香气和干净度。' },
+    ],
+    checkTitle: { en: 'How to tell a good clear broth', cn: '怎么判断一锅好清汤' },
+    checks: [
+      { en: 'Clean and savory', cn: '清鲜' },
+      { en: 'Balanced', cn: '平衡，入口干净' },
+      { en: 'Light seasoning, never thin', cn: '调味轻，汤不薄' },
+    ],
+  },
 };

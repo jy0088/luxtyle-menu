@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import { BROTHS, SAUCE_CATEGORIES, ALLERGEN_COLOR, getItem, type Allergen } from "./menuData";
 import AppShell from "@/components/shell/AppShell";
 import PsstWidget from "@/components/ygf/PsstWidget";
 
 // Manager's Picks stage pulls in GSAP (~60KB gz); load it only on the client, only when Ma-Fans renders
+const BrothStoryView = dynamic(() => import("@/components/ygf/BrothStory"), { ssr: false });
+
 const SauceBubbles = dynamic(() => import("@/components/ygf/SauceBubbles"), {
   ssr: false,
   loading: () => <div style={{ height: 440, borderRadius: 22, background: "#F7EBD8" }} aria-hidden="true" />,
@@ -28,7 +29,7 @@ import {
   DRINK_PICKS, SNACK_PICKS, NEW_ARRIVALS, CAMPAIGN, MEMBER_PERKS,
   SPOTLIGHTS, TIER_META, SAUCE_RECIPES, SAUCE_NOTES, SECRET_MIX,
   ENTRY_CARDS, MAFANS_BANNERS, ITEM_BANNERS, SAUCE_BANNERS,
-  SECTION_INTRO, BROTH_NOTES, BROTH_SKIN, SPOTLIGHT_TIERS,
+  SECTION_INTRO, BROTH_STORY, BROTH_SKIN, SPOTLIGHT_TIERS,
   resolvePick, type SpotlightTier, type EntryId,
 } from "./picksData";
 
@@ -679,16 +680,20 @@ function EntryOrbit({ onPick }: { onPick: (id: EntryId) => void }) {
    二级横幅 —— 一个开,其余退让缩小
    ══════════════════════════════════════════════════════════ */
 function AccItem({
-  open, onToggle, emoji, titleEn, titleCn, hookCn, grad, edge, children,
+  open, onToggle, emoji, titleEn, titleCn, hookCn, grad, edge, dataKey, dialog, children,
 }: {
   open: boolean; onToggle: () => void;
   emoji: string; titleEn: string; titleCn: string; hookCn?: string;
+  /** data-key on the banner (used to find it as an animation origin) */
+  dataKey?: string;
+  /** banner opens a full-screen view instead of expanding in place */
+  dialog?: boolean;
   grad: string; edge: string; children: React.ReactNode;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const click = () => {
     onToggle();
-    if (!open) {
+    if (!open && !dialog) {
       setTimeout(() => {
         box.current?.scrollIntoView({
           block: "start",
@@ -698,15 +703,16 @@ function AccItem({
     }
   };
   return (
-    <div ref={box} className="acc2-item" data-on={open ? "1" : "0"} style={{ borderColor: edge }}>
-      <button className="acc2-bar" style={{ background: grad }} onClick={click} aria-expanded={open}>
+    <div ref={box} className="acc2-item" data-on={open ? "1" : "0"} data-key={dataKey} style={{ borderColor: edge }}>
+      <button className="acc2-bar" style={{ background: grad }} onClick={click}
+        aria-expanded={dialog ? undefined : open} aria-haspopup={dialog ? "dialog" : undefined}>
         <span className="acc2-chip">{emoji}</span>
         <span className="acc2-t">
           <b>{titleEn}</b>
           <s>{titleCn}</s>
           {hookCn && <i>{hookCn}</i>}
         </span>
-        <span className="acc2-chev">▼</span>
+        <span className="acc2-chev" style={dialog ? { transform: "rotate(-90deg)" } : undefined}>▼</span>
       </button>
       <div className="acc2-panel">
         <div><div className="acc2-inner">{children}</div></div>
@@ -729,7 +735,8 @@ export default function YGFPage() {
 
   // 每个一级下,当前展开的那个二级横幅(默认第一个)
   const [openMf, setOpenMf] = useState<string | null>(null);   // Ma-Fans 进来四个横幅全收起
-  const [openBr, setOpenBr] = useState<string | null>(null);   // 五款汤底全收起,让客人自己挑
+  // 汤底:点横幅打开全屏故事页(有故事的汤底);origin = 被点的横幅按钮
+  const [brothStory, setBrothStory] = useState<{ id: string; origin: HTMLElement | null } | null>(null);
   const [openIt, setOpenIt] = useState<SpotlightTier | null>("new");
 
   // 三级:调料配方
@@ -740,7 +747,7 @@ export default function YGFPage() {
 
   // 二级全收起时横幅吃满屏:容器最小高度 = 视口 − 容器顶部 − 底部导航 − 页脚
   const accRef = useRef<HTMLDivElement>(null);
-  const fill = (view === "mafans" && openMf === null) || (view === "broth" && openBr === null);
+  const fill = (view === "mafans" && openMf === null) || view === "broth";
   useLayoutEffect(() => {
     const el = accRef.current;
     if (!el || !fill) return;
@@ -779,7 +786,6 @@ export default function YGFPage() {
   const enter = (id: EntryId) => {
     setView(id);
     if (id === "mafans") setOpenMf(null);
-    if (id === "broth")  setOpenBr(null);
     if (id === "items")  setOpenIt("new");
     window.scrollTo({ top: 0 });
   };
@@ -976,72 +982,17 @@ export default function YGFPage() {
 
               {/* ══════════ Our Broths —— 五款各一个横幅 ══════════ */}
               {view === "broth" && BROTHS.map(br => {
-                const open = openBr === br.id;
-                const note = BROTH_NOTES[br.id];
                 const skin = BROTH_SKIN[br.id];
-                const rows: [string, string | undefined, string | undefined][] = [
-                  ["Character 特点",    note?.charEn,  note?.charCn],
-                  ["What's in it 原料", note?.madeEn,  note?.madeCn],
-                  ["Taste 风味",        note?.tasteEn, note?.tasteCn],
-                  ["Goes with 适合配",  note?.forEn,   note?.forCn],
-                ];
+                const story = BROTH_STORY[br.id];
                 return (
-                  <AccItem key={br.id} open={open} onToggle={() => setOpenBr(open ? null : br.id)}
-                    emoji="🍲" titleEn={br.en} titleCn={br.zh} hookCn={br.badge}
+                  <AccItem key={br.id} open={false} dialog dataKey={`broth-${br.id}`}
+                    onToggle={() => setBrothStory({
+                      id: br.id,
+                      origin: document.querySelector<HTMLElement>(`[data-key="broth-${br.id}"] .acc2-bar`),
+                    })}
+                    emoji="🍲" titleEn={br.en} titleCn={br.zh} hookCn={story?.kicker.cn ?? br.badge}
                     grad={skin?.grad ?? `linear-gradient(120deg,${br.color},rgba(0,0,0,.55))`} edge={skin?.edge ?? br.color}>
-
-                    {br.img && (
-                      <div style={{ position: "relative", borderRadius: 14, overflow: "hidden",
-                        aspectRatio: "16 / 9", background: br.color, marginBottom: 13 }}>
-                        <img src={br.img} alt={br.zh}
-                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                          onError={e => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-                      </div>
-                    )}
-
-                    <div style={{ fontSize: 13.5, color: C.inkMid, lineHeight: 1.55 }}>{br.taglineEn}</div>
-                    <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 3, lineHeight: 1.55 }}>{br.tagline}</div>
-
-                    {/* 店里确认可公开的内容,填了才出现 */}
-                    {rows.map(([label, en, cn]) => (en || cn) ? (
-                      <div key={label} style={{ marginTop: 14 }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2 }}>{label}</div>
-                        {en && <div style={{ fontSize: 13, color: C.inkMid, marginTop: 4, lineHeight: 1.55 }}>{en}</div>}
-                        {cn && <div style={{ fontSize: 12.5, color: C.inkLight, marginTop: 2, lineHeight: 1.55 }}>{cn}</div>}
-                      </div>
-                    ) : null)}
-
-                    {/* 辣度 */}
-                    <div style={{ marginTop: 14 }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 800, color: C.gold, letterSpacing: 1.2, marginBottom: 6 }}>
-                        Heat 辣度
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {br.spicyLevels.length === 0
-                          ? <span style={{ fontSize: 12.5, color: C.inkMid }}>🍃 {br.spicy}</span>
-                          : br.spicyLevels.map(lv => (
-                              <span key={lv.en} style={{ fontSize: 12.5, color: C.inkMid, display: "flex", alignItems: "center", gap: 8 }}>
-                                <span style={{ minWidth: 92 }}>{lv.en} {lv.zh}</span>
-                                <span style={{ letterSpacing: -1 }}>{"🌶".repeat(lv.chilies)}</span>
-                              </span>
-                            ))}
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 15, gap: 10 }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 800, whiteSpace: "nowrap",
-                        color: br.surcharge ? "#fff" : C.inkMid,
-                        background: br.surcharge ? C.red : "transparent",
-                        border: br.surcharge ? "none" : `1px solid ${C.border}`,
-                        borderRadius: 8, padding: "6px 11px" }}>
-                        {br.surcharge ? `+$${br.surcharge.toFixed(2)} / bowl` : "Included 免费"}
-                      </span>
-                      <Link href={`/menu/ygf/broth/${br.id}`} data-press
-                        style={{ textDecoration: "none", background: C.red, color: "#fff",
-                          fontSize: 13, fontWeight: 800, borderRadius: 10, padding: "9px 15px", whiteSpace: "nowrap" }}>
-                        查看搭配 Combos ›
-                      </Link>
-                    </div>
+                    {null}
                   </AccItem>
                 );
               })}
@@ -1349,6 +1300,15 @@ export default function YGFPage() {
         </div>
       </div>
     )}
+
+    {brothStory && (() => {
+      const br = BROTHS.find(x => x.id === brothStory.id);
+      const story = BROTH_STORY[brothStory.id];
+      const skin = BROTH_SKIN[brothStory.id];
+      if (!br || !story || !skin) return null;
+      return <BrothStoryView broth={br} story={story} skin={skin} origin={brothStory.origin}
+        onClosed={() => setBrothStory(null)} />;
+    })()}
 
     <PsstWidget open={psst} onClose={() => setPsst(false)} channelUrl={YGF_CHANNEL} />
     </>
