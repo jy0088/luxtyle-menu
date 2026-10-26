@@ -8,6 +8,7 @@
 import { type ReactNode } from 'react';
 import Header from './Header';
 import BottomNav from './BottomNav';
+import TableInfo from './TableInfo';
 
 export default function AppShell({
   children,
@@ -34,7 +35,10 @@ export default function AppShell({
       }}
     >
       <Header action={action} nav={nav} showBack={showBack} onBack={onBack} />
-      <main style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>{children}</main>
+      <main style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+        {children}
+        <TableInfo />
+      </main>
       <BottomNav />
     </div>
   );
