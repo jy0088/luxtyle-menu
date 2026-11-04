@@ -14,6 +14,12 @@ export default function StaffHome() {
       >
         SJ 叫货单 / SJ Order Sheet →
       </Link>
+      <Link
+        href="/staff/warehouse"
+        style={{ display: 'block', background: '#1f5f8b', color: '#fff', padding: '16px 20px', borderRadius: 12, textDecoration: 'none', fontWeight: 600, fontSize: 19, marginTop: 12 }}
+      >
+        仓库：盘点 · 领料 · 补货 / Warehouse →
+      </Link>
 
       <h2 style={{ fontSize: 17, margin: '32px 0 8px' }}>安装到手机桌面 / Add to Home Screen</h2>
       <ol style={{ paddingLeft: 22, margin: 0 }}>
