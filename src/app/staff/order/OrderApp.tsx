@@ -111,6 +111,22 @@ function drawSheet(o: Order): string {
   return cv.toDataURL('image/png');
 }
 
+/** One-tap export: share sheet (→ WeChat / Save Image) where supported, else a file download. */
+async function exportImage(dataUrl: string, filename: string, toast: (m: string) => void) {
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const file = new File([blob], filename, { type: 'image/png' });
+    const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+    if (nav.share && nav.canShare?.({ files: [file] })) {
+      try { await nav.share({ files: [file], title: filename }); return; }
+      catch (e) { if ((e as Error).name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast('已下载到「文件」/ 下载目录');
+  } catch { toast('导出失败，请长按图片保存'); }
+}
+
 // ---------- component ----------
 export default function OrderApp() {
   const [ready, setReady] = useState(false);
@@ -247,7 +263,7 @@ export default function OrderApp() {
       )}
 
       {sheet?.t === 'confirm' && <ConfirmSheet o={sheet.o} onClose={() => setSheet(null)} onSubmit={o => { saveHist([o, ...hist]); saveQty({}); setSheet({ t: 'dispatch', id: o.id }); }} />}
-      {sheet?.t === 'dispatch' && find(sheet.id) && <DispatchSheet o={find(sheet.id)!} copy={copy} onClose={() => go('history')} />}
+      {sheet?.t === 'dispatch' && find(sheet.id) && <DispatchSheet o={find(sheet.id)!} copy={copy} toast={toast} onClose={() => go('history')} />}
       {sheet?.t === 'receive' && find(sheet.id) && <ReceiveSheet o={find(sheet.id)!} copy={copy} toast={toast} onClose={() => setSheet(null)}
         onShowSheet={() => setSheet({ t: 'dispatch', id: sheet.id })}
         onAgain={() => { saveQty({ ...find(sheet.id)!.qty }); go('order'); toast('已复制到草稿'); }}
@@ -285,17 +301,20 @@ function ConfirmSheet({ o, onClose, onSubmit }: { o: Order; onClose: () => void;
   );
 }
 
-function DispatchSheet({ o, copy, onClose }: { o: Order; copy: (t: string) => void; onClose: () => void }) {
+function DispatchSheet({ o, copy, toast, onClose }: { o: Order; copy: (t: string) => void; toast: (m: string) => void; onClose: () => void }) {
   const [img, setImg] = useState('');
   useEffect(() => { let on = true; (document.fonts?.ready ?? Promise.resolve()).then(() => { if (on) setImg(drawSheet(o)); }); return () => { on = false; }; }, [o]);
   return (
     <div className="sheet">
       <div className="top"><h2>叫货单 {o.id}</h2><span className={'pill ' + o.status}>{STATUS[o.status]}</span><button className="x" onClick={onClose}>完成</button></div>
       <Flow o={o} />
-      <div className="out"><h3>① 发微信群（长按图片 → 存储 / 转发）</h3>
+      <div className="acts">
+        <button className="btn pri" disabled={!img} onClick={() => exportImage(img, `${o.id}.png`, toast)}>一键发送图片 → 微信 / 相册</button>
+        <button className="btn" onClick={() => copy(orderText(o))}>复制文字版</button>
+      </div>
+      <div className="out"><h3>① 叫货单图片（预览）</h3>
         {img ? <SheetImg src={img} /> : <p className="hint">生成中…</p>}
-        <p className="hint">长按图片选「存储图像」或「转发」到 SJ 叫货群。</p></div>
-      <div className="acts"><button className="btn" onClick={() => copy(orderText(o))}>复制文字版（给 Walter）</button></div>
+        <p className="hint">点上面的按钮直接选微信群发送，或存到相册；长按图片也可以。</p></div>
       <div className="out"><h3>② 发会计（当前请复制；后续自动发送）</h3><pre>{acctText(o)}</pre>
         <div className="acts"><button className="btn pri" onClick={() => copy(acctText(o))}>复制会计单</button></div></div>
       <div className="out"><h3>文字版</h3><pre>{orderText(o)}</pre></div>
