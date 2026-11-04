@@ -95,3 +95,11 @@
 .so .gate input{width:100%;text-align:center;font-size:34px;letter-spacing:.4em;padding:12px;font-family:var(--mono)}
 .so .gate .err{color:var(--crit);font-size:14px;min-height:20px;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.so *{transition:none!important}}
+.so .name .en{font-size:13px;color:var(--mute);font-weight:400;width:100%}
+.so .banner{background:var(--soft);color:var(--crit);font-size:13px;padding:8px 12px;border-radius:8px;margin:10px 0 0}
+.so .cat h2{font-size:13px}
+.so .kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15px;padding:6px 0;border-bottom:1px solid var(--line)}
+.so .kv b{font-weight:600}
+.so .kv .num{text-align:right}
+.so .wk{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 0}
+.so .wk button{padding:8px 14px;border:1px solid var(--line);border-radius:8px}
