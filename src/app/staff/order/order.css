@@ -76,14 +76,11 @@
 .so .hist{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;width:100%;text-align:left}
 .so .hist .d{font-weight:700;font-size:18px}.so .hist .s{font-size:14px;color:var(--mute)}
 .so .pill{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
-.so .pill.submitted{color:var(--warn);border-color:var(--warn)}
-.so .pill.approved{color:var(--by);border-color:var(--by)}
+.so .pill.sent{color:var(--by);border-color:var(--by)}
 .so .pill.received{color:var(--ok);border-color:var(--ok);background:#e8f3ec}
-.so .pill.rejected{color:var(--crit);border-color:var(--crit)}
 .so .flow{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--mute);margin:8px 0 4px;flex-wrap:wrap}
 .so .flow span{padding:3px 8px;border-radius:4px;border:1px solid var(--line)}
 .so .flow span.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.so .flow span.rej{color:var(--crit);border-color:var(--crit)}
 .so .rcv{display:grid;grid-template-columns:1fr 54px 80px 60px;gap:6px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:17px}
 .so .rcv.ap{grid-template-columns:1fr 60px 110px}
 .so .rcv input{width:100%;text-align:center;padding:8px 4px;font-size:18px}

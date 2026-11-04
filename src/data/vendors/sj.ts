@@ -30,17 +30,26 @@ export const VENDOR = {
   id: 'sj',
   name: 'S.J. Distributors',
   shortName: 'SJ',
-  billTo: 'Tea Station (Luxtyle Creations Inc.)',
-  shipTo: '7315 Clairemont Mesa Blvd, San Diego',
-  shipNote: '后门 · 14:00–20:00 · 周一至周六可送',
   minLb: 100,
   contact: 'Walter Z. (408) 520-9456',
 };
 
-export const STAFF_PIN = '4973';
-export const ADMIN_PIN = '2026'; // TODO Kevin: change before rollout
+export interface Store {
+  id: string;
+  name: string;
+  billTo: string;
+  shipTo: string;
+  shipNote: string;
+  /** brands served at this store — drives the brand filter */
+  brands: Exclude<Brand, 'ALL'>[];
+}
 
-export const REQUESTERS = ['Abel', 'Kevin', 'BY 早班', 'BY 晚班', 'YGF 厨房'];
+export const STORES: Store[] = [
+  { id: 'cm', name: 'Clairemont Mesa 7315', billTo: 'Tea Station (Luxtyle Creations Inc.)', shipTo: '7315 Clairemont Mesa Blvd, San Diego', shipNote: '后门 · 14:00–20:00 · 周一至周六可送', brands: ['BY', 'YGF'] },
+  { id: 'mm', name: 'Mira Mesa 9003', billTo: 'Luxtyle City Inc.', shipTo: '9003 Mira Mesa Blvd, San Diego', shipNote: '14:00–20:00 · 周一至周六可送', brands: ['BY'] },
+];
+
+export const STAFF_PIN = '4973';
 
 export const CATS = ['猪肉', '牛肉', '鸡肉', '海鲜', '丸类·蛋'];
 
