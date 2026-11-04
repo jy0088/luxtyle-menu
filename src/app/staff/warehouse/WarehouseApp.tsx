@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '../order/order.css';
 import { WAREHOUSE, WH_VENDORS, WH_CATS, WH_SKUS, type WhSku, type WhVendorId } from '@/data/warehouse';
-import { STORES, STAFF_PIN } from '@/data/vendors/sj';
+import { STORES, STAFF_PIN } from '@/data/vendors/types';
 
 // ---------- types ----------
 type View = 'count' | 'req' | 'replenish';
@@ -82,11 +82,11 @@ async function exportImage(dataUrl: string, filename: string, toast: (m: string)
 const SheetImg = ({ src }: { src: string }) => <img className="sheetimg" src={src} alt="领料单图片" />;
 
 // ---------- component ----------
-export default function WarehouseApp() {
+export default function WarehouseApp({ mode }: { mode: 'inbound' | 'pickup' }) {
   const [ready, setReady] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState(''); const [pinErr, setPinErr] = useState('');
-  const [view, setView] = useState<View>('count');
+  const [view, setView] = useState<View>(mode === 'pickup' ? 'req' : 'count');
   const [stock, setStock] = useState<Record<string, Stock>>({});
   const [counts, setCounts] = useState<CountSnap[]>([]);
   const [countDraft, setCountDraft] = useState<Record<string, string>>({});
@@ -106,10 +106,10 @@ export default function WarehouseApp() {
     setStock(lsGet(K.stock, {})); setCounts(lsGet(K.counts, [])); setReqs(lsGet(K.reqs, [])); setDraft(lsGet(K.draft, {}));
     setWho(lsGet(K.who, '')); setStore(lsGet(K.store, STORES[0].id)); setRun(lsGet(K.run, ''));
     const ok = lsGet<number>(K.pin, 0); if (ok && Date.now() - ok < 90 * 864e5) setUnlocked(true);
-    const route = () => { const h = location.hash.replace('#', ''); setView(h === 'req' || h === 'replenish' ? h : 'count'); setSheet(null); };
+    const route = () => { if (mode === 'pickup') { setView('req'); setSheet(null); return; } const h = location.hash.replace('#', ''); setView(h === 'replenish' ? h : 'count'); setSheet(null); };
     route(); window.addEventListener('hashchange', route); setReady(true);
     return () => window.removeEventListener('hashchange', route);
-  }, []);
+  }, [mode]);
 
   const toast = useCallback((m: string) => { setToastMsg(m); window.clearTimeout(toastT.current); toastT.current = window.setTimeout(() => setToastMsg(''), 2200); }, []);
   const go = (v: View) => { const h = v === 'count' ? '' : '#' + v; if (location.hash !== h) location.hash = h; else { setView(v); setSheet(null); } };
@@ -154,12 +154,12 @@ export default function WarehouseApp() {
 
   return (
     <div className="so">
-      {!unlocked && (<div className="gate"><div className="box"><h2>仓库 Warehouse</h2><p>{WAREHOUSE.address} · 店内 PIN</p>
+      {!unlocked && (<div className="gate"><div className="box"><h2>L$ 员工</h2><p>{WAREHOUSE.address} · 店内 PIN</p>
         <input id="pin" type="password" inputMode="numeric" maxLength={4} autoComplete="off" aria-label="PIN" value={pin} onChange={e => onPin(e.target.value)} autoFocus /><div className="err">{pinErr}</div></div></div>)}
 
       <header>
         <div className="hrow">
-          <h1>仓库 <small>{WAREHOUSE.manager} · 9863 Pacific Heights · 60 天盘点</small></h1>
+          <h1><a href="/staff" style={{ color: 'inherit', textDecoration: 'none' }}>‹</a> {mode === 'pickup' ? '仓库提货' : '仓库进货'} <small>{mode === 'pickup' ? '门店向仓库领料' : `${WAREHOUSE.manager} · 9863 Pacific Heights · 60 天盘点`}</small></h1>
           <div className="meta">
             {view === 'req' && <select id="store" aria-label="门店" value={store} onChange={e => { setStore(e.target.value); lsSet(K.store, e.target.value); }}>{STORES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>}
             <input id="who" placeholder={view === 'req' ? '请货人' : '盘点人'} value={who} onChange={e => { setWho(e.target.value); lsSet(K.who, e.target.value); }} style={{ width: '6.5em' }} />
@@ -170,11 +170,11 @@ export default function WarehouseApp() {
           {(['all', ...WH_VENDORS.map(v => v.id)] as (WhVendorId | 'all')[]).map(v => (
             <button key={v} className="tab" data-on={vendorF === v} onClick={() => setVendorF(v)}>{v === 'all' ? '全部' : vendorOf(v).name}</button>
           ))}
-          <div className="nav">
+          {mode === 'inbound' && <div className="nav">
             <button className="tab" data-on={view === 'count'} onClick={() => go('count')}>盘点</button>
-            <button className="tab" data-on={view === 'req'} onClick={() => go('req')}>门店领料{pendingReq > 0 && <span className="cnt">{pendingReq}</span>}</button>
             <button className="tab" data-on={view === 'replenish'} onClick={() => go('replenish')}>补货{low.length > 0 && <span className="cnt">{low.length}</span>}</button>
-          </div>
+            <a className="tab" href="/staff/pickup">领料记录{pendingReq > 0 && <span className="cnt">{pendingReq}</span>}</a>
+          </div>}
         </div>
       </header>
 

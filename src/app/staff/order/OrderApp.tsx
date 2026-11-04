@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './order.css';
-import {
-  SKUS, CATS, VENDOR, STORES, STAFF_PIN, csPrice,
-  type Sku, type Brand, type Store,
-} from '@/data/vendors/sj';
+import { STORES, STAFF_PIN, csPrice, type Sku, type Brand, type Store, type VendorConfig } from '@/data/vendors/types';
 
 // ---------- types ----------
 type Status = 'sent' | 'received';
@@ -20,8 +17,13 @@ type Sheet = { t: 'confirm'; o: Order } | { t: 'dispatch'; id: string } | { t: '
 
 const STATUS: Record<Status, string> = { sent: '已下单·待收货', received: '已收货' };
 
+// Active vendor config; set by <OrderApp vendor> before any helper runs (one vendor per page).
+let V: VendorConfig;
+let SKUS: Sku[] = [];
+const K = { draft: '', who: 'staff.who', store: 'staff.store', hist: '', pin: 'sj.pinok' };
+function bind(v: VendorConfig) { V = v; SKUS = v.skus; K.draft = v.id + '.draft'; K.hist = v.id + '.hist'; }
+
 // ---------- storage (per device; server sync comes later) ----------
-const K = { draft: 'sj.draft', who: 'sj.who', store: 'sj.store', hist: 'sj.hist', pin: 'sj.pinok' };
 function lsGet<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
 function lsSet(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
 
@@ -43,33 +45,33 @@ function orderText(o: Order) {
   const fmt = (x: { s: Sku; n: number }) => `${x.n} ${x.s.unit}  ${x.s.name}${x.s.note ? '（' + x.s.note + '）' : ''}`;
   const by = L.filter(x => !isYgf(x.s)), ygf = L.filter(x => isYgf(x.s));
   return [
-    `SJ 叫货单 · ${st.billTo}`,
+    `${V.shortName} 叫货单 · ${st.billTo}`,
     `日期 ${o.date}  请货人 ${o.who || '—'}  单号 ${o.id}${o.eta ? '  希望送货 ' + o.eta : ''}`,
     `送货：${st.shipTo} · ${st.shipNote}`, '',
     ...(by.length ? ['【北苑 / 共用】', ...by.map(fmt)] : []),
     ...(ygf.length ? ['', '【杨国福】', ...ygf.map(fmt)] : []),
-    '', `合计 ${t.cs} 箱 · 约 ${Math.round(t.lb)}${t.unk ? '+' : ''} 磅`,
+    '', `合计 ${t.cs} 件${t.lb ? ' · 约 ' + Math.round(t.lb) + (t.unk ? '+' : '') + ' 磅' : ''}`,
     o.memo ? `备注：${o.memo}` : '',
   ].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n');
 }
 function acctText(o: Order) {
   const st = storeOf(o.store); const L = lines(o.qty); const t = totals(o.qty);
   const sum = (f: (s: Sku) => boolean) => L.filter(x => f(x.s)).reduce((a, x) => a + (csPrice(x.s) || 0) * x.n, 0);
-  const row = (x: { s: Sku; n: number }) => { const p = csPrice(x.s); return `${x.s.name}  ${x.n} CS${x.s.lb ? ' × ' + x.s.lb + 'LB' : ''}  ${p != null ? '≈$' + (p * x.n).toFixed(2) : '价格待补'}  [${isYgf(x.s) ? 'YGF' : 'BY'}]`; };
+  const row = (x: { s: Sku; n: number }) => { const p = csPrice(x.s); return `${x.s.name}  ${x.n} ${x.s.unit}${x.s.lb ? ' × ' + x.s.lb + 'LB' : ''}  ${p != null ? '≈$' + (p * x.n).toFixed(2) : '价格待补'}  [${isYgf(x.s) ? 'YGF' : 'BY'}]`; };
   return [
-    `采购单 ${o.id} — ${VENDOR.name}`, `门店：${st.name}  公司：${st.billTo}`,
+    `采购单 ${o.id} — ${V.name}`, `门店：${st.name}  公司：${st.billTo}`,
     `下单 ${fmtTs(o.ts)}  请货人 ${o.who || '—'}  预计送货：${o.eta || '—'}`, '',
     ...L.map(row), '',
     `预估合计 ≈ $${t.amt.toFixed(2)}${t.unk ? '（部分未定价）' : ''}  ·  ${t.cs} 箱  ·  约 ${Math.round(t.lb)} 磅`,
     `按品牌分摊：BY ≈ $${sum(s => !isYgf(s)).toFixed(2)} / YGF ≈ $${sum(isYgf).toFixed(2)}`, '',
-    `收货后将补发：到货数量差异 + SJ 收据/Invoice 号`,
+    `收货后将补发：到货数量差异 + ${V.shortName} 收据/Invoice 号`,
   ].join('\n');
 }
 function recvText(o: Order) {
   const L = lines(o.qty); const rc = o.recv || {};
   const diffs = L.filter(x => (rc[x.s.id] ?? x.n) !== x.n);
   return [
-    `收货回执 ${o.id} — ${VENDOR.name} · ${storeOf(o.store).name}`, `SJ 收据/Invoice 号：${o.receipt}`, `收货人 ${o.recvBy} · ${fmtTs(o.recvTs)}`,
+    `收货回执 ${o.id} — ${V.name} · ${storeOf(o.store).name}`, `${V.shortName} 收据/Invoice 号：${o.receipt}`, `收货人 ${o.recvBy} · ${fmtTs(o.recvTs)}`,
     diffs.length ? '差异：' : '到货与订单一致，无差异。',
     ...diffs.map(x => `  ${x.s.name}  订 ${x.n} / 到 ${rc[x.s.id]}  (${rc[x.s.id] - x.n > 0 ? '+' : ''}${rc[x.s.id] - x.n})`),
     o.recvNote ? `备注：${o.recvNote}` : '',
@@ -84,7 +86,7 @@ function drawSheet(o: Order): string {
   const g = cv.getContext('2d')!; g.scale(2, 2);
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.textBaseline = 'middle';
   const F = (w: number, s: number) => { g.font = `${w} ${s}px "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif`; };
-  F(700, 46); g.fillStyle = '#111'; g.fillText('SJ 订货单（肉类生鲜）', 40, 60);
+  F(700, 46); g.fillStyle = '#111'; g.fillText(`${V.name} 订货单`, 40, 60);
   F(400, 28); g.fillStyle = '#444';
   g.fillText(`Bill To: ${st.billTo}`, 40, 120);
   g.fillText(`送货: ${st.shipTo} · ${st.shipNote}`, 40, 164);
@@ -105,7 +107,7 @@ function drawSheet(o: Order): string {
     g.fillStyle = '#e5e5e5'; g.fillRect(40, y + rowH - 1, W - 80, 1); y += rowH;
   };
   L.filter(x => !isYgf(x.s)).forEach(draw); L.filter(x => isYgf(x.s)).forEach(draw);
-  F(700, 32); g.fillStyle = '#111'; g.fillText(`合计 ${t.cs} 箱 · 约 ${Math.round(t.lb)}${t.unk ? '+' : ''} 磅`, 40, y + 50);
+  F(700, 32); g.fillStyle = '#111'; g.fillText(`合计 ${t.cs} 件${t.lb ? ' · 约 ' + Math.round(t.lb) + (t.unk ? '+' : '') + ' 磅' : ''}`, 40, y + 50);
   if (o.memo) { F(400, 26); g.fillStyle = '#b4461c'; g.fillText(`备注: ${o.memo}`, 40, y + 100); y += 60; }
   F(400, 24); g.fillStyle = '#666'; g.fillText('RECEIVED BY: ____________   收据号: ____________   日期: ________', 40, y + 110);
   return cv.toDataURL('image/png');
@@ -128,7 +130,8 @@ async function exportImage(dataUrl: string, filename: string, toast: (m: string)
 }
 
 // ---------- component ----------
-export default function OrderApp() {
+export default function OrderApp({ vendor }: { vendor: VendorConfig }) {
+  bind(vendor);
   const [ready, setReady] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState(''); const [pinErr, setPinErr] = useState('');
@@ -170,7 +173,7 @@ export default function OrderApp() {
   const bump = (id: string, d: number) => { const q = { ...qty }; q[id] = Math.max(0, (q[id] || 0) + d); if (!q[id]) delete q[id]; saveQty(q); };
   const startConfirm = () => {
     if (!who.trim()) { toast('请先填写请货人'); document.getElementById('who')?.focus(); return; }
-    const d = new Date(); const id = 'SJ' + fmtDate(d).replace(/-/g, '').slice(2) + '-' + pad(d.getHours()) + pad(d.getMinutes());
+    const d = new Date(); const id = V.id.toUpperCase() + fmtDate(d).replace(/-/g, '').slice(2) + '-' + pad(d.getHours()) + pad(d.getMinutes());
     setSheet({ t: 'confirm', o: { id, date: fmtDate(d), store, who: who.trim(), qty: { ...qty }, status: 'sent', ts: Date.now() } });
   };
   const update = (id: string, patch: Partial<Order>) => saveHist(hist.map(o => o.id === id ? { ...o, ...patch } : o));
@@ -182,7 +185,7 @@ export default function OrderApp() {
     <div className="so">
       {!unlocked && (
         <div className="gate"><div className="box">
-          <h2>SJ 叫货单</h2><p>Luxtyle 员工 · 店内 PIN</p>
+          <h2>L$ 员工</h2><p>{V.shortName} 叫货单 · 店内 PIN</p>
           <input id="pin" type="password" inputMode="numeric" maxLength={4} autoComplete="off" aria-label="PIN" value={pin} onChange={e => onPin(e.target.value)} autoFocus />
           <div className="err">{pinErr}</div>
         </div></div>
@@ -190,7 +193,7 @@ export default function OrderApp() {
 
       <header>
         <div className="hrow">
-          <h1>SJ 叫货单 <small>{st.shipNote}</small></h1>
+          <h1><a href="/staff" style={{ color: 'inherit', textDecoration: 'none' }}>‹</a> {V.shortName} 叫货 <small>{V.terms}</small></h1>
           <div className="meta">
             <select id="store" aria-label="门店" value={store} onChange={e => { setStore(e.target.value); lsSet(K.store, e.target.value); setBrand('ALL'); }}>
               {STORES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -211,7 +214,7 @@ export default function OrderApp() {
       </header>
 
       <main>
-        {view === 'order' && CATS.map(c => {
+        {view === 'order' && V.cats.map(c => {
           const items = SKUS.filter(s => s.cat === c && vis(s)); if (!items.length) return null;
           return (
             <section className="cat" key={c}><h2>{c}</h2>
@@ -220,7 +223,7 @@ export default function OrderApp() {
                   <div>
                     <div className="name"><span className={'badge ' + s.brand}>{s.brand === 'ALL' ? '共用' : s.brand}</span>{s.name}</div>
                     <div className="spec">
-                      {[s.lb ? `${s.lb} LB/CS` : '箱规?', s.price != null ? (s.basis === 'lb' ? `$${s.price.toFixed(2)}/LB` : `$${s.price.toFixed(2)}/CS`) : '价格待补', cp != null && s.basis === 'lb' ? `≈$${cp.toFixed(0)}/CS` : '', s.note].filter(Boolean).join(' · ')}
+                      {[s.basis === 'lb' ? (s.lb ? `${s.lb} LB/${s.unit}` : '箱规?') : s.unit, s.price != null ? (s.basis === 'lb' ? `$${s.price.toFixed(2)}/LB` : `$${s.price.toFixed(2)}/${s.unit}`) : '价格待补', cp != null && s.basis === 'lb' ? `≈$${cp.toFixed(0)}/${s.unit}` : '', s.note].filter(Boolean).join(' · ')}
                       {s.q && <span className="q"> · ⚠ {s.q}</span>}
                     </div>
                   </div>
@@ -247,12 +250,12 @@ export default function OrderApp() {
       {view === 'order' && (
         <footer>
           <div className="tot">
-            <span>箱数 <b className="num">{t.cs}</b></span>
+            <span>件数 <b className="num">{t.cs}</b></span>
             <span>约 <b className="num">{Math.round(t.lb)}{t.unk ? '+' : ''}</b> 磅</span>
             <span>约 $<b className="num">{t.amt.toFixed(0)}{t.unk ? '+' : ''}</b></span>
-            <span className={'minw' + (t.cs && t.lb >= VENDOR.minLb ? ' ok' : '')}>
-              {!t.cs ? `起送 ${VENDOR.minLb} 磅` : t.lb >= VENDOR.minLb ? '已达起送' : `距起送还差 ${Math.ceil(VENDOR.minLb - t.lb)} 磅${t.unk ? '（部分箱规未知）' : ''}`}
-            </span>
+            {V.minLb != null && <span className={'minw' + (t.cs && t.lb >= V.minLb ? ' ok' : '')}>
+              {!t.cs ? `起送 ${V.minLb} 磅` : t.lb >= V.minLb ? '已达起送' : `距起送还差 ${Math.ceil(V.minLb - t.lb)} 磅${t.unk ? '（部分箱规未知）' : ''}`}
+            </span>}
           </div>
           <div className="acts">
             <button className="btn" onClick={() => { const q = { ...qty }; for (const s of SKUS) if (s.par && vis(s)) q[s.id] = s.par; saveQty(q); toast('已按惯常量填入，请逐项核对'); }}>按惯常量填</button>
@@ -293,9 +296,9 @@ function ConfirmSheet({ o, onClose, onSubmit }: { o: Order; onClose: () => void;
       <div className="top"><h2>确认叫货 {o.id}</h2><button className="x" onClick={onClose}>返回修改</button></div>
       <Flow o={o} />
       <div className="field"><label htmlFor="eta">希望送货日（可选）</label><input id="eta" value={eta} onChange={e => setEta(e.target.value)} placeholder="例如 周一 11/10" /></div>
-      <div className="field"><label htmlFor="memo">给 SJ 的备注（可选，会印在单上）</label><input id="memo" value={memo} onChange={e => setMemo(e.target.value)} placeholder="例如 五花肉要瘦一点" /></div>
+      <div className="field"><label htmlFor="memo">给{V.shortName}的备注（可选，会印在单上）</label><input id="memo" value={memo} onChange={e => setMemo(e.target.value)} placeholder="例如 五花肉要瘦一点" /></div>
       <div className="out"><h3>预览</h3><pre>{orderText({ ...o, eta: eta.trim(), memo: memo.trim() })}</pre></div>
-      {t.lb < VENDOR.minLb && <p className="hint" style={{ color: 'var(--crit)' }}>未达 {VENDOR.minLb} 磅起送（约 {Math.round(t.lb)} 磅），SJ 可能不送。</p>}
+      {V.minLb != null && t.lb < V.minLb && <p className="hint" style={{ color: 'var(--crit)' }}>未达 {V.minLb} 磅起送（约 {Math.round(t.lb)} 磅），{V.shortName} 可能不送。</p>}
       <div className="acts"><button className="btn pri" onClick={() => onSubmit({ ...o, eta: eta.trim(), memo: memo.trim() })}>确认 → 生成发群图 + 会计单</button></div>
     </div>
   );
@@ -330,7 +333,7 @@ function ReceiveSheet({ o, copy, toast, onClose, onAgain, onShowSheet, onConfirm
   const [rc, setRc] = useState<Record<string, string>>(() => Object.fromEntries(L.map(x => [x.s.id, o.recv?.[x.s.id] != null ? String(o.recv[x.s.id]) : ''])));
   const [receipt, setReceipt] = useState(o.receipt || ''); const [rby, setRby] = useState(o.recvBy || ''); const [rnote, setRnote] = useState(o.recvNote || '');
   const confirm = () => {
-    if (!receipt.trim()) { toast('请填写 SJ 收据号'); return; }
+    if (!receipt.trim()) { toast('请填写收据号'); return; }
     if (!rby.trim()) { toast('请填写收货人'); return; }
     if (L.some(x => rc[x.s.id] === '')) { toast('每一项都要填到货数量（没到填 0）'); return; }
     onConfirm({ recv: Object.fromEntries(L.map(x => [x.s.id, +rc[x.s.id]])), receipt: receipt.trim(), recvBy: rby.trim(), recvNote: rnote.trim() });
@@ -348,7 +351,7 @@ function ReceiveSheet({ o, copy, toast, onClose, onAgain, onShowSheet, onConfirm
           <span className={'diff num ' + (df == null ? '' : df ? 'bad' : 'good')}>{df == null ? '' : df > 0 ? '+' + df : df}</span>
         </div>); })}
       {!done && <div className="acts" style={{ marginTop: 8 }}><button className="btn" onClick={() => setRc(Object.fromEntries(L.map(x => [x.s.id, String(x.n)])))}>全部按订量到货</button></div>}
-      <div className="field"><label htmlFor="receipt">SJ 收据 / Invoice 号 *</label><input id="receipt" value={receipt} disabled={done} onChange={e => setReceipt(e.target.value)} placeholder="送货单右上角号码" /></div>
+      <div className="field"><label htmlFor="receipt">{V.shortName} 收据 / Invoice 号 *</label><input id="receipt" value={receipt} disabled={done} onChange={e => setReceipt(e.target.value)} placeholder="送货单 / 发票号码" /></div>
       <div className="field"><label htmlFor="rby">收货人 *</label><input id="rby" value={rby} disabled={done} onChange={e => setRby(e.target.value)} /></div>
       <div className="field"><label htmlFor="rnote">收货备注（破损、退货、换货）</label><input id="rnote" value={rnote} disabled={done} onChange={e => setRnote(e.target.value)} /></div>
       {done ? <p className="hint">已于 {fmtTs(o.recvTs)} 确认收货。</p> : <div className="acts" style={{ marginTop: 14 }}><button className="btn ok" onClick={confirm}>确认收货</button></div>}

@@ -1,5 +1,6 @@
-import OrderApp from './OrderApp';
+import { redirect } from 'next/navigation';
 
-export default function OrderPage() {
-  return <OrderApp />;
+// Legacy entry (installed home-screen icons point here) → default vendor.
+export default function OrderIndex() {
+  redirect('/staff/order/sj');
 }

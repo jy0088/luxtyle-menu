@@ -1,16 +1,26 @@
 {
-  "name": "SJ 叫货单 · Luxtyle Staff",
-  "short_name": "SJ 叫货",
-  "description": "员工叫货 · 审批 · 收货 / Staff ordering for S.J. Distributors",
-  "id": "/staff/order",
-  "start_url": "/staff/order",
+  "name": "L$ Luxtyle Staff",
+  "short_name": "L$",
+  "description": "叫货 · 采买 · 仓库 / Ordering · Purchasing · Warehouse",
+  "id": "/staff",
+  "start_url": "/staff",
   "scope": "/staff/",
   "display": "standalone",
   "background_color": "#f6f4ef",
-  "theme_color": "#b4461c",
+  "theme_color": "#1d1b17",
   "orientation": "portrait",
   "icons": [
-    { "src": "/icons/staff-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/staff-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/icons/staff-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/staff-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
