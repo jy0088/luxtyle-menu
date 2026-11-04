@@ -1,0 +1,100 @@
+/* Staff ordering PWA — large type for use in a walk-in. Scoped under .so to stay clear of menu styles. */
+.so{
+  --bg:#f6f4ef; --panel:#fff; --line:#ddd8cc; --fg:#1d1b17; --mute:#6f6a5e;
+  --accent:#b4461c; --accent-fg:#fff; --soft:#f3e4dc; --ok:#2e7d4f; --warn:#b8860b; --crit:#b3261e;
+  --by:#1f5f8b; --ygf:#b4461c;
+  --sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  min-height:100dvh;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:19px;line-height:1.4;
+  display:flex;flex-direction:column;
+}
+.so *{box-sizing:border-box}
+.so button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.so input,.so select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.so input:focus,.so select:focus,.so button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.so .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.so header{position:sticky;top:0;z-index:9;background:var(--panel);border-bottom:1px solid var(--line);
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.so .hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.so h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.02em}
+.so h1 small{font-weight:400;color:var(--mute);font-size:14px;margin-left:6px}
+.so .meta{display:flex;gap:8px;align-items:center;margin-left:auto;font-size:15px;color:var(--mute)}
+.so .meta select{padding:6px 8px}
+.so .tabs{display:flex;gap:8px;margin-top:10px;overflow-x:auto;scrollbar-width:none}
+.so .tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);font-size:16px;white-space:nowrap;color:var(--mute);position:relative}
+.so .tab[data-on="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.so .nav{margin-left:auto;display:flex;gap:6px}
+.so .nav .tab[data-on="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.so .cnt{position:absolute;top:-6px;right:-4px;background:var(--crit);color:#fff;font-size:12px;font-weight:700;border-radius:999px;min-width:20px;height:20px;line-height:20px;text-align:center;padding:0 5px}
+
+.so main{flex:1;padding:8px max(16px,env(safe-area-inset-right,0px)) 150px max(16px,env(safe-area-inset-left,0px))}
+.so .cat{margin-top:18px}
+.so .cat h2{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:0 0 8px;font-weight:500}
+.so .row{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.so .row.has{background:linear-gradient(90deg,var(--soft),transparent 60%);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:8px}
+.so .name{font-weight:500;font-size:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.so .badge{font-size:12px;padding:2px 7px;border-radius:4px;color:#fff;font-weight:700;letter-spacing:.05em}
+.so .badge.BY{background:var(--by)} .so .badge.YGF{background:var(--ygf)} .so .badge.ALL{background:var(--mute)}
+.so .spec{font-size:14px;color:var(--mute);margin-top:3px}
+.so .spec .q{color:var(--warn)}
+.so .step{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.so .step button{width:54px;height:50px;font-size:28px;line-height:1;color:var(--fg)}
+.so .step button:active{background:var(--soft)}
+.so .step .v{width:48px;text-align:center;font-size:22px;font-weight:700}
+.so .step .v.zero{color:var(--line)}
+
+.so footer{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--panel);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.so .tot{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;font-size:15px;color:var(--mute)}
+.so .tot b{font-size:22px;color:var(--fg)}
+.so .minw{font-size:14px;padding:3px 10px;border-radius:4px;background:var(--soft);color:var(--crit)}
+.so .minw.ok{color:var(--ok)}
+.so .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.so .btn{flex:1;padding:14px;border-radius:10px;border:1px solid var(--line);font-weight:500;text-align:center;font-size:17px;min-width:120px}
+.so .btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.so .btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.so .btn.danger{color:var(--crit);border-color:var(--crit)}
+.so .btn:disabled{opacity:.4}
+
+.so .sheet{position:fixed;inset:0;z-index:20;background:var(--bg);overflow-y:auto;
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(30px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.so .sheet .top{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.so .sheet h2{font-size:20px;margin:0}
+.so .sheet .x{margin-left:auto;font-size:16px;color:var(--mute);padding:8px 14px;border:1px solid var(--line);border-radius:8px}
+.so .out{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px}
+.so .out h3{font-size:13px;letter-spacing:.1em;color:var(--mute);margin:0 0 8px;font-weight:500;text-transform:uppercase}
+.so pre{font-family:var(--mono);font-size:14px;white-space:pre-wrap;word-break:break-all;margin:0;line-height:1.5}
+.so .sheetimg{width:100%;height:auto;display:block;border:1px solid var(--line);background:#fff;border-radius:4px}
+.so .hint{font-size:14px;color:var(--mute);margin-top:8px}
+.so .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(160px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:15px;z-index:30;opacity:0;transition:opacity .2s;max-width:90vw;text-align:center;pointer-events:none}
+.so .toast.on{opacity:1}
+.so .field{display:grid;gap:4px;margin-top:10px}
+.so .field label{font-size:14px;color:var(--mute)}
+.so .field input{width:100%;font-size:18px}
+
+.so .hist{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;width:100%;text-align:left}
+.so .hist .d{font-weight:700;font-size:18px}.so .hist .s{font-size:14px;color:var(--mute)}
+.so .pill{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.so .pill.submitted{color:var(--warn);border-color:var(--warn)}
+.so .pill.approved{color:var(--by);border-color:var(--by)}
+.so .pill.received{color:var(--ok);border-color:var(--ok);background:#e8f3ec}
+.so .pill.rejected{color:var(--crit);border-color:var(--crit)}
+.so .flow{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--mute);margin:8px 0 4px;flex-wrap:wrap}
+.so .flow span{padding:3px 8px;border-radius:4px;border:1px solid var(--line)}
+.so .flow span.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.so .flow span.rej{color:var(--crit);border-color:var(--crit)}
+.so .rcv{display:grid;grid-template-columns:1fr 54px 80px 60px;gap:6px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:17px}
+.so .rcv.ap{grid-template-columns:1fr 60px 110px}
+.so .rcv input{width:100%;text-align:center;padding:8px 4px;font-size:18px}
+.so .rcv .diff{text-align:center;font-weight:700}
+.so .rcv .diff.bad{color:var(--crit)} .so .rcv .diff.good{color:var(--ok)}
+.so .rhead{font-size:12px;color:var(--mute);letter-spacing:.08em;text-transform:uppercase}
+.so .empty{color:var(--mute);text-align:center;padding:50px 0;font-size:17px}
+.so .gate{position:fixed;inset:0;z-index:40;background:var(--bg);display:grid;place-items:center;padding:20px}
+.so .gate .box{width:min(340px,100%);text-align:center}
+.so .gate h2{font-size:22px;margin:0 0 4px}
+.so .gate p{color:var(--mute);margin:0 0 18px;font-size:15px}
+.so .gate input{width:100%;text-align:center;font-size:34px;letter-spacing:.4em;padding:12px;font-family:var(--mono)}
+.so .gate .err{color:var(--crit);font-size:14px;min-height:20px;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.so *{transition:none!important}}
