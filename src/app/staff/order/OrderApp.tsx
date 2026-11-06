@@ -41,10 +41,10 @@ export default function OrderApp({ vendor }: { vendor: Vendor }) {
 
   const docOf = (ev: OrderEv): SheetDoc => { const s = STORES.find(x => x.id === ev.data.store) || STORES[0]; return {
     title: `${vendor.shortName} 叫货单 · Order Sheet`, id: ev.id, date: fmtDate(new Date(ev.ts)), accent: '#b4461c',
-    meta: [`Bill To: ${s.billTo}`, `Ship To: ${s.shipTo} · ${s.shipNote}`, `请货人 ${ev.data.who}${ev.data.eta ? ` · 希望送货 ${ev.data.eta}` : ''}`], rows: rows(ev.data.qty), memo: ev.data.memo }; };
+    meta: [`Bill To: ${s.billTo}`, `Ship To: ${s.shipTo} · ${s.shipNote}`, `请货人 ${ev.data.who}${ev.data.eta ? ` · 希望送货 ${ev.data.eta}` : ''}`], rows: rows(ev.data.qty), memo: ev.data.memo, showPrice: false }; };  // vendor-facing: no prices
   const acctText = (ev: OrderEv) => { const R = rows(ev.data.qty); const tt = totals(R); const by = R.filter(r => r.item.brand !== 'YGF'), ygf = R.filter(r => r.item.brand === 'YGF');
     const sum = (rs: SheetRow[]) => rs.reduce((a, r) => a + ((r.item.basis === 'lb' ? (r.item.lb || 0) * (r.item.refPrice || 0) : (r.item.refPrice || 0)) * r.qty), 0);
-    return [`采购单 ${ev.id} — ${vendor.name}`, `门店 ${st.name} · 公司 ${st.billTo}`, `下单 ${fmtTs(ev.ts)} · 请货人 ${ev.data.who} · 预计送货 ${ev.data.eta || '—'}`, '', sheetText(docOf(ev)).split('\n').slice(4).join('\n'), '', `参考合计 ≈ $${tt.amt.toFixed(2)} · BY ≈ $${sum(by).toFixed(2)} / YGF ≈ $${sum(ygf).toFixed(2)}`, `收货后补发：到货差异 + ${vendor.shortName} 收据号 + 实付金额`].join('\n'); };
+    return [`采购单 ${ev.id} — ${vendor.name}`, `门店 ${st.name} · 公司 ${st.billTo}`, `下单 ${fmtTs(ev.ts)} · 请货人 ${ev.data.who} · 预计送货 ${ev.data.eta || '—'}`, '', sheetText({ ...docOf(ev), showPrice: true }).split('\n').slice(4).join('\n'), '', `参考合计 ≈ $${tt.amt.toFixed(2)} · BY ≈ $${sum(by).toFixed(2)} / YGF ≈ $${sum(ygf).toFixed(2)}`, `收货后补发：到货差异 + ${vendor.shortName} 收据号 + 实付金额`].join('\n'); };
 
   if (!ready) return <div className="so" />;
   const find = (id: string) => mine.find(e => e.id === id);
